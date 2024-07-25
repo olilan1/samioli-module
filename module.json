@@ -10,5 +10,8 @@
         "name": "Oli"
       }
     ],
+    "esmodules": [
+      "src/test.ts"
+    ],
     "version": "0.0.0"
 }
