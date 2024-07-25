@@ -1,0 +1,14 @@
+{
+    "id": "samioli-module",
+    "title": "Sami & Oli's Foundry Module",
+    "description": "A bunch of things by Sami & Oli",
+    "authors": [
+      {
+        "name": "Sami"
+      },
+      {
+        "name": "Oli"
+      }
+    ],
+    "version": "0.0.0"
+}
