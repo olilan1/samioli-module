@@ -13,6 +13,17 @@
     "esmodules": [
       "src/test.js"
     ],
+    "packs": [
+      {
+        "label": "SamiOli Macros",
+        "name": "Macros",
+        "path": "packs/macros.db",
+        "system": "pf2e",
+        "type": "Macro",
+        "private": false,
+        "flags": {}
+      }
+    ],
     "version": "#{VERSION}#",
     "url": "#{URL}#",
     "manifest": "#{MANIFEST}#",
