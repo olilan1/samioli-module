@@ -6,7 +6,7 @@ import * as path from "node:path"
 const DOCUMENT_DEFAULT = {
   type: "script",
   scope: "global",
-  author: "xpf2eanimationsx",
+  author: "samioli",
 }
 
 const PACK = "macros"
