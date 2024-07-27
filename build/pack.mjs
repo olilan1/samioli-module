@@ -29,6 +29,10 @@ const db = new ClassicLevel(dir, {
 const batch = db.batch()
 
 for (const file of await fs.readdir(inputDir)) {
+  if (!file.endsWith(".js")) {
+    continue;
+  }
+
   const content = await fs.readFile(path.join(inputDir, file), {
     encoding: "utf-8",
   })
