@@ -13,6 +13,16 @@
     "esmodules": [
       "src/test.js"
     ],
+    "packFolders": [
+        {
+            "name": "SamiOli Module",
+            "sorting": "a",
+            "color": "#002113",
+            "packs": [
+                "Macros"
+            ]
+        }
+    ],
     "packs": [
       {
         "label": "SamiOli Macros",
