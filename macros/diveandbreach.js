@@ -118,30 +118,21 @@ async function captureTargets() {
   }
 }
 
-async function addTargetsToUser(user) {
-  console.log("users current targets:")
-  console.log(game.user.targets)
+async function addTargetsToUser(player) {
   let targetIds = Array.from(targets).map(token => token.document._id);
-  //add some logic to check that the player isn't included
-  targetIds = targetIds.filter(targetIds => targetIds !== user.actorId);
+  targetIds = targetIds.filter(targetIds => targetIds !== player._id);
   await game.user.updateTokenTargets(targetIds);
-  console.log("users updated targets:")
-  console.log(game.user.targets)  
 }
 
 async function clearUserTargets() {
   await game.user.clearTargets();
-  console.log("Targets have been cleared")
   await delay(200);
-  console.log(game.user.targets);
 }
 
 async function doAnimation(token) {
 
   //clear targets for the animation
   await clearUserTargets();
-  console.log("game.user.targets after clearUserTargets():");  
-  console.log(game.user.targets);
   let rotation
 
   if (token.x > firstLocationSequencer.x) {
@@ -152,11 +143,29 @@ async function doAnimation(token) {
       rotation = 140
   }
 
+  async function fileExistsAtPath(path) {
+    
+    try {
+      const response = await fetch(path, { method: 'HEAD' });
+      return response.ok; // Returns true if status code is 200-299, false otherwise
+    } catch (error) {
+      console.log("File not found at: " + path)
+      return false; 
+    }
+  }
+  
+  let spellSound = "sound/BG2-Sounds/sim_pulswater.wav"
+  let entrySplashSound = "sound/NWN2-Sounds/pl_splash_idle01.WAV"
+  let exitSplashSound ="sound/NWN2-Sounds/pl_splash_idle02.WAV"
+
   await new Sequence()
     //cast spell sound
     .sound()
       .volume(0.7)
-      .file("sound/BG2-Sounds/sim_pulswater.wav", true, true)  
+      .file(spellSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(spellSound);
+    })
     //cast spell animation
     .effect()
       .atLocation(token)
@@ -181,7 +190,10 @@ async function doAnimation(token) {
     //entry splash sound
     .sound()
       .volume(0.5)
-      .file("sound/NWN2-Sounds/pl_splash_idle01.WAV", true, true)
+      .file(entrySplashSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(entrySplashSound);
+    })
     //entry splash effect
     .effect()
       .atLocation(firstLocation)
@@ -192,7 +204,10 @@ async function doAnimation(token) {
     //exit splash sound
     .sound()
       .volume(0.5)
-      .file("sound/NWN2-Sounds/pl_splash_idle02.WAV", true, true)
+      .file(exitSplashSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(exitSplashSound);
+    })
     //exit splash
     .effect()
       .atLocation(secondLocation)
