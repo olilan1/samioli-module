@@ -2,7 +2,7 @@
     {
         "name":"aasimar",
         "files":[
-            "NWN2-Creatures\\c_aasimar_hit1.wav"
+            "sound/NWN2-Creatures/c_aasimar_hit1.wav"
         ],
         "traits":[
             "humanoid",
@@ -12,8 +12,8 @@
     {
         "name":"air elemental",
         "files":[
-            "NWN2-Sounds\\c_elmair_hit1.WAV",
-            "NWN2-Sounds\\c_elmair_hit2.WAV"
+            "sound/NWN2-Sounds/c_elmair_hit1.WAV",
+            "sound/NWN2-Sounds/c_elmair_hit2.WAV"
         ],
         "traits":[
             "air",
@@ -24,7 +24,7 @@
     {
         "name":"badger",
         "files":[
-            "NWN2-Sounds\\c_badger_hit1.WAV"
+            "sound/NWN2-Sounds/c_badger_hit1.WAV"
         ],
         "traits":[
             "badger",
@@ -34,8 +34,8 @@
     {
         "name":"balor",
         "files":[
-            "NWN2-Sounds\\c_balor_hit1.WAV",
-            "NWN2-Sounds\\c_balor_hit2.WAV"
+            "sound/NWN2-Sounds/c_balor_hit1.WAV",
+            "sound/NWN2-Sounds/c_balor_hit2.WAV"
         ],
         "traits":[
             "balor",
@@ -46,8 +46,8 @@
     {
         "name":"bat",
         "files":[
-            "NWN2-Sounds\\c_floatbat_hit1.WAV",
-            "NWN2-Creatures\\c_bat_hit1.WAV"
+            "sound/NWN2-Sounds/c_floatbat_hit1.WAV",
+            "sound/NWN2-Creatures/c_bat_hit1.WAV"
         ],
         "traits":[
             "bat",
@@ -57,7 +57,7 @@
     {
         "name":"bear",
         "files":[
-            "NWN2-Sounds\\c_bear_hit1.WAV"
+            "sound/NWN2-Sounds/c_bear_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -67,8 +67,8 @@
     {
         "name":"beast",
         "files":[
-            "NWN2-Sounds\\c_umber_hit1.WAV",
-            "NWN2-Sounds\\c_umber_hit2.WAV"
+            "sound/NWN2-Sounds/c_umber_hit1.WAV",
+            "sound/NWN2-Sounds/c_umber_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -78,8 +78,8 @@
     {
         "name":"beetle",
         "files":[
-            "NWN2-Creatures\\c_beetle_hit1.wav",
-            "NWN2-Creatures\\c_beetle_hit2.wav"
+            "sound/NWN2-Creatures/c_beetle_hit1.wav",
+            "sound/NWN2-Creatures/c_beetle_hit2.wav"
         ],
         "traits":[
             "animal",
@@ -90,7 +90,7 @@
     {
         "name":"black dragon",
         "files":[
-            "NWN2-Sounds\\c_dragblack_hit1.WAV"
+            "sound/NWN2-Sounds/c_dragblack_hit1.WAV"
         ],
         "traits":[
             "black dragon",
@@ -100,8 +100,8 @@
     {
         "name":"blade golem",
         "files":[
-            "NWN2-Sounds\\c_bladegol_hit1.WAV",
-            "NWN2-Sounds\\c_bladegol_hit2.WAV"
+            "sound/NWN2-Sounds/c_bladegol_hit1.WAV",
+            "sound/NWN2-Sounds/c_bladegol_hit2.WAV"
         ],
         "traits":[
             "blade golem",
@@ -111,8 +111,8 @@
     {
         "name":"bladeling",
         "files":[
-            "NWN2-Sounds\\c_bladeling_hit1.WAV",
-            "NWN2-Sounds\\c_bladeling_hit2.WAV"
+            "sound/NWN2-Sounds/c_bladeling_hit1.WAV",
+            "sound/NWN2-Sounds/c_bladeling_hit2.WAV"
         ],
         "traits":[
             "bladeling",
@@ -123,7 +123,7 @@
     {
         "name":"boar",
         "files":[
-            "NWN2-Sounds\\c_boar_hit1.WAV"
+            "sound/NWN2-Sounds/c_boar_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -133,7 +133,7 @@
     {
         "name":"bomb beetle",
         "files":[
-            "NWN2-Sounds\\c_beetlebomb_hit1.WAV"
+            "sound/NWN2-Sounds/c_beetlebomb_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -144,8 +144,8 @@
     {
         "name":"bugbear",
         "files":[
-            "NWN2-Sounds\\c_bugbear_hit1.WAV",
-            "NWN2-Sounds\\c_bugbear_hit2.WAV"
+            "sound/NWN2-Sounds/c_bugbear_hit1.WAV",
+            "sound/NWN2-Sounds/c_bugbear_hit2.WAV"
         ],
         "traits":[
             "bugbear",
@@ -156,7 +156,7 @@
     {
         "name":"cat",
         "files":[
-            "NWN2-Sounds\\c_cat_hit1.WAV"
+            "sound/NWN2-Sounds/c_cat_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -166,7 +166,7 @@
     {
         "name":"cow",
         "files":[
-            "NWN2-Creatures\\c_cow_hit1.wav"
+            "sound/NWN2-Creatures/c_cow_hit1.wav"
         ],
         "traits":[
             "animal",
@@ -176,7 +176,7 @@
     {
         "name":"deer",
         "files":[
-            "NWN2-Creatures\\c_deer_hit1.wav"
+            "sound/NWN2-Creatures/c_deer_hit1.wav"
         ],
         "traits":[
             "animal",
@@ -186,8 +186,8 @@
     {
         "name":"demon",
         "files":[
-            "NWN2-Creatures\\c_demon_hit1.wav",
-            "NWN2-Creatures\\c_demon_hit2.wav"
+            "sound/NWN2-Creatures/c_demon_hit1.wav",
+            "sound/NWN2-Creatures/c_demon_hit2.wav"
         ],
         "traits":[
             "fiend",
@@ -197,10 +197,10 @@
     {
         "name":"devil",
         "files":[
-            "NWN2-Sounds\\c_devil_hit1.WAV",
-            "NWN2-Sounds\\c_devil_hit2.WAV",
-            "NWN2-Sounds\\c_devilhorn_hit1.WAV",
-            "NWN2-Sounds\\c_devilhorn_hit2.WAV"
+            "sound/NWN2-Sounds/c_devil_hit1.WAV",
+            "sound/NWN2-Sounds/c_devil_hit2.WAV",
+            "sound/NWN2-Sounds/c_devilhorn_hit1.WAV",
+            "sound/NWN2-Sounds/c_devilhorn_hit2.WAV"
         ],
         "traits":[
             "devil",
@@ -210,8 +210,8 @@
     {
         "name":"dire badger",
         "files":[
-            "NWN2-Sounds\\c_badgerdire_hit1.WAV",
-            "NWN2-Sounds\\c_badgerdire_hit2.WAV"
+            "sound/NWN2-Sounds/c_badgerdire_hit1.WAV",
+            "sound/NWN2-Sounds/c_badgerdire_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -221,8 +221,8 @@
     {
         "name":"dire bear",
         "files":[
-            "NWN2-Sounds\\c_beardire_hit1.WAV",
-            "NWN2-Sounds\\c_beardire_hit2.WAV"
+            "sound/NWN2-Sounds/c_beardire_hit1.WAV",
+            "sound/NWN2-Sounds/c_beardire_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -232,8 +232,8 @@
     {
         "name":"dire boar",
         "files":[
-            "NWN2-Sounds\\c_boardire_hit1.WAV",
-            "NWN2-Sounds\\c_boardire_hit2.WAV"
+            "sound/NWN2-Sounds/c_boardire_hit1.WAV",
+            "sound/NWN2-Sounds/c_boardire_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -243,8 +243,8 @@
     {
         "name":"dire rat",
         "files":[
-            "NWN2-Sounds\\c_ratdire_hit1.WAV",
-            "NWN2-Sounds\\c_ratdire_hit2.WAV"
+            "sound/NWN2-Sounds/c_ratdire_hit1.WAV",
+            "sound/NWN2-Sounds/c_ratdire_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -254,7 +254,7 @@
     {
         "name":"dire wolf",
         "files":[
-            "NWN2-Sounds\\c_dogwolfdire_hit1.WAV"
+            "sound/NWN2-Sounds/c_dogwolfdire_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -264,7 +264,7 @@
     {
         "name":"dog",
         "files":[
-            "NWN2-Sounds\\c_dogshado_hit1.WAV"
+            "sound/NWN2-Sounds/c_dogshado_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -274,8 +274,8 @@
     {
         "name":"dryad",
         "files":[
-            "NWN2-Sounds\\c_dryad_hit1.WAV",
-            "NWN2-Sounds\\c_dryad_hit2.WAV"
+            "sound/NWN2-Sounds/c_dryad_hit1.WAV",
+            "sound/NWN2-Sounds/c_dryad_hit2.WAV"
         ],
         "traits":[
             "dryad",
@@ -286,8 +286,8 @@
     {
         "name":"earth elemental",
         "files":[
-            "NWN2-Sounds\\c_elmearth_hit1.WAV",
-            "NWN2-Sounds\\c_elmearth_hit2.WAV"
+            "sound/NWN2-Sounds/c_elmearth_hit1.WAV",
+            "sound/NWN2-Sounds/c_elmearth_hit2.WAV"
         ],
         "traits":[
             "elemental",
@@ -298,8 +298,8 @@
     {
         "name":"erinyes",
         "files":[
-            "NWN2-Sounds\\c_erinyes_hit1.WAV",
-            "NWN2-Sounds\\c_erinyes_hit2.WAV"
+            "sound/NWN2-Sounds/c_erinyes_hit1.WAV",
+            "sound/NWN2-Sounds/c_erinyes_hit2.WAV"
         ],
         "traits":[
             "fiend",
@@ -309,7 +309,7 @@
     {
         "name":"ether spider",
         "files":[
-            "NWN2-Sounds\\c_spidwraith_hit1.WAV"
+            "sound/NWN2-Sounds/c_spidwraith_hit1.WAV"
         ],
         "traits":[
             "ether spider",
@@ -319,8 +319,8 @@
     {
         "name":"fairy",
         "files":[
-            "NWN2-Creatures\\c_fairy_hit1.wav",
-            "NWN2-Creatures\\c_fairy_hit2.wav"
+            "sound/NWN2-Creatures/c_fairy_hit1.wav",
+            "sound/NWN2-Creatures/c_fairy_hit2.wav"
         ],
         "traits":[
             "fairy",
@@ -330,8 +330,8 @@
     {
         "name":"fiend",
         "files":[
-            "NWN2-Sounds\\c_fiend_hit1.WAV",
-            "NWN2-Sounds\\c_fiend_hit2.WAV"
+            "sound/NWN2-Sounds/c_fiend_hit1.WAV",
+            "sound/NWN2-Sounds/c_fiend_hit2.WAV"
         ],
         "traits":[
             "fiend"
@@ -340,7 +340,7 @@
     {
         "name":"fire beetle",
         "files":[
-            "NWN2-Sounds\\c_beetlefire_hit1.WAV"
+            "sound/NWN2-Sounds/c_beetlefire_hit1.WAV"
         ],
         "traits":[
             "animal",
@@ -351,8 +351,8 @@
     {
         "name":"fire elemental",
         "files":[
-            "NWN2-Sounds\\c_elmfire_hit1.WAV",
-            "NWN2-Sounds\\c_elmfire_hit2.WAV"
+            "sound/NWN2-Sounds/c_elmfire_hit1.WAV",
+            "sound/NWN2-Sounds/c_elmfire_hit2.WAV"
         ],
         "traits":[
             "fire",
@@ -363,8 +363,8 @@
     {
         "name":"fire giant",
         "files":[
-            "NWN2-Sounds\\c_giantfire_hit1.WAV",
-            "NWN2-Sounds\\c_giantfire_hit2.WAV"
+            "sound/NWN2-Sounds/c_giantfire_hit1.WAV",
+            "sound/NWN2-Sounds/c_giantfire_hit2.WAV"
         ],
         "traits":[
             "giant",
@@ -374,8 +374,8 @@
     {
         "name":"fire scamp",
         "files":[
-            "NWN2-Sounds\\c_impfire_hit1.WAV",
-            "NWN2-Sounds\\c_impfire_hit2.WAV"
+            "sound/NWN2-Sounds/c_impfire_hit1.WAV",
+            "sound/NWN2-Sounds/c_impfire_hit2.WAV"
         ],
         "traits":[
             "fiend",
@@ -385,8 +385,8 @@
     {
         "name":"frost giant",
         "files":[
-            "NWN2-Sounds\\c_giantfrost_hit1.WAV",
-            "NWN2-Sounds\\c_giantfrost_hit2.WAV"
+            "sound/NWN2-Sounds/c_giantfrost_hit1.WAV",
+            "sound/NWN2-Sounds/c_giantfrost_hit2.WAV"
         ],
         "traits":[
             "frost giant",
@@ -396,7 +396,7 @@
     {
         "name":"gargoyle",
         "files":[
-            "NWN2-Sounds\\c_gargoyle_hit1.WAV"
+            "sound/NWN2-Sounds/c_gargoyle_hit1.WAV"
         ],
         "traits":[
             "gargoyle",
@@ -406,8 +406,8 @@
     {
         "name":"ghast",
         "files":[
-            "NWN2-Sounds\\c_ghast_hit1.WAV",
-            "NWN2-Sounds\\c_ghast_hit2.WAV"
+            "sound/NWN2-Sounds/c_ghast_hit1.WAV",
+            "sound/NWN2-Sounds/c_ghast_hit2.WAV"
         ],
         "traits":[
             "ghast",
@@ -417,8 +417,8 @@
     {
         "name":"ghost",
         "files":[
-            "NWN2-Sounds\\c_ghost_hit1.WAV",
-            "NWN2-Sounds\\c_ghost_hit2.WAV"
+            "sound/NWN2-Sounds/c_ghost_hit1.WAV",
+            "sound/NWN2-Sounds/c_ghost_hit2.WAV"
         ],
         "traits":[
             "ghost",
@@ -428,8 +428,8 @@
     {
         "name":"ghoul",
         "files":[
-            "NWN2-Sounds\\c_ghoul_hit1.WAV",
-            "NWN2-Sounds\\c_ghoul_hit2.WAV"
+            "sound/NWN2-Sounds/c_ghoul_hit1.WAV",
+            "sound/NWN2-Sounds/c_ghoul_hit2.WAV"
         ],
         "traits":[
             "ghoul",
@@ -439,9 +439,9 @@
     {
         "name":"githyanki",
         "files":[
-            "NWN2-Sounds\\c_gith_hit1.WAV",
-            "NWN2-Sounds\\c_gith_hit2.WAV",
-            "NWN2-Sounds\\c_gith_hit3.WAV"
+            "sound/NWN2-Sounds/c_gith_hit1.WAV",
+            "sound/NWN2-Sounds/c_gith_hit2.WAV",
+            "sound/NWN2-Sounds/c_gith_hit3.WAV"
         ],
         "traits":[
             "githyanki",
@@ -452,8 +452,8 @@
     {
         "name":"gnoll",
         "files":[
-            "NWN2-Sounds\\c_gnoll_hit1.WAV",
-            "NWN2-Sounds\\c_gnoll_hit2.WAV"
+            "sound/NWN2-Sounds/c_gnoll_hit1.WAV",
+            "sound/NWN2-Sounds/c_gnoll_hit2.WAV"
         ],
         "traits":[
             "humanoid",
@@ -463,8 +463,8 @@
     {
         "name":"goblin",
         "files":[
-            "NWN2-Sounds\\c_goblin_hit1.WAV",
-            "NWN2-Sounds\\c_goblin_hit2.WAV"
+            "sound/NWN2-Sounds/c_goblin_hit1.WAV",
+            "sound/NWN2-Sounds/c_goblin_hit2.WAV"
         ],
         "traits":[
             "goblinoid",
@@ -475,8 +475,8 @@
     {
         "name":"golem",
         "files":[
-            "NWN2-Sounds\\c_irongol_hit1.WAV",
-            "NWN2-Sounds\\c_irongol_hit2.WAV"
+            "sound/NWN2-Sounds/c_irongol_hit1.WAV",
+            "sound/NWN2-Sounds/c_irongol_hit2.WAV"
         ],
         "traits":[
             "construct",
@@ -486,7 +486,7 @@
     {
         "name":"green dragon",
         "files":[
-            "NWN2-Sounds\\c_draggreen_hit1.WAV"
+            "sound/NWN2-Sounds/c_draggreen_hit1.WAV"
         ],
         "traits":[
             "dragon",
@@ -496,7 +496,7 @@
     {
         "name":"hell hound",
         "files":[
-            "NWN2-Sounds\\c_doghell_hit1.WAV"
+            "sound/NWN2-Sounds/c_doghell_hit1.WAV"
         ],
         "traits":[
             "fiend",
@@ -506,8 +506,8 @@
     {
         "name":"hezrou",
         "files":[
-            "NWN2-Sounds\\c_hezrou_hit1.WAV",
-            "NWN2-Sounds\\c_hezrou_hit2.WAV"
+            "sound/NWN2-Sounds/c_hezrou_hit1.WAV",
+            "sound/NWN2-Sounds/c_hezrou_hit2.WAV"
         ],
         "traits":[
             "fiend",
@@ -518,8 +518,8 @@
     {
         "name":"hobgoblin",
         "files":[
-            "NWN2-Sounds\\c_hobgob_hit1.WAV",
-            "NWN2-Sounds\\c_hobgob_hit2.WAV"
+            "sound/NWN2-Sounds/c_hobgob_hit1.WAV",
+            "sound/NWN2-Sounds/c_hobgob_hit2.WAV"
         ],
         "traits":[
             "hobgoblin",
@@ -530,10 +530,10 @@
     {
         "name":"horror",
         "files":[
-            "NWN2-Sounds\\c_horror_hit1.WAV",
-            "NWN2-Sounds\\c_horror_hit2.WAV",
-            "NWN2-Sounds\\c_nightwalk_hit1.WAV",
-            "NWN2-Sounds\\c_nightwalk_hit2.WAV"
+            "sound/NWN2-Sounds/c_horror_hit1.WAV",
+            "sound/NWN2-Sounds/c_horror_hit2.WAV",
+            "sound/NWN2-Sounds/c_nightwalk_hit1.WAV",
+            "sound/NWN2-Sounds/c_nightwalk_hit2.WAV"
         ],
         "traits":[
             "horror",
@@ -543,10 +543,10 @@
     {
         "name":"human",
         "files":[
-            "NWN2-Sounds\\c_vale_hit1.WAV",
-            "NWN2-Sounds\\c_vale_hit2.WAV",
-            "NWN2-Sounds\\c_vale_hit3.WAV",
-            "NWN2-Sounds\\c_vashne_hit1.WAV"
+            "sound/NWN2-Sounds/c_vale_hit1.WAV",
+            "sound/NWN2-Sounds/c_vale_hit2.WAV",
+            "sound/NWN2-Sounds/c_vale_hit3.WAV",
+            "sound/NWN2-Sounds/c_vashne_hit1.WAV"
         ],
         "traits":[
             "humanoid",
@@ -556,8 +556,8 @@
     {
         "name":"ice scamp",
         "files":[
-            "NWN2-Sounds\\c_impice_hit1.WAV",
-            "NWN2-Sounds\\c_impice_hit2.WAV"
+            "sound/NWN2-Sounds/c_impice_hit1.WAV",
+            "sound/NWN2-Sounds/c_impice_hit2.WAV"
         ],
         "traits":[
             "ice scamp",
@@ -567,8 +567,8 @@
     {
         "name":"imp",
         "files":[
-            "NWN2-Sounds\\c_imp_hit1.WAV",
-            "NWN2-Sounds\\c_imp_hit2.WAV"
+            "sound/NWN2-Sounds/c_imp_hit1.WAV",
+            "sound/NWN2-Sounds/c_imp_hit2.WAV"
         ],
         "traits":[
             "fiend",
@@ -578,8 +578,8 @@
     {
         "name":"insect",
         "files":[
-            "NWN2-Sounds\\c_umberhlk_hit1.WAV",
-            "NWN2-Sounds\\c_umberhlk_hit2.WAV"
+            "sound/NWN2-Sounds/c_umberhlk_hit1.WAV",
+            "sound/NWN2-Sounds/c_umberhlk_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -589,9 +589,9 @@
     {
         "name":"iron golem",
         "files":[
-            "NWN2-Sounds\\c_golmiron_hit1.WAV",
-            "NWN2-Sounds\\c_golmiron_hit2.WAV",
-            "NWN2-Sounds\\c_golmiron_hit3.WAV"
+            "sound/NWN2-Sounds/c_golmiron_hit1.WAV",
+            "sound/NWN2-Sounds/c_golmiron_hit2.WAV",
+            "sound/NWN2-Sounds/c_golmiron_hit3.WAV"
         ],
         "traits":[
             "iron golem",
@@ -601,9 +601,9 @@
     {
         "name":"kana",
         "files":[
-            "NWN2-Sounds\\c_kana_hit1.WAV",
-            "NWN2-Sounds\\c_kana_hit2.WAV",
-            "NWN2-Sounds\\c_kana_hit3.WAV"
+            "sound/NWN2-Sounds/c_kana_hit1.WAV",
+            "sound/NWN2-Sounds/c_kana_hit2.WAV",
+            "sound/NWN2-Sounds/c_kana_hit3.WAV"
         ],
         "traits":[
             "kana",
@@ -613,8 +613,8 @@
     {
         "name":"kobold",
         "files":[
-            "NWN2-Sounds\\c_kobold_hit1.WAV",
-            "NWN2-Sounds\\c_kobold_hit2.WAV"
+            "sound/NWN2-Sounds/c_kobold_hit1.WAV",
+            "sound/NWN2-Sounds/c_kobold_hit2.WAV"
         ],
         "traits":[
             "kobold",
@@ -625,8 +625,8 @@
     {
         "name":"lich",
         "files":[
-            "NWN2-Sounds\\c_lich_hit1.WAV",
-            "NWN2-Sounds\\c_lich_hit2.WAV"
+            "sound/NWN2-Sounds/c_lich_hit1.WAV",
+            "sound/NWN2-Sounds/c_lich_hit2.WAV"
         ],
         "traits":[
             "lich",
@@ -636,9 +636,9 @@
     {
         "name":"lizard folk",
         "files":[
-            "NWN2-Sounds\\c_slaan_hit1.WAV",
-            "NWN2-Sounds\\c_slaan_hit2.WAV",
-            "NWN2-Sounds\\c_slaan_hit3.WAV"
+            "sound/NWN2-Sounds/c_slaan_hit1.WAV",
+            "sound/NWN2-Sounds/c_slaan_hit2.WAV",
+            "sound/NWN2-Sounds/c_slaan_hit3.WAV"
         ],
         "traits":[
             "lizard folk",
@@ -649,10 +649,10 @@
     {
         "name":"lizard man",
         "files":[
-            "NWN2-Sounds\\c_lizardm_hit1.WAV",
-            "NWN2-Sounds\\c_lizardm_hit2.WAV",
-            "NWN2-Sounds\\c_lizman_hit1.WAV",
-            "NWN2-Sounds\\c_lizman_hit2.WAV"
+            "sound/NWN2-Sounds/c_lizardm_hit1.WAV",
+            "sound/NWN2-Sounds/c_lizardm_hit2.WAV",
+            "sound/NWN2-Sounds/c_lizman_hit1.WAV",
+            "sound/NWN2-Sounds/c_lizman_hit2.WAV"
         ],
         "traits":[
             "reptilian",
@@ -663,8 +663,8 @@
     {
         "name":"mindflayer",
         "files":[
-            "NWN2-Sounds\\c_mindflayer_hit1.WAV",
-            "NWN2-Sounds\\c_mindflayer_hit2.WAV"
+            "sound/NWN2-Sounds/c_mindflayer_hit1.WAV",
+            "sound/NWN2-Sounds/c_mindflayer_hit2.WAV"
         ],
         "traits":[
             "mindflayer",
@@ -674,8 +674,8 @@
     {
         "name":"minotaur",
         "files":[
-            "NWN2-Sounds\\c_minotaur_hit1.WAV",
-            "NWN2-Sounds\\c_minotaur_hit2.WAV"
+            "sound/NWN2-Sounds/c_minotaur_hit1.WAV",
+            "sound/NWN2-Sounds/c_minotaur_hit2.WAV"
         ],
         "traits":[
             "monstrous humanoid",
@@ -686,10 +686,10 @@
     {
         "name":"mummy",
         "files":[
-            "NWN2-Sounds\\c_mummy_hit1.WAV",
-            "NWN2-Sounds\\c_mummy_hit2.WAV",
-            "NWN2-Sounds\\c_mummygrt_hit1.WAV",
-            "NWN2-Sounds\\c_mummygrt_hit2.WAV"
+            "sound/NWN2-Sounds/c_mummy_hit1.WAV",
+            "sound/NWN2-Sounds/c_mummy_hit2.WAV",
+            "sound/NWN2-Sounds/c_mummygrt_hit1.WAV",
+            "sound/NWN2-Sounds/c_mummygrt_hit2.WAV"
         ],
         "traits":[
             "mummy",
@@ -699,10 +699,10 @@
     {
         "name":"ogre",
         "files":[
-            "NWN2-Sounds\\c_ogre_hit1.WAV",
-            "NWN2-Sounds\\c_ogre_hit2.WAV",
-            "NWN2-Sounds\\c_ogremagi_hit1.WAV",
-            "NWN2-Sounds\\c_ogremagi_hit2.WAV"
+            "sound/NWN2-Sounds/c_ogre_hit1.WAV",
+            "sound/NWN2-Sounds/c_ogre_hit2.WAV",
+            "sound/NWN2-Sounds/c_ogremagi_hit1.WAV",
+            "sound/NWN2-Sounds/c_ogremagi_hit2.WAV"
         ],
         "traits":[
             "ogre",
@@ -712,9 +712,9 @@
     {
         "name":"orc",
         "files":[
-            "NWN2-Sounds\\c_orc_hit1.WAV",
-            "NWN2-Sounds\\c_orc_hit2.WAV",
-            "NWN2-Sounds\\c_orc_hit3.WAV"
+            "sound/NWN2-Sounds/c_orc_hit1.WAV",
+            "sound/NWN2-Sounds/c_orc_hit2.WAV",
+            "sound/NWN2-Sounds/c_orc_hit3.WAV"
         ],
         "traits":[
             "orc",
@@ -724,8 +724,8 @@
     {
         "name":"pit fiend",
         "files":[
-            "NWN2-Sounds\\c_koraboros_hit1.WAV",
-            "NWN2-Sounds\\c_koraboros_hit2.WAV"
+            "sound/NWN2-Sounds/c_koraboros_hit1.WAV",
+            "sound/NWN2-Sounds/c_koraboros_hit2.WAV"
         ],
         "traits":[
             "fiend",
@@ -735,8 +735,8 @@
     {
         "name":"pixie",
         "files":[
-            "NWN2-Sounds\\c_pixie_hit1.WAV",
-            "NWN2-Sounds\\c_pixie_hit2.WAV"
+            "sound/NWN2-Sounds/c_pixie_hit1.WAV",
+            "sound/NWN2-Sounds/c_pixie_hit2.WAV"
         ],
         "traits":[
             "pixie",
@@ -746,8 +746,8 @@
     {
         "name":"rat",
         "files":[
-            "NWN2-Sounds\\c_rat_hit1.WAV",
-            "NWN2-Sounds\\c_rat_hit2.WAV"
+            "sound/NWN2-Sounds/c_rat_hit1.WAV",
+            "sound/NWN2-Sounds/c_rat_hit2.WAV"
         ],
         "traits":[
             "rat",
@@ -757,7 +757,7 @@
     {
         "name":"red dragon",
         "files":[
-            "NWN2-Sounds\\c_dragred_hit1.WAV"
+            "sound/NWN2-Sounds/c_dragred_hit1.WAV"
         ],
         "traits":[
             "red dragon",
@@ -767,8 +767,8 @@
     {
         "name":"scamp",
         "files":[
-            "NWN2-Creatures\\c_mephit_hit1.wav",
-            "NWN2-Creatures\\c_mephit_hit2.wav"
+            "sound/NWN2-Creatures/c_mephit_hit1.wav",
+            "sound/NWN2-Creatures/c_mephit_hit2.wav"
         ],
         "traits":[
             "scamp",
@@ -778,9 +778,9 @@
     {
         "name":"shadow",
         "files":[
-            "NWN2-Sounds\\c_kos_hit1.WAV",
-            "NWN2-Sounds\\c_kos_hit2.WAV",
-            "NWN2-Sounds\\c_kos_hit3.WAV"
+            "sound/NWN2-Sounds/c_kos_hit1.WAV",
+            "sound/NWN2-Sounds/c_kos_hit2.WAV",
+            "sound/NWN2-Sounds/c_kos_hit3.WAV"
         ],
         "traits":[
             "shadow",
@@ -790,9 +790,9 @@
     {
         "name":"shadow reaver",
         "files":[
-            "NWN2-Sounds\\c_shadowreaver_hit1.WAV",
-            "NWN2-Sounds\\c_shadowreaver_hit2.WAV",
-            "NWN2-Sounds\\c_shadowreaver_hit3.WAV"
+            "sound/NWN2-Sounds/c_shadowreaver_hit1.WAV",
+            "sound/NWN2-Sounds/c_shadowreaver_hit2.WAV",
+            "sound/NWN2-Sounds/c_shadowreaver_hit3.WAV"
         ],
         "traits":[
             "shadow reaver",
@@ -802,8 +802,8 @@
     {
         "name":"skeleton",
         "files":[
-            "NWN2-Sounds\\c_skeleton_hit1.WAV",
-            "NWN2-Sounds\\c_skeleton_hit2.WAV"
+            "sound/NWN2-Sounds/c_skeleton_hit1.WAV",
+            "sound/NWN2-Sounds/c_skeleton_hit2.WAV"
         ],
         "traits":[
             "skeleton",
@@ -813,8 +813,8 @@
     {
         "name":"slyph",
         "files":[
-            "NWN2-Sounds\\c_slyph_hit1.WAV",
-            "NWN2-Sounds\\c_slyph_hit2.WAV"
+            "sound/NWN2-Sounds/c_slyph_hit1.WAV",
+            "sound/NWN2-Sounds/c_slyph_hit2.WAV"
         ],
         "traits":[
             "slyph",
@@ -824,14 +824,14 @@
     {
         "name":"spider",
         "files":[
-            "NWN2-Sounds\\c_kistral_hit1.WAV",
-            "NWN2-Sounds\\c_spidbn_hit1.WAV",
-            "NWN2-Sounds\\c_spidbn_hit2.WAV",
-            "NWN2-Sounds\\c_spidbn_hit3.WAV",
-            "NWN2-Sounds\\c_spidbone_hit1.WAV",
-            "NWN2-Creatures\\c_spider_hit1.WAV",
-            "NWN2-Creatures\\c_spider_hit2.WAV",
-            "NWN2-Creatures\\c_spider_hit3.WAV"
+            "sound/NWN2-Sounds/c_kistral_hit1.WAV",
+            "sound/NWN2-Sounds/c_spidbn_hit1.WAV",
+            "sound/NWN2-Sounds/c_spidbn_hit2.WAV",
+            "sound/NWN2-Sounds/c_spidbn_hit3.WAV",
+            "sound/NWN2-Sounds/c_spidbone_hit1.WAV",
+            "sound/NWN2-Creatures/c_spider_hit1.WAV",
+            "sound/NWN2-Creatures/c_spider_hit2.WAV",
+            "sound/NWN2-Creatures/c_spider_hit3.WAV"
         ],
         "traits":[
             "animal",
@@ -841,19 +841,20 @@
     {
         "name":"stag beetle",
         "files":[
-            "NWN2-Sounds\\c_beetlestag_hit1.WAV"
+            "sound/NWN2-Sounds/c_beetlestag_hit1.WAV"
         ],
         "traits":[
             "animal",
             "stag beetle",
+            "beetle",
             "insect"
         ]
     },
     {
         "name":"succubus",
         "files":[
-            "NWN2-Sounds\\c_succubus_hit1.WAV",
-            "NWN2-Sounds\\c_succubus_hit2.WAV"
+            "sound/NWN2-Sounds/c_succubus_hit1.WAV",
+            "sound/NWN2-Sounds/c_succubus_hit2.WAV"
         ],
         "traits":[
             "succubus",
@@ -863,7 +864,7 @@
     {
         "name":"tiefling",
         "files":[
-            "NWN2-Creatures\\c_tiefling_hit1.wav"
+            "sound/NWN2-Creatures/c_tiefling_hit1.wav"
         ],
         "traits":[
             "humanoid",
@@ -873,8 +874,8 @@
     {
         "name":"troll",
         "files":[
-            "NWN2-Sounds\\c_troll_hit1.WAV",
-            "NWN2-Sounds\\c_troll_hit2.WAV"
+            "sound/NWN2-Sounds/c_troll_hit1.WAV",
+            "sound/NWN2-Sounds/c_troll_hit2.WAV"
         ],
         "traits":[
             "giant",
@@ -884,12 +885,12 @@
     {
         "name":"vampire",
         "files":[
-            "NWN2-Sounds\\c_vampm_hit1.WAV",
-            "NWN2-Sounds\\c_vampm_hit2.WAV",
-            "NWN2-Sounds\\c_vampf_hit1.WAV",
-            "NWN2-Sounds\\c_vampf_hit2.WAV",
-            "NWN2-Creatures\\c_vampire_hit1.wav",
-            "NWN2-Creatures\\c_vampire_hit2.wav"
+            "sound/NWN2-Sounds/c_vampm_hit1.WAV",
+            "sound/NWN2-Sounds/c_vampm_hit2.WAV",
+            "sound/NWN2-Sounds/c_vampf_hit1.WAV",
+            "sound/NWN2-Sounds/c_vampf_hit2.WAV",
+            "sound/NWN2-Creatures/c_vampire_hit1.wav",
+            "sound/NWN2-Creatures/c_vampire_hit2.wav"
         ],
         "traits":[
             "vampire",
@@ -899,8 +900,8 @@
     {
         "name":"water elemental",
         "files":[
-            "NWN2-Sounds\\c_elmwater_hit1.WAV",
-            "NWN2-Sounds\\c_elmwater_hit2.WAV"
+            "sound/NWN2-Sounds/c_elmwater_hit1.WAV",
+            "sound/NWN2-Sounds/c_elmwater_hit2.WAV"
         ],
         "traits":[
             "elemental",
@@ -911,8 +912,8 @@
     {
         "name":"weasel",
         "files":[
-            "NWN2-Sounds\\c_weasel_hit1.WAV",
-            "NWN2-Sounds\\c_weasel_hit2.WAV"
+            "sound/NWN2-Sounds/c_weasel_hit1.WAV",
+            "sound/NWN2-Sounds/c_weasel_hit2.WAV"
         ],
         "traits":[
             "animal",
@@ -922,10 +923,10 @@
     {
         "name":"werewolf",
         "files":[
-            "NWN2-Sounds\\c_werewolf_hit1.WAV",
-            "NWN2-Sounds\\c_werewolf_hit2.WAV",
-            "NWN2-Sounds\\c_werewolf_m_hit1.WAV",
-            "NWN2-Sounds\\c_werewolf_m_hit2.WAV"
+            "sound/NWN2-Sounds/c_werewolf_hit1.WAV",
+            "sound/NWN2-Sounds/c_werewolf_hit2.WAV",
+            "sound/NWN2-Sounds/c_werewolf_m_hit1.WAV",
+            "sound/NWN2-Sounds/c_werewolf_m_hit2.WAV"
         ],
         "traits":[
             "werewolf",
@@ -936,8 +937,8 @@
     {
         "name":"wraith",
         "files":[
-            "NWN2-Creatures\\c_wraith_hit1.WAV",
-            "NWN2-Creatures\\c_wraith_hit2.WAV"
+            "sound/NWN2-Creatures/c_wraith_hit1.WAV",
+            "sound/NWN2-Creatures/c_wraith_hit2.WAV"
         ],
         "traits":[
             "wraith",
@@ -947,8 +948,8 @@
     {
         "name":"zombie",
         "files":[
-            "NWN2-Creatures\\c_zombie_hit1.WAV",
-            "NWN2-Creatures\\c_zombie_hit2.WAV"
+            "sound/NWN2-Creatures/c_zombie_hit1.WAV",
+            "sound/NWN2-Creatures/c_zombie_hit2.WAV"
         ],
         "traits":[
             "undead",
