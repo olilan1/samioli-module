@@ -11,7 +11,9 @@
       }
     ],
     "esmodules": [
-      "src/test.js"
+      "src/test.js",
+      "src/hooks.js",
+      "src/soundsbytrait.js"
     ],
     "packFolders": [
         {
