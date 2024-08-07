@@ -1,6 +1,6 @@
 import hitSoundsDatabase from "../databases/hit_sounds_database.json" with { type: "json" };
 
-function findBestMatch(traits) {
+export function findBestMatch(traits) {
     let bestMatch = null;
     let maxMatchingTraits = 0;
   
@@ -16,7 +16,7 @@ function findBestMatch(traits) {
     return bestMatch;
   }
 
-  function extractTraits(obj) {
+export function extractTraits(obj) {
     const traits = [];
   
     for (const key in obj) {
