@@ -1,6 +1,22 @@
 import hitSoundsDatabase from "../databases/hit_sounds_database.json" with { type: "json" };
 
-export function findBestMatch(traits) {
+export function onDamageTaken(flags) {
+  const myRollOptions = flags.pf2e.rollOptions.all;
+  const myTraits = extractTraits(myRollOptions)
+  const myBestMatch = findBestMatch(myTraits);
+  console.log(myBestMatch);
+  const returnedSounds = myBestMatch.files;
+  const randomIndex = Math.floor(Math.random() * returnedSounds.length);
+  const soundSelected = returnedSounds[randomIndex];
+  AudioHelper.play({
+      src: soundSelected,
+      volume: 0.7,
+      autoplay: true,
+      loop: false
+  }, true);
+}
+
+function findBestMatch(traits) {
     let bestMatch = null;
     let maxMatchingTraits = 0;
   
@@ -16,7 +32,7 @@ export function findBestMatch(traits) {
     return bestMatch;
   }
 
-export function extractTraits(obj) {
+function extractTraits(obj) {
     const traits = [];
   
     for (const key in obj) {
