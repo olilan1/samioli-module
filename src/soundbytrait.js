@@ -5,7 +5,7 @@ const HIT_SOUND_VOLUME = 0.7;
 export function onDamageTaken(flags) {
   const rollOptions = flags.pf2e.rollOptions.all;
   const bestMatch = findBestMatch(extractTraits(rollOptions));
-  
+
   const returnedSounds = bestMatch.files;
   const randomIndex = Math.floor(Math.random() * returnedSounds.length);
 
@@ -15,35 +15,30 @@ export function onDamageTaken(flags) {
 function findBestMatch(traits) {
   let bestMatch = null;
   let maxMatchingTraits = 0;
-
   for (const entry of hitSoundsDatabase) {
     const matchingTraits = entry.traits.filter(trait => traits.includes(trait)).length;
-
     if (matchingTraits > maxMatchingTraits) {
       bestMatch = entry;
       maxMatchingTraits = matchingTraits;
     }
   }
-
   return bestMatch;
 }
 
 function extractTraits(obj) {
   const traits = [];
-
   for (const key in obj) {
     if (key.startsWith("self:trait:")) {
       const trait = key.replace("self:trait:", "");
       traits.push(trait);
     }
   }
-
   return traits;
 }
 
 function playSound(sound) {
   AudioHelper.play({
-    src: soundSelected,
+    src: sound,
     volume: HIT_SOUND_VOLUME,
     autoplay: true,
     loop: false
