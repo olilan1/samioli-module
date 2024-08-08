@@ -1,6 +1,6 @@
 import hitSoundsDatabase from "../databases/hit_sounds_database.json" with { type: "json" };
 
-const HIT_SOUND_VOLUME = 0.7;
+const HIT_SOUND_VOLUME = 0.5;
 
 export function onDamageTaken(flags) {
   const rollOptions = flags.pf2e.rollOptions.all;
@@ -37,7 +37,7 @@ function extractTraits(obj) {
 }
 
 function playSound(sound) {
-  AudioHelper.play({
+  foundry.audio.AudioHelper.play({
     src: sound,
     volume: HIT_SOUND_VOLUME,
     autoplay: true,
