@@ -1,8 +1,7 @@
 /* {"name":"Wall of Fire","img":"systems/pf2e/icons/spells/wall-of-fire.webp","_id":"t0dtf3WjzeEI1Lhz"} */
 
-//TODO: add a dialog box that asks which form of wall of fire to use
-//TODO: build the logic and animation for the ring wall of fire
-//TODO: extend the casting animation and add sound effects
+//TODO: add sound effects
+//TODO: investigate removing tokens that are too central for the circle template
 
 const controlledTokens = game.user.getActiveTokens();
 let caster;
@@ -14,7 +13,6 @@ let adjustedOffsetY;
 
 if (controlledTokens.length === 1) {
   caster = controlledTokens[0];
-  console.log(caster);
 
   offset = game.canvas.scene.grid.size/2;
 
@@ -59,18 +57,18 @@ async function wallOfFireLine() {
     let secondLocation = await selectEndPoint(firstLocation);
     let myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
     let myTemplate = await createTemplate(myTemplateDocument);
-    await delay(200);
-    console.log(caster);
+    await delay(500);
+    await animateSpellCasting(caster);
     await animateCastingLine(caster, firstLocation, secondLocation);
     await animateLine(myTemplate);
 }
 
 async function wallOfFireRing() {
-    //create a circle template
     let firstLocation = await selectCentrePoint();
     let myTemplateDocument = await createRingTemplateDocument(firstLocation);
     let myTemplate = await createTemplate(myTemplateDocument);
-    await delay(200);
+    await delay(500);
+    await animateSpellCasting(caster);
     await animateRing(caster, myTemplate);
     //remove tokens that are too central
 }
@@ -93,8 +91,6 @@ async function selectStartingPoint() {
     .origin({ x: casterXwithOffset, y: casterYwithOffset })
     .range(120);
   firstLocation = await portal.pick();
-  console.log("firstLocation:");
-  console.log(firstLocation);
   return firstLocation;
 }
 
@@ -106,8 +102,6 @@ async function selectEndPoint(secondLocation) {
     .origin(firstLocation)
     .range(60);
   secondLocation = await portal.pick();
-  console.log("secondLocation:");
-  console.log(secondLocation);
   return secondLocation;
 }
 
@@ -129,9 +123,6 @@ function createRingTemplateDocument(location){
 function createRayTemplateDocument(location1, location2) {
 
   let distanceAndAngle = calculateDistanceAndAngle(location1, location2);
-  console.log("Value of distanceAndAngle");
-  console.log(distanceAndAngle);
-
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
 
   adjustedOffsetX = offset;
@@ -147,73 +138,46 @@ function createRayTemplateDocument(location1, location2) {
     foundryDistance = 0; //we will actually increase this later
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 0;
-    console.log("Single Square");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if going left to right horizontally only
   else if (location1.x < location2.x && location1.y === location2.y) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 0;
-    console.log("Horizontal going from left to right");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   } 
   //if going right to left horizontally only
   else if (location1.x > location2.x && location1.y === location2.y) {
     adjustedOffsetX *= 1;
     adjustedOffsetY *= 0;
-    console.log("Horizontal going from right to left");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if going up to down vertically only
   else if (location1.x === location2.x && location1.y < location2.y) {
     adjustedOffsetX *= 0;
     adjustedOffsetY *= -1;
-    console.log("Vertical going from up to down");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if going down to up vertically only
   else if (location1.x === location2.x && location1.y > location2.y) {
     adjustedOffsetX *= 0;
     adjustedOffsetY *= 1;
-    console.log("Horizontal going from down to up");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if diagonal going from top left to bottom right
   else if (location1.x < location2.x && location1.y < location2.y) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= -1;
-    console.log("Horizontal going from down to up");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if diagonal going from top right to bottom left
   else if (location1.x > location2.x && location1.y < location2.y) {
     adjustedOffsetX *= 1;
     adjustedOffsetY *= -1;
-    console.log("Horizontal going from down to up");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
   //if diagonal going from bottom left to top right
   else if (location1.x < location2.x && location1.y > location2.y) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 1;
-    console.log("Horizontal going from down to up");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
     //if diagonal going from bottom right to top left
   else if (location1.x > location2.x && location1.y > location2.y) {
     adjustedOffsetX *= 1;
     adjustedOffsetY *= 1;
-    console.log("Horizontal going from down to up");
-    console.log("adjustedOffsetX: " + adjustedOffsetX);
-    console.log("adjustedOffsetY: " + adjustedOffsetY);
   }
 
   let templateData = {
@@ -228,7 +192,6 @@ function createRayTemplateDocument(location1, location2) {
   };
 
   return templateData;
-
 }
 
 async function createTemplate(templateData) {
@@ -268,6 +231,15 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function animateSpellCasting(token) {
+    await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+    .effect()
+        .atLocation(token)
+        .file("jb2a.cast_generic.fire.01.orange.0")
+        .waitUntilFinished(-1300)
+    .play()
+}
+
 async function animateCastingLine(token, location1, location2) {
 
     let distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
@@ -295,17 +267,13 @@ async function animateCastingLine(token, location1, location2) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .effect()
         .atLocation(token)
-        .file("jb2a.cast_generic.fire.01.orange.0")
-        .waitUntilFinished(-1300)
-    .effect()
-        .atLocation(token)
         .file(boltOfFireAnim)
         .stretchTo({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
         .waitUntilFinished(-1100)
     .effect()
         .file(fireJetAnim)
         .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
-        .stretchTo({ x: location2.x + ((adjustedOffsetX * -1)*2), y: location2.y + ((adjustedOffsetY * -1) * 2)})
+        .stretchTo({ x: location2.x + ((adjustedOffsetX * -1) * 2), y: location2.y + ((adjustedOffsetY * -1) * 2)})
         .scale({ x: 1.0, y: 3 })
         .fadeIn(100)
         .startTime(400)
@@ -342,13 +310,16 @@ async function animateRing(token, templateToAttachTo) {
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .effect()
-        .atLocation(token)
-        .file("jb2a.cast_generic.fire.01.orange.0")
-        .waitUntilFinished(-1300)
-      .effect()
+        .atLocation(templateToAttachTo)
+        .scale(1.3)
+        .file("jb2a.impact.fire.01.orange.0")
+    .effect()
         .file("jb2a.wall_of_fire.ring.yellow")
         .attachTo(templateToAttachTo)
+        .fadeIn(500)
+        .rotateIn(520, 2300, {ease: "easeOutQuint"})
         .scale(1.15)
+        .scaleIn(0, 1000, {ease: "easeOutBack"})
         .persist()
         .loopOptions({ loops: 3600 })    
     .play()
