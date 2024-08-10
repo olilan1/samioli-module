@@ -1,2541 +1,2998 @@
-[
-    {
-       "aasimar":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_aasimar_hit1.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_aasimar_atk1.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_aasimar_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_aasimar_bat1.wav"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Aasimar"
-          ],
-          "match_on":[
-             "aasimar"
-          ]
-       },
-       "badger":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_badger_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_badger_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_badger_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Badger"
-          ],
-          "match_on":[
-             "badger"
-          ]
-       },
-       "badgerdire":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_badgerdire_hit1.WAV",
-             "NWN2-Sounds/c_badgerdire_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_badgerdire_atk1.WAV",
-             "NWN2-Sounds/c_badgerdire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_badgerdire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Dire Badger"
-          ],
-          "match_on":[
-             "dire badger"
-          ]
-       },
-       "balor":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_balor_hit1.WAV",
-             "NWN2-Sounds/c_balor_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_balor_atk2.WAV",
-             "NWN2-Sounds/c_balor_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_balor_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Balor"
-          ],
-          "match_on":[
-             "balor"
-          ]
-       },
-       "bat":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_bat_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_bat_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bat"
-          ],
-          "match_on":[
-             "bat"
-          ]
-       },
-       "bear":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_bear_hit1.WAV",
-             "NWN2-Sounds/c_beardire_hit1.WAV",
-             "NWN2-Sounds/c_beardire_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_bear_atk1.WAV",
-             "NWN2-Sounds/c_beardire_atk1.WAV",
-             "NWN2-Sounds/c_beardire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_bear_bat1.WAV",
-             "NWN2-Sounds/c_beardire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bear",
-             "Dire Bear"
-          ],
-          "match_on":[
-             "bear"
-          ]
-       },
-       "beetle":{
-          "notes":"insect sounding - could be used for other insects",
-          "hit_sounds":[
-             "NWN2-Creatures/c_beetle_hit1.wav",
-             "NWN2-Creatures/c_beetle_hit2.wav",
-             "NWN2-Sounds/c_beetlebomb_hit1.WAV",
-             "NWN2-Sounds/c_beetlefire_hit1.WAV",
-             "NWN2-Sounds/c_beetlestag_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_beetle_atk1.wav",
-             "NWN2-Creatures/c_beetle_atk2.wav",
-             "NWN2-Creatures/c_beetle_atk3.wav",
-             "NWN2-Sounds/c_beetlebomb_atk1.WAV",
-             "NWN2-Sounds/c_beetlefire_atk1.WAV",
-             "NWN2-Sounds/c_beetlestag_atk1.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_beetle_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_beetle_bat1.wav",
-             "NWN2-Creatures/c_beetle_bat2.wav",
-             "NWN2-Sounds/c_beetlebomb_bat1.WAV",
-             "NWN2-Sounds/c_beetlefire_bat1.WAV",
-             "NWN2-Sounds/c_beetlestag_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Beetle"
-          ],
-          "match_on":[
-             "beetle"
-          ]
-       },
-       "bevil":{
-          "notes":"human male",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_bevil_atk.WAV",
-             "NWN2-Sounds/c_bevil_atk1.WAV",
-             "NWN2-Sounds/c_bevil_atk2.WAV",
-             "NWN2-Sounds/c_bevil_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_bevil_bat1.WAV",
-             "NWN2-Sounds/c_bevil_bat2.WAV",
-             "NWN2-Sounds/c_bevil_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bevil"
-          ],
-          "match_on":[
-             "bevil"
-          ]
-       },
-       "blackgarius":{
-          "notes":"human male - barbarian",
-          "hit_sounds":[
-             "NWN2-Sounds/c_blackgarius_hit1.WAV",
-             "NWN2-Sounds/c_blackgarius_hit2.WAV",
-             "NWN2-Sounds/c_blackgarius_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_blackgarius_atk1.WAV",
-             "NWN2-Sounds/c_blackgarius_atk2.WAV",
-             "NWN2-Sounds/c_blackgarius_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Blackgarius"
-          ],
-          "match_on":[
-             "blackgarius"
-          ]
-       },
-       "bladegol":{
-          "notes":"golem sounds with blade",
-          "hit_sounds":[
-             "NWN2-Sounds/c_bladegol_hit1.WAV",
-             "NWN2-Sounds/c_bladegol_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_bladegol_atk1.WAV",
-             "NWN2-Sounds/c_bladegol_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_bladegol_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bladegol"
-          ],
-          "match_on":[
-             "bladegol"
-          ]
-       },
-       "bladeling":{
-          "notes":"angry humanoid",
-          "hit_sounds":[
-             "NWN2-Sounds/c_bladeling_hit1.WAV",
-             "NWN2-Sounds/c_bladeling_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_bladeling_atk1.WAV",
-             "NWN2-Sounds/c_bladeling_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_bladeling_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bladeling"
-          ],
-          "match_on":[
-             "bladeling"
-          ]
-       },
-       "boar":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_boardire_hit1.WAV",
-             "NWN2-Sounds/c_boardire_hit2.WAV",
-             "NWN2-Sounds/c_boar_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_boar_atk1.WAV",
-             "NWN2-Sounds/c_boardire_atk1.WAV",
-             "NWN2-Sounds/c_boardire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_boar_bat1.WAV",
-             "NWN2-Sounds/c_boardire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Boar"
-          ],
-          "match_on":[
-             "boar"
-          ]
-       },
-       "bugbear":{
-          "notes":"big brutish",
-          "hit_sounds":[
-             "NWN2-Sounds/c_bugbear_hit1.WAV",
-             "NWN2-Sounds/c_bugbear_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_bugbear_atk1.WAV",
-             "NWN2-Sounds/c_bugbear_atk2.WAV",
-             "NWN2-Sounds/c_bugbear_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_bugbear_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Bugbear"
-          ],
-          "match_on":[
-             "bugbear"
-          ]
-       },
-       "cat":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_cat_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_cat_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_cat_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Cat"
-          ],
-          "match_on":[
-             "cat"
-          ]
-       },
-       "chicken":{
-          "notes":"",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_chkn_bat1.WAV",
-             "NWN2-Sounds/c_chkn_bat1_01.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Chicken"
-          ],
-          "match_on":[
-             "chicken"
-          ]
-       },
-       "cow":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_cow_hit1.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_cow_atk1.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_cow_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_cow_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Cow"
-          ],
-          "match_on":[
-             "cow"
-          ]
-       },
-       "deer":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_deer_hit1.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_deer_atk1.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_deer_dead.wav"
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Deer"
-          ],
-          "match_on":[
-             "deer"
-          ]
-       },
-       "demon":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_demon_hit1.wav",
-             "NWN2-Creatures/c_demon_hit2.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_demon_atk1.wav",
-             "NWN2-Creatures/c_demon_atk2.wav",
-             "NWN2-Creatures/c_demon_atk3.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_demon_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_demon_bat2.wav",
-             "NWN2-Sounds/c_demon_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Demon"
-          ],
-          "match_on":[
-             "demon"
-          ]
-       },
-       "devil":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_devil_hit1.WAV",
-             "NWN2-Sounds/c_devil_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_devil_atk1.WAV",
-             "NWN2-Sounds/c_devil_atk2.WAV",
-             "NWN2-Sounds/c_devil_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_devil_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_devil_bat1.WAV",
-             "NWN2-Sounds/c_devil_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Devil"
-          ],
-          "match_on":[
-             "devil"
-          ]
-       },
-       "devilhorn":{
-          "notes":"minotaury sounding",
-          "hit_sounds":[
-             "NWN2-Sounds/c_devilhorn_hit1.WAV",
-             "NWN2-Sounds/c_devilhorn_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_devilhorn_atk1.WAV",
-             "NWN2-Sounds/c_devilhorn_atk2.WAV",
-             "NWN2-Sounds/c_devilhorn_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_devilhorn_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Devilhorn"
-          ],
-          "match_on":[
-             "devilhorn"
-          ]
-       },
-       "dog":{
-          "notes":"general dog sounds",
-          "hit_sounds":[
-             "NWN2-Sounds/c_doghell_hit1.WAV",
-             "NWN2-Sounds/c_dogshado_hit1.WAV",
-             "NWN2-Sounds/c_dogwolfdire_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_doghell_atk1.WAV",
-             "NWN2-Sounds/c_doghell_atk2.WAV",
-             "NWN2-Sounds/c_dogshado_atk1.WAV",
-             "NWN2-Sounds/c_dogshado_atk2.WAV",
-             "NWN2-Sounds/c_dogwolf_atk1.WAV",
-             "NWN2-Sounds/c_dogwolfdire_atk1.WAV",
-             "NWN2-Sounds/c_dogwolfdire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_doghell_bat1.WAV",
-             "NWN2-Sounds/c_dogshado_bat1.WAV",
-             "NWN2-Sounds/c_dogwolfdire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Doghell"
-          ],
-          "match_on":[
-             "doghell"
-          ]
-       },
-       "dragon":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_dragblack_hit1.WAV",
-             "NWN2-Sounds/c_draggreen_hit1.WAV",
-             "NWN2-Sounds/c_dragred_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_dragblack_atk1.WAV",
-             "NWN2-Sounds/c_dragblack_atk2.WAV",
-             "NWN2-Sounds/c_draggreen_atk1.WAV",
-             "NWN2-Sounds/c_draggreen_atk2.WAV",
-             "NWN2-Sounds/c_dragred_atk1.WAV",
-             "NWN2-Sounds/c_dragred_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_dragblack_bat1.WAV",
-             "NWN2-Sounds/c_draggreen_bat1.WAV",
-             "NWN2-Sounds/c_dragred_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Dragon"
-          ],
-          "match_on":[
-             "dragon"
-          ]
-       },
-       "dryad":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_dryad_hit1.WAV",
-             "NWN2-Sounds/c_dryad_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_dryad_atk3.wav",
-             "NWN2-Sounds/c_dryad_atk1.WAV",
-             "NWN2-Sounds/c_dryad_atk2.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_dryad_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_dryad_bat2.wav",
-             "NWN2-Sounds/c_dryad_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Dryad"
-          ],
-          "match_on":[
-             "dryad"
-          ]
-       },
-       "ear":{
-          "notes":"More earth Elemental sounds",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_ear_ele_atk1.WAV",
-             "NWN2-Sounds/c_ear_ele_atk2.WAV",
-             "NWN2-Sounds/c_ear_ele_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_ear_ele_bat1.WAV",
-             "NWN2-Sounds/c_ear_ele_bat2.WAV",
-             "NWN2-Sounds/c_ear_ele_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Ear"
-          ],
-          "match_on":[
-             "ear"
-          ]
-       },
-       "elee":{
-          "notes":"Earth Elemental sounding",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_elee_atk1_01.WAV",
-             "NWN2-Sounds/c_elee_atk1_02.WAV",
-             "NWN2-Sounds/c_elee_atk1_03.WAV",
-             "NWN2-Sounds/c_elee_atk1_04.WAV",
-             "NWN2-Sounds/c_elee_atk2_01.WAV",
-             "NWN2-Sounds/c_elee_atk2_02.WAV",
-             "NWN2-Sounds/c_elee_atk2_03.WAV",
-             "NWN2-Sounds/c_elee_atk2_04.WAV",
-             "NWN2-Sounds/c_elee_atk3_01.WAV",
-             "NWN2-Sounds/c_elee_atk3_02.WAV",
-             "NWN2-Sounds/c_elee_atk3_03.WAV",
-             "NWN2-Sounds/c_elee_atk3_04.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_elee_bat1_01.WAV",
-             "NWN2-Sounds/c_elee_bat1_02.WAV",
-             "NWN2-Sounds/c_elee_bat1_03.WAV",
-             "NWN2-Sounds/c_elee_bat1_04.WAV",
-             "NWN2-Sounds/c_elee_bat2_01.WAV",
-             "NWN2-Sounds/c_elee_bat2_02.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Earth Elemental"
-          ],
-          "match_on":[
-             "earth elemental"
-          ]
-       },
-       "elmair":{
-          "notes":"Air Elemental",
-          "hit_sounds":[
-             "NWN2-Sounds/c_elmair_hit1.WAV",
-             "NWN2-Sounds/c_elmair_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_elmair_atk1.WAV",
-             "NWN2-Sounds/c_elmair_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_elmair_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Air Elemental"
-          ],
-          "match_on":[
-             "air elemental"
-          ]
-       },
-       "elmearth":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_elmearth_hit1.WAV",
-             "NWN2-Sounds/c_elmearth_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_elmearth_atk1.WAV",
-             "NWN2-Sounds/c_elmearth_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_elmearth_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Earth Elemental"
-          ],
-          "match_on":[
-             "earth elemental"
-          ]
-       },
-       "elmfire":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_elmfire_hit1.WAV",
-             "NWN2-Sounds/c_elmfire_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_elmfire_atk1.WAV",
-             "NWN2-Sounds/c_elmfire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_elmfire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Fire Elemental"
-          ],
-          "match_on":[
-             "fire elemental"
-          ]
-       },
-       "elmwater":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_elmwater_hit1.WAV",
-             "NWN2-Sounds/c_elmwater_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_elmwater_atk1.WAV",
-             "NWN2-Sounds/c_elmwater_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_elmwater_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Water Elemental"
-          ],
-          "match_on":[
-             "water elemental"
-          ]
-       },
-       "erinyes":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_erinyes_hit1.WAV",
-             "NWN2-Sounds/c_erinyes_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_erinyes_atk1.WAV",
-             "NWN2-Sounds/c_erinyes_atk2.WAV",
-             "NWN2-Sounds/c_erinyes_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_erinyes_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Erinyes"
-          ],
-          "match_on":[
-             "erinyes"
-          ]
-       },
-       "fairy":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_fairy_hit1.wav",
-             "NWN2-Creatures/c_fairy_hit2.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_fairy_atk1.wav",
-             "NWN2-Creatures/c_fairy_atk2.wav",
-             "NWN2-Creatures/c_fairy_atk3.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_fairy_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_fairy_bat1.wav",
-             "NWN2-Creatures/c_fairy_bat2.wav"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Fairy"
-          ],
-          "match_on":[
-             "fairy"
-          ]
-       },
-       "fiend":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_fiend_hit1.WAV",
-             "NWN2-Sounds/c_fiend_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_fiend_atk1.WAV",
-             "NWN2-Sounds/c_fiend_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_fiend_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Fiend"
-          ],
-          "match_on":[
-             "fiend"
-          ]
-       },
-       "floatbat":{
-          "notes":"bat like creature - screechy",
-          "hit_sounds":[
-             "NWN2-Sounds/c_floatbat_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_floatbat_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_floatbat_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Floatbat"
-          ],
-          "match_on":[
-             "floatbat"
-          ]
-       },
-       "gargoyle":{
-          "notes":"generic monster sound",
-          "hit_sounds":[
-             "NWN2-Sounds/c_gargoyle_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_gargoyle_atk1.WAV",
-             "NWN2-Sounds/c_gargoyle_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_gargoyle_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Gargoyle"
-          ],
-          "match_on":[
-             "gargoyle"
-          ]
-       },
-       "ghast":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_ghast_hit1.WAV",
-             "NWN2-Sounds/c_ghast_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_ghast_atk1.WAV",
-             "NWN2-Sounds/c_ghast_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_ghast_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Ghast"
-          ],
-          "match_on":[
-             "ghast"
-          ]
-       },
-       "ghost":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_ghost_hit1.WAV",
-             "NWN2-Sounds/c_ghost_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_ghost_atk1.WAV",
-             "NWN2-Sounds/c_ghost_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_ghost_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Ghost"
-          ],
-          "match_on":[
-             "ghost"
-          ]
-       },
-       "ghoul":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_ghoul_hit1.WAV",
-             "NWN2-Sounds/c_ghoul_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_ghoul_atk3.wav",
-             "NWN2-Sounds/c_ghoul_atk1.WAV",
-             "NWN2-Sounds/c_ghoul_atk2.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_ghoul_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_ghoul_bat2.wav",
-             "NWN2-Sounds/c_ghoul_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Ghoul"
-          ],
-          "match_on":[
-             "ghoul"
-          ]
-       },
-       "giant":{
-          "notes":"giant - no actual fire or frost",
-          "hit_sounds":[
-             "NWN2-Sounds/c_giantfire_hit1.WAV",
-             "NWN2-Sounds/c_giantfire_hit2.WAV",
-             "NWN2-Sounds/c_giantfrost_hit1.WAV",
-             "NWN2-Sounds/c_giantfrost_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_giantfire_atk1.WAV",
-             "NWN2-Sounds/c_giantfire_atk2.WAV",
-             "NWN2-Sounds/c_giantfire_atk3.WAV",
-             "NWN2-Sounds/c_giantfrost_atk1.WAV",
-             "NWN2-Sounds/c_giantfrost_atk2.WAV",
-             "NWN2-Sounds/c_giantfrost_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_giantfire_bat1.WAV",
-             "NWN2-Sounds/c_giantfrost_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Giant"
-          ],
-          "match_on":[
-             "giant"
-          ]
-       },
-       "gith":{
-          "notes":"Male Githyanki - can probably be used for most humanoids",
-          "hit_sounds":[
-             "NWN2-Sounds/c_gith_hit1.WAV",
-             "NWN2-Sounds/c_gith_hit2.WAV",
-             "NWN2-Sounds/c_gith_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_gith_atk1.WAV",
-             "NWN2-Sounds/c_gith_atk2.WAV",
-             "NWN2-Sounds/c_gith_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_gith_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Gith"
-          ],
-          "match_on":[
-             "gith"
-          ]
-       },
-       "githf":{
-          "notes":"Female Githyanki - tchk",
-          "hit_sounds":[
-             "NWN2-Sounds/c_githf_hit1.WAV",
-             "NWN2-Sounds/c_githf_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_githf_atk1.WAV",
-             "NWN2-Sounds/c_githf_atk2.WAV",
-             "NWN2-Sounds/c_githf_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_githf_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Githf"
-          ],
-          "match_on":[
-             "githf"
-          ]
-       },
-       "gnoll":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_gnoll_hit1.WAV",
-             "NWN2-Sounds/c_gnoll_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_gnoll_atk1.WAV",
-             "NWN2-Sounds/c_gnoll_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_gnoll_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Gnoll"
-          ],
-          "match_on":[
-             "gnoll"
-          ]
-       },
-       "goblin":{
-          "notes":"very aggressive sounding - not very golarion gobliny :D",
-          "hit_sounds":[
-             "NWN2-Sounds/c_goblin_hit1.WAV",
-             "NWN2-Sounds/c_goblin_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_goblin_atk1.WAV",
-             "NWN2-Sounds/c_goblin_atk2.WAV",
-             "NWN2-Sounds/c_goblin_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_goblin_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_goblin_bat1.WAV",
-             "NWN2-Sounds/c_goblin_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Goblin"
-          ],
-          "match_on":[
-             "goblin"
-          ]
-       },
-       "golmiron":{
-          "notes":"metalic sounding golem - could be used for any metal construct",
-          "hit_sounds":[
-             "NWN2-Sounds/c_golmiron_hit1.WAV",
-             "NWN2-Sounds/c_golmiron_hit2.WAV",
-             "NWN2-Sounds/c_golmiron_hit3.WAV",
-             "NWN2-Sounds/c_irongol_hit1.WAV",
-             "NWN2-Sounds/c_irongol_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_golmiron_atk1.WAV",
-             "NWN2-Sounds/c_golmiron_atk2.WAV",
-             "NWN2-Sounds/c_golmiron_atk3.WAV",
-             "NWN2-Sounds/c_irongol_atk1.WAV",
-             "NWN2-Sounds/c_irongol_atk2.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_golmiron_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_golmiron_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Iron Golem"
-          ],
-          "match_on":[
-             "Iron Golem"
-          ]
-       },
-       "hezrou":{
-          "notes":"Very big beast sound",
-          "hit_sounds":[
-             "NWN2-Sounds/c_hezrou_hit1.WAV",
-             "NWN2-Sounds/c_hezrou_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_hezrou_atk1.WAV",
-             "NWN2-Sounds/c_hezrou_atk2.WAV",
-             "NWN2-Sounds/c_hezrou_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_hezrou_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Hezrou"
-          ],
-          "match_on":[
-             "hezrou"
-          ]
-       },
-       "hobgob":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_hobgob_hit1.WAV",
-             "NWN2-Sounds/c_hobgob_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_hobgob_atk1.WAV",
-             "NWN2-Sounds/c_hobgob_atk2.WAV",
-             "NWN2-Sounds/c_hobgob_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_hobgob_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_hobgob_bat1.WAV",
-             "NWN2-Sounds/c_hobgob_bat2.WAV",
-             "NWN2-Sounds/c_hobgobwiz_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Hobgoblin"
-          ],
-          "match_on":[
-             "hobgoblin"
-          ]
-       },
-       "horror":{
-          "notes":"Metal sounding - more like a haunted item",
-          "hit_sounds":[
-             "NWN2-Sounds/c_horror_hit1.WAV",
-             "NWN2-Sounds/c_horror_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_horror_atk1.WAV",
-             "NWN2-Sounds/c_horror_atk2.WAV",
-             "NWN2-Sounds/c_horror_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_horror_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_horror_bat1.WAV",
-             "NWN2-Sounds/c_horror_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Horror"
-          ],
-          "match_on":[
-             "horror"
-          ]
-       },
-       "imp":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_imp_hit1.WAV",
-             "NWN2-Sounds/c_imp_hit2.WAV",
-             "NWN2-Sounds/c_impice_hit1.WAV",
-             "NWN2-Sounds/c_impice_hit2.WAV",
-             "NWN2-Sounds/c_impfire_hit1.WAV",
-             "NWN2-Sounds/c_impfire_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_imp_atk1.WAV",
-             "NWN2-Sounds/c_impfire_atk1.WAV",
-             "NWN2-Sounds/c_impfire_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_imp_bat1.WAV",
-             "NWN2-Sounds/c_impfire_bat1.WAV",
-             "NWN2-Sounds/c_impice_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Imp"
-          ],
-          "match_on":[
-             "imp"
-          ]
-       },
-       "kana":{
-          "notes":"angry female - barbarianesque",
-          "hit_sounds":[
-             "NWN2-Sounds/c_kana_hit1.WAV",
-             "NWN2-Sounds/c_kana_hit2.WAV",
-             "NWN2-Sounds/c_kana_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_kana_atk1.WAV",
-             "NWN2-Sounds/c_kana_atk2.WAV",
-             "NWN2-Sounds/c_kana_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Kana"
-          ],
-          "match_on":[
-             "kana"
-          ]
-       },
-       "kistral":{
-          "notes":"gross insect sounding",
-          "hit_sounds":[
-             "NWN2-Sounds/c_kistral_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_kistral_atk1.WAV",
-             "NWN2-Sounds/c_kistral_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_kistral_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Kistral"
-          ],
-          "match_on":[
-             "kistral"
-          ]
-       },
-       "kobold":{
-          "notes":"quite dog sounding - less lizardy",
-          "hit_sounds":[
-             "NWN2-Sounds/c_kobold_hit1.WAV",
-             "NWN2-Sounds/c_kobold_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_kobold_atk1.WAV",
-             "NWN2-Sounds/c_kobold_atk2.WAV",
-             "NWN2-Sounds/c_kobold_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_kobold_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_kobold_bat1.WAV",
-             "NWN2-Sounds/c_kobold_bat2.WAV",
-             "NWN2-Sounds/c_koboldchf_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Kobold"
-          ],
-          "match_on":[
-             "kobold"
-          ]
-       },
-       "koraboros":{
-          "notes":"deeper male humanoid",
-          "hit_sounds":[
-             "NWN2-Sounds/c_koraboros_hit1.WAV",
-             "NWN2-Sounds/c_koraboros_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_koraboros_atk1.WAV",
-             "NWN2-Sounds/c_koraboros_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_koraboros_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Koraboros"
-          ],
-          "match_on":[
-             "koraboros"
-          ]
-       },
-       "kos":{
-          "notes":"sounds like an orc boss",
-          "hit_sounds":[
-             "NWN2-Sounds/c_kos_hit1.WAV",
-             "NWN2-Sounds/c_kos_hit2.WAV",
-             "NWN2-Sounds/c_kos_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_kos_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_kos_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Kos"
-          ],
-          "match_on":[
-             "kos"
-          ]
-       },
-       "lich":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_lich_hit1.WAV",
-             "NWN2-Sounds/c_lich_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_lich_atk1.WAV",
-             "NWN2-Sounds/c_lich_atk2.WAV",
-             "NWN2-Sounds/c_lich_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_lich_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_lich_bat1.WAV",
-             "NWN2-Sounds/c_lich_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Lich"
-          ],
-          "match_on":[
-             "lich"
-          ]
-       },
-       "lizardm":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_lizardm_hit1.WAV",
-             "NWN2-Sounds/c_lizardm_hit2.WAV",
-             "NWN2-Sounds/c_lizman_hit1.WAV",
-             "NWN2-Sounds/c_lizman_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_lizardm_atk1.WAV",
-             "NWN2-Sounds/c_lizardm_atk2.WAV",
-             "NWN2-Sounds/c_lizardm_atk3.WAV",
-             "NWN2-Sounds/c_lizman_atk1.WAV",
-             "NWN2-Sounds/c_lizman_atk2.WAV",
-             "NWN2-Sounds/c_lizman_bat1.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_lizardm_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_lizardm_bat1.WAV",
-             "NWN2-Sounds/c_lizardm_bat2.WAV",
-             "NWN2-Sounds/c_lizardmw_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Lizardman"
-          ],
-          "match_on":[
-             "lizardman"
-          ]
-       },
-       "lornestarling":{
-          "notes":"generic evil human male",
-          "hit_sounds":[
-             "NWN2-Sounds/c_lornestarling_hit1.WAV",
-             "NWN2-Sounds/c_lornestarling_hit2.WAV",
-             "NWN2-Sounds/c_lornestarling_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_lornestarling_atk1.WAV",
-             "NWN2-Sounds/c_lornestarling_atk2.WAV",
-             "NWN2-Sounds/c_lornestarling_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_lornestarling_bat1.WAV",
-             "NWN2-Sounds/c_lornestarling_bat2.WAV",
-             "NWN2-Sounds/c_lornestarling_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Lornestarling"
-          ],
-          "match_on":[
-             "lornestarling"
-          ]
-       },
-       "mephit":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_mephit_hit1.wav",
-             "NWN2-Creatures/c_mephit_hit2.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_mephit_atk1.wav",
-             "NWN2-Creatures/c_mephit_atk2.wav",
-             "NWN2-Creatures/c_mephit_atk3.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_mephit_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_mephit_bat1.wav",
-             "NWN2-Creatures/c_mephit_bat2.wav"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Mephit"
-          ],
-          "match_on":[
-             "mephit"
-          ]
-       },
-       "mindflayer":{
-          "notes":"monster sounding - not very tentacly",
-          "hit_sounds":[
-             "NWN2-Sounds/c_mindflayer_hit1.WAV",
-             "NWN2-Sounds/c_mindflayer_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_mindflayer_atk1.WAV",
-             "NWN2-Sounds/c_mindflayer_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_mindflayer_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Mindflayer"
-          ],
-          "match_on":[
-             "mindflayer"
-          ]
-       },
-       "minotaur":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_minotaur_hit1.WAV",
-             "NWN2-Sounds/c_minotaur_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_minotaur_atk1.WAV",
-             "NWN2-Sounds/c_minotaur_atk2.WAV",
-             "NWN2-Sounds/c_minotaur_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_minotaur_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_minotaur_bat1.WAV",
-             "NWN2-Sounds/c_minotaur_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Minotaur"
-          ],
-          "match_on":[
-             "minotaur"
-          ]
-       },
-       "mummy":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_mummy_hit1.WAV",
-             "NWN2-Sounds/c_mummy_hit2.WAV",
-             "NWN2-Sounds/c_mummygrt_hit1.WAV",
-             "NWN2-Sounds/c_mummygrt_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_mummy_atk1.WAV",
-             "NWN2-Sounds/c_mummy_atk2.WAV",
-             "NWN2-Sounds/c_mummygrt_atk1.WAV",
-             "NWN2-Sounds/c_mummygrt_atk2.WAV",
-             "NWN2-Sounds/c_mummygrt_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_mummygrt_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_mummy_bat1.WAV",
-             "NWN2-Sounds/c_mummygrt_bat1.WAV",
-             "NWN2-Sounds/c_mummygrt_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Mummy"
-          ],
-          "match_on":[
-             "mummy"
-          ]
-       },
-       "nightwalk":{
-          "notes":"Good for generic evil creatures",
-          "hit_sounds":[
-             "NWN2-Sounds/c_nightwalk_hit1.WAV",
-             "NWN2-Sounds/c_nightwalk_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_nightwalk_atk1.WAV",
-             "NWN2-Sounds/c_nightwalk_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_nightwalk_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Nightwalk"
-          ],
-          "match_on":[
-             "nightwalk"
-          ]
-       },
-       "ogre":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_ogre_hit1.WAV",
-             "NWN2-Sounds/c_ogre_hit2.WAV",
-             "NWN2-Sounds/c_ogremagi_hit1.WAV",
-             "NWN2-Sounds/c_ogremagi_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_ogre_atk1.WAV",
-             "NWN2-Sounds/c_ogre_atk2.WAV",
-             "NWN2-Sounds/c_ogre_atk3.WAV",
-             "NWN2-Sounds/c_ogremagi_atk1.WAV",
-             "NWN2-Sounds/c_ogremagi_atk2.WAV",
-             "NWN2-Sounds/c_ogremagi_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_ogre_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_ogre_bat1.WAV",
-             "NWN2-Sounds/c_ogre_bat2.WAV",
-             "NWN2-Sounds/c_ogrechf_bat1.WAV",
-             "NWN2-Sounds/c_ogremagi_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Ogre"
-          ],
-          "match_on":[
-             "ogre"
-          ]
-       },
-       "orc":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_orc_hit1.WAV",
-             "NWN2-Sounds/c_orc_hit2.WAV",
-             "NWN2-Sounds/c_orc_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_orc_atk1.WAV",
-             "NWN2-Sounds/c_orc_atk2.WAV",
-             "NWN2-Sounds/c_orc_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_orc_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_orc_bat1.WAV",
-             "NWN2-Sounds/c_orc_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Orc"
-          ],
-          "match_on":[
-             "orc"
-          ]
-       },
-       "pixie":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_pixie_hit1.WAV",
-             "NWN2-Sounds/c_pixie_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_pixie_atk1.WAV",
-             "NWN2-Sounds/c_pixie_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_pixie_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Pixie"
-          ],
-          "match_on":[
-             "pixie"
-          ]
-       },
-       "rat":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_rat_hit1.WAV",
-             "NWN2-Sounds/c_rat_hit2.WAV",
-             "NWN2-Sounds/c_ratdire_hit1.WAV",
-             "NWN2-Sounds/c_ratdire_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_rat_atk1.WAV",
-             "NWN2-Sounds/c_rat_atk2.WAV",
-             "NWN2-Sounds/c_rat_atk3.WAV",
-             "NWN2-Sounds/c_ratdire_atk1.WAV",
-             "NWN2-Sounds/c_ratdire_atk2.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_rat_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_rat_bat1.WAV",
-             "NWN2-Sounds/c_rat_bat2.WAV",
-             "NWN2-Sounds/c_ratdire_bat1.WAV",
-             "NWN2-Sounds/c_rathuge_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Rat"
-          ],
-          "match_on":[
-             "rat"
-          ]
-       },
-       "shadowreaver":{
-          "notes":"evil undeady creatures",
-          "hit_sounds":[
-             "NWN2-Sounds/c_shadowreaver_hit1.WAV",
-             "NWN2-Sounds/c_shadowreaver_hit2.WAV",
-             "NWN2-Sounds/c_shadowreaver_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_shadowreaver_atk1.WAV",
-             "NWN2-Sounds/c_shadowreaver_atk2.WAV",
-             "NWN2-Sounds/c_shadowreaver_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_shadowreaver_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Shadowreaver"
-          ],
-          "match_on":[
-             "shadowreaver"
-          ]
-       },
-       "skeleton":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_skeleton_hit1.WAV",
-             "NWN2-Sounds/c_skeleton_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_skeleton_atk1.WAV",
-             "NWN2-Sounds/c_skeleton_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_skeleton_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Skeleton"
-          ],
-          "match_on":[
-             "skeleton"
-          ]
-       },
-       "slaan":{
-          "notes":"Lizard man sounding",
-          "hit_sounds":[
-             "NWN2-Sounds/c_slaan_hit1.WAV",
-             "NWN2-Sounds/c_slaan_hit2.WAV",
-             "NWN2-Sounds/c_slaan_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_slaan_atk1.WAV",
-             "NWN2-Sounds/c_slaan_atk2.WAV",
-             "NWN2-Sounds/c_slaan_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Slaan"
-          ],
-          "match_on":[
-             "slaan"
-          ]
-       },
-       "slyph":{
-          "notes":"annoying sounding fairy",
-          "hit_sounds":[
-             "NWN2-Sounds/c_slyph_hit1.WAV",
-             "NWN2-Sounds/c_slyph_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_slyph_atk1.WAV",
-             "NWN2-Sounds/c_slyph_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_slyph_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Slyph"
-          ],
-          "match_on":[
-             "slyph"
-          ]
-       },
-       "spidbn":{
-          "notes":"Generic Spider Sounds",
-          "hit_sounds":[
-             "NWN2-Sounds/c_spidbn_hit1.WAV",
-             "NWN2-Sounds/c_spidbn_hit1_01.WAV",
-             "NWN2-Sounds/c_spidbn_hit1_02.WAV",
-             "NWN2-Sounds/c_spidbn_hit1_03.WAV",
-             "NWN2-Sounds/c_spidbn_hit2.WAV",
-             "NWN2-Sounds/c_spidbn_hit2_01.WAV",
-             "NWN2-Sounds/c_spidbn_hit2_02.WAV",
-             "NWN2-Sounds/c_spidbn_hit2_03.WAV",
-             "NWN2-Sounds/c_spidbn_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidbn_atk1.WAV",
-             "NWN2-Sounds/c_spdbn_atk1_01.WAV",
-             "NWN2-Sounds/c_spidbn_atk1_02.WAV",
-             "NWN2-Sounds/c_spidbn_atk1_03.WAV",
-             "NWN2-Sounds/c_spidbn_atk1_04.WAV",
-             "NWN2-Sounds/c_spidbn_atk2.WAV",
-             "NWN2-Sounds/c_spidbn_atk2_01.WAV",
-             "NWN2-Sounds/c_spidbn_atk2_02.WAV",
-             "NWN2-Sounds/c_spidbn_atk2_03.WAV",
-             "NWN2-Sounds/c_spidbn_atk2_04.WAV",
-             "NWN2-Sounds/c_spidbn_atk3.WAV",
-             "NWN2-Sounds/c_spidbn_atk3_01.WAV",
-             "NWN2-Sounds/c_spidbn_atk3_02.WAV",
-             "NWN2-Sounds/c_spidbn_atk3_03.WAV",
-             "NWN2-Sounds/c_spidbn_atk3_04.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_spidbn_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_spidbn_bat1.WAV",
-             "NWN2-Sounds/c_spidbn_bat1_01.WAV",
-             "NWN2-Sounds/c_spidbn_bat1_02.WAV",
-             "NWN2-Sounds/c_spidbn_bat1_03.WAV",
-             "NWN2-Sounds/c_spidbn_bat1_04.WAV",
-             "NWN2-Sounds/c_spidbn_bat2.WAV",
-             "NWN2-Sounds/c_spidbn_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidbn"
-          ],
-          "match_on":[
-             "spidbn"
-          ]
-       },
-       "spidbone":{
-          "notes":"More Generic Spider Sounds",
-          "hit_sounds":[
-             "NWN2-Sounds/c_spidbone_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidbone_atk1.WAV",
-             "NWN2-Sounds/c_spidbone_atk2.WAV",
-             "NWN2-Sounds/c_spiddire_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_spidbone_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidbone"
-          ],
-          "match_on":[
-             "spidbone"
-          ]
-       },
-       "spider":{
-          "notes":"Even More Generic Spider Sounds",
-          "hit_sounds":[
-             "NWN2-Creatures/c_spider_hit1.WAV",
-             "NWN2-Creatures/c_spider_hit2.WAV",
-             "NWN2-Creatures/c_spider_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_spider_atk1.WAV",
-             "NWN2-Creatures/c_spider_atk2.WAV",
-             "NWN2-Creatures/c_spider_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_spider_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_spider_bat1.WAV",
-             "NWN2-Creatures/c_spider_bat2.WAV",
-             "NWN2-Creatures/c_spider_bat3.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spider"
-          ],
-          "match_on":[
-             "spider"
-          ]
-       },
-       "spidgiant":{
-          "notes":"",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidgiant_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_spidgiant_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidgiant"
-          ],
-          "match_on":[
-             "spidgiant"
-          ]
-       },
-       "spidphase":{
-          "notes":"",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidphase_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_spidphase_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidphase"
-          ],
-          "match_on":[
-             "spidphase"
-          ]
-       },
-       "spidsword":{
-          "notes":"",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidsword_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidsword"
-          ],
-          "match_on":[
-             "spidsword"
-          ]
-       },
-       "spidwraith":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_spidwraith_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_spidwraith_atk1.WAV",
-             "NWN2-Sounds/c_spidwraith_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_spidwraith_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Spidwraith"
-          ],
-          "match_on":[
-             "spidwraith"
-          ]
-       },
-       "succubus":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_succubus_hit1.WAV",
-             "NWN2-Sounds/c_succubus_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_succubus_atk3.wav",
-             "NWN2-Sounds/c_succubus_atk1.WAV",
-             "NWN2-Sounds/c_succubus_atk2.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_succubus_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_succubus_bat2.wav",
-             "NWN2-Sounds/c_succubus_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Succubus"
-          ],
-          "match_on":[
-             "succubus"
-          ]
-       },
-       "tiefling":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_tiefling_hit1.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_tiefling_atk1.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_tiefling_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_tiefling_bat1.wav"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Tiefling"
-          ],
-          "match_on":[
-             "tiefling"
-          ]
-       },
-       "troll":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_troll_hit1.WAV",
-             "NWN2-Sounds/c_troll_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_troll_atk1.WAV",
-             "NWN2-Sounds/c_troll_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_troll_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Troll"
-          ],
-          "match_on":[
-             "troll"
-          ]
-       },
-       "umber":{
-          "notes":"Mix of bestial and giant",
-          "hit_sounds":[
-             "NWN2-Sounds/c_umber_hit1.WAV",
-             "NWN2-Sounds/c_umber_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_umber_atk1.WAV",
-             "NWN2-Sounds/c_umber_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_umber_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Umber"
-          ],
-          "match_on":[
-             "umber"
-          ]
-       },
-       "umberhlk":{
-          "notes":"insecty sounding",
-          "hit_sounds":[
-             "NWN2-Sounds/c_umberhlk_hit1.WAV",
-             "NWN2-Sounds/c_umberhlk_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_umberhlk_atk1.WAV",
-             "NWN2-Sounds/c_umberhlk_atk2.WAV",
-             "NWN2-Sounds/c_umberhlk_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_umberhlk_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_umberhlk_bat1.WAV",
-             "NWN2-Sounds/c_umberhlk_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Umberhlk"
-          ],
-          "match_on":[
-             "umberhlk"
-          ]
-       },
-       "umberhulk":{
-          "notes":"",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             
-          ],
-          "death_sounds":[
-             "NWN2-Sounds/c_umberhulk_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_umberhulk_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Umberhulk"
-          ],
-          "match_on":[
-             "umberhulk"
-          ]
-       },
-       "vale":{
-          "notes":"Male human - a bit higher pitched",
-          "hit_sounds":[
-             "NWN2-Sounds/c_vale_hit1.WAV",
-             "NWN2-Sounds/c_vale_hit2.WAV",
-             "NWN2-Sounds/c_vale_hit3.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_vale_atk1.WAV",
-             "NWN2-Sounds/c_vale_atk2.WAV",
-             "NWN2-Sounds/c_vale_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Vale"
-          ],
-          "match_on":[
-             "vale"
-          ]
-       },
-       "vampf":{
-          "notes":"Female Vampire Sounds",
-          "hit_sounds":[
-             "NWN2-Sounds/c_vampf_hit1.WAV",
-             "NWN2-Sounds/c_vampf_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_vampf_atk2.WAV",
-             "NWN2-Sounds/c_vampf_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_vampf_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Vampf"
-          ],
-          "match_on":[
-             "vampf"
-          ]
-       },
-       "vampire":{
-          "notes":"Boss vampire sounds",
-          "hit_sounds":[
-             "NWN2-Creatures/c_vampire_hit1.wav",
-             "NWN2-Creatures/c_vampire_hit2.wav"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_vampire_atk1.wav",
-             "NWN2-Creatures/c_vampire_atk2.wav",
-             "NWN2-Creatures/c_vampire_atk3.wav"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_vampire_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_vampire_bat1.wav",
-             "NWN2-Creatures/c_vampire_bat2.wav"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Vampire"
-          ],
-          "match_on":[
-             "vampire"
-          ]
-       },
-       "vampm":{
-          "notes":"Generic vampire sounds",
-          "hit_sounds":[
-             "NWN2-Sounds/c_vampm_hit1.WAV",
-             "NWN2-Sounds/c_vampm_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_vampm_atk1.WAV",
-             "NWN2-Sounds/c_vampm_atk2.WAV",
-             "NWN2-Sounds/c_vampm_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_vampm_dead.wav"
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_vampm_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Vampm"
-          ],
-          "match_on":[
-             "vampm"
-          ]
-       },
-       "vashne":{
-          "notes":"Vampire or undead boss",
-          "hit_sounds":[
-             "NWN2-Sounds/c_vashne_hit1.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_vashne_atk1.WAV",
-             "NWN2-Sounds/c_vashne_atk2.WAV",
-             "NWN2-Sounds/c_vashne_atk3.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Vashne"
-          ],
-          "match_on":[
-             "vashne"
-          ]
-       },
-       "weasel":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_weasel_hit1.WAV",
-             "NWN2-Sounds/c_weasel_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_weasel_atk1.WAV",
-             "NWN2-Sounds/c_weasel_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_weasel_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Weasel"
-          ],
-          "match_on":[
-             "weasel"
-          ]
-       },
-       "werewolf":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Sounds/c_werewolf_hit1.WAV",
-             "NWN2-Sounds/c_werewolf_hit2.WAV",
-             "NWN2-Sounds/c_werewolf_m_hit1.WAV",
-             "NWN2-Sounds/c_werewolf_m_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_werewolf_atk1.WAV",
-             "NWN2-Sounds/c_werewolf_atk2.WAV",
-             "NWN2-Sounds/c_werewolf_m_atk1.WAV",
-             "NWN2-Sounds/c_werewolf_m_atk2.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_werewolf_bat1.WAV",
-             "NWN2-Sounds/c_werewolf_m_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Werewolf"
-          ],
-          "match_on":[
-             "werewolf"
-          ]
-       },
-       "wraith":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_wraith_hit1.WAV",
-             "NWN2-Creatures/c_wraith_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_wraith_atk1.WAV",
-             "NWN2-Creatures/c_wraith_atk2.WAV",
-             "NWN2-Creatures/c_wraith_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_wraith_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_wraith_bat1.WAV",
-             "NWN2-Creatures/c_wraith_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Wraith"
-          ],
-          "match_on":[
-             "wraith"
-          ]
-       },
-       "zeeaire":{
-          "notes":"annoying imp",
-          "hit_sounds":[
-             
-          ],
-          "attack_sounds":[
-             "NWN2-Sounds/c_zeeaire_atk.WAV",
-             "NWN2-Sounds/c_zeeaire_atk1.WAV"
-          ],
-          "death_sounds":[
-             
-          ],
-          "battle_sounds":[
-             "NWN2-Sounds/c_zeeaire_bat1.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Zeeaire"
-          ],
-          "match_on":[
-             "zeeaire"
-          ]
-       },
-       "zombie":{
-          "notes":"",
-          "hit_sounds":[
-             "NWN2-Creatures/c_zombie_hit1.WAV",
-             "NWN2-Creatures/c_zombie_hit2.WAV"
-          ],
-          "attack_sounds":[
-             "NWN2-Creatures/c_zombie_atk1.WAV",
-             "NWN2-Creatures/c_zombie_atk2.WAV",
-             "NWN2-Creatures/c_zombie_atk3.WAV"
-          ],
-          "death_sounds":[
-             "NWN2-Creatures/c_zombie_dead.WAV"
-          ],
-          "battle_sounds":[
-             "NWN2-Creatures/c_zombie_bat1.WAV",
-             "NWN2-Creatures/c_zombie_bat2.WAV"
-          ],
-          "traits":[
-             
-          ],
-          "creatures":[
-             "Zombie"
-          ],
-          "match_on":[
-             "zombie"
-          ]
-       }
-    }
- ]
+{
+  "aasimar": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_aasimar_hit1.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_aasimar_atk1.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_aasimar_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_aasimar_bat1.wav"
+    ],
+    "traits": [
+      "good",
+      "human",
+      "humanoid",
+      "nephilim"
+    ],
+    "creatures": [
+      "Aasimar",
+      "Aasimar Redeemer"
+    ],
+    "match_on": [
+      "aasimar"
+    ]
+  },
+  "badger": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_badger_hit1.WAV",
+      "NWN2-Sounds/c_badgerdire_hit1.WAV",
+      "NWN2-Sounds/c_badgerdire_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_badger_atk1.WAV",
+      "NWN2-Sounds/c_badgerdire_atk1.WAV",
+      "NWN2-Sounds/c_badgerdire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_badger_bat1.WAV",
+      "NWN2-Sounds/c_badgerdire_bat1.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Badger",
+      "Giant Badger"
+    ],
+    "match_on": [
+      "badger"
+    ]
+  },
+  "balor": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_balor_hit1.WAV",
+      "NWN2-Sounds/c_balor_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_balor_atk2.WAV",
+      "NWN2-Sounds/c_balor_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_balor_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "demon",
+      "evil",
+      "fiend",
+      "unholy"
+    ],
+    "creatures": [
+      "Balor",
+      "Glabrezu",
+      "Marilith",
+      "Quasit",
+      "Shemhazian",
+      "Treerazer",
+      "Vrock",
+      "Babau",
+      "Hezrou",
+      "Invidiak",
+      "Nabasu",
+      "Nalfeshnee",
+      "Vrolikai",
+      "Abrikandilu",
+      "Brimorak",
+      "Dretch",
+      "Omox",
+      "Kalavakus",
+      "Kithangian",
+      "Brimorak",
+      "Omox",
+      "Pusk",
+      "Seraptis",
+      "Shemhazian",
+      "Treerazer",
+      "Vrolikai"
+    ],
+    "match_on": [
+      "balor"
+    ]
+  },
+  "bat": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_bat_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_bat_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [
+      "beast"
+    ],
+    "creatures": [
+      "Bat",
+      "Giant Bat",
+      "Vampire Bat Swarm",
+      "Spark Bat",
+      "Werebat",
+      "Stony Bat"
+    ],
+    "match_on": [
+      "bat"
+    ]
+  },
+  "bear": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_bear_hit1.WAV",
+      "NWN2-Sounds/c_beardire_hit1.WAV",
+      "NWN2-Sounds/c_beardire_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_bear_atk1.WAV",
+      "NWN2-Sounds/c_beardire_atk1.WAV",
+      "NWN2-Sounds/c_beardire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_bear_bat1.WAV",
+      "NWN2-Sounds/c_beardire_bat1.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Bear",
+      "Dire Bear",
+      "Bugbear Thug",
+      "Bugbear Tormentor",
+      "Cave Bear",
+      "Grizzly Bear",
+      "Owlbear",
+      "Werebear",
+      "Black Bear",
+      "Polar Bear",
+      "Feathered Bear",
+      "Ghastly Bear",
+      "Zombie Owlbear",
+      "Mist Bear"
+    ],
+    "match_on": [
+      "bear"
+    ]
+  },
+  "beetle": {
+    "notes": "insect sounding - could be used for other insects",
+    "hit_sounds": [
+      "NWN2-Creatures/c_beetle_hit1.wav",
+      "NWN2-Creatures/c_beetle_hit2.wav",
+      "NWN2-Sounds/c_beetlebomb_hit1.WAV",
+      "NWN2-Sounds/c_beetlefire_hit1.WAV",
+      "NWN2-Sounds/c_beetlestag_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_beetle_atk1.wav",
+      "NWN2-Creatures/c_beetle_atk2.wav",
+      "NWN2-Creatures/c_beetle_atk3.wav",
+      "NWN2-Sounds/c_beetlebomb_atk1.WAV",
+      "NWN2-Sounds/c_beetlefire_atk1.WAV",
+      "NWN2-Sounds/c_beetlestag_atk1.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_beetle_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_beetle_bat1.wav",
+      "NWN2-Creatures/c_beetle_bat2.wav",
+      "NWN2-Sounds/c_beetlebomb_bat1.WAV",
+      "NWN2-Sounds/c_beetlefire_bat1.WAV",
+      "NWN2-Sounds/c_beetlestag_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Beetle",
+      "Flash Beetle",
+      "Giant Stag Beetle",
+      "Beetle Carapace",
+      "Skin Beetle Swarm",
+      "Skin Beetle"
+    ],
+    "match_on": [
+      "beetle"
+    ]
+  },
+  "bevil": {
+    "notes": "human male",
+    "hit_sounds": [],
+    "attack_sounds": [
+      "NWN2-Sounds/c_bevil_atk.WAV",
+      "NWN2-Sounds/c_bevil_atk1.WAV",
+      "NWN2-Sounds/c_bevil_atk2.WAV",
+      "NWN2-Sounds/c_bevil_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_bevil_bat1.WAV",
+      "NWN2-Sounds/c_bevil_bat2.WAV",
+      "NWN2-Sounds/c_bevil_bat3.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Bevil"
+    ],
+    "match_on": [
+      "bevil"
+    ]
+  },
+  "blackgarius": {
+    "notes": "human male - barbarian",
+    "hit_sounds": [
+      "NWN2-Sounds/c_blackgarius_hit1.WAV",
+      "NWN2-Sounds/c_blackgarius_hit2.WAV",
+      "NWN2-Sounds/c_blackgarius_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_blackgarius_atk1.WAV",
+      "NWN2-Sounds/c_blackgarius_atk2.WAV",
+      "NWN2-Sounds/c_blackgarius_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [],
+    "creatures": [
+      "Blackgarius"
+    ],
+    "match_on": [
+      "blackgarius"
+    ]
+  },
+  "bladegol": {
+    "notes": "golem sounds with blade",
+    "hit_sounds": [
+      "NWN2-Sounds/c_bladegol_hit1.WAV",
+      "NWN2-Sounds/c_bladegol_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_bladegol_atk1.WAV",
+      "NWN2-Sounds/c_bladegol_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_bladegol_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Blade Golem"
+    ],
+    "match_on": [
+      "Blade Golem"
+    ]
+  },
+  "bladeling": {
+    "notes": "angry humanoid",
+    "hit_sounds": [
+      "NWN2-Sounds/c_bladeling_hit1.WAV",
+      "NWN2-Sounds/c_bladeling_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_bladeling_atk1.WAV",
+      "NWN2-Sounds/c_bladeling_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_bladeling_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Pirate",
+      "Ghost Pirate Captain"
+    ],
+    "match_on": [
+      "Pirate"
+    ]
+  },
+  "boar": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_boardire_hit1.WAV",
+      "NWN2-Sounds/c_boardire_hit2.WAV",
+      "NWN2-Sounds/c_boar_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_boar_atk1.WAV",
+      "NWN2-Sounds/c_boardire_atk1.WAV",
+      "NWN2-Sounds/c_boardire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_boar_bat1.WAV",
+      "NWN2-Sounds/c_boardire_bat1.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Boar",
+      "Wereboar",
+      "Blood Boar"
+    ],
+    "match_on": [
+      "boar"
+    ]
+  },
+  "bugbear": {
+    "notes": "big brutish",
+    "hit_sounds": [
+      "NWN2-Sounds/c_bugbear_hit1.WAV",
+      "NWN2-Sounds/c_bugbear_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_bugbear_atk1.WAV",
+      "NWN2-Sounds/c_bugbear_atk2.WAV",
+      "NWN2-Sounds/c_bugbear_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_bugbear_bat1.WAV"
+    ],
+    "traits": [
+      "evil",
+      "goblin",
+      "humanoid"
+    ],
+    "creatures": [
+      "Bugbear",
+      "Bugbear Thug",
+      "Bugbear Tormentor",
+      "Bugbear Prowler"
+    ],
+    "match_on": [
+      "bugbear"
+    ]
+  },
+  "cat": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_cat_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_cat_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_cat_bat1.WAV"
+    ],
+    "traits": [
+      "beast",
+      "chaotic",
+      "evil"
+    ],
+    "creatures": [
+      "Cat",
+      "Catfolk Pouncer",
+      "Catoblepas",
+      "Catrina",
+      "Dweomercat",
+      "Hellcat",
+      "Locathah Hunter",
+      "Roiling Incant (Evocation)",
+      "Mummified Cat",
+      "Tormented (Dislocation)",
+      "Azarketi Crab Catcher"
+    ],
+    "match_on": [
+      "cat"
+    ]
+  },
+  "chicken": {
+    "notes": "",
+    "hit_sounds": [],
+    "attack_sounds": [],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Creatures/c_chkn_bat1.WAV",
+      "NWN2-Sounds/c_chkn_bat1_01.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Chicken"
+    ],
+    "match_on": [
+      "chicken"
+    ]
+  },
+  "cow": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_cow_hit1.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_cow_atk1.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_cow_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_cow_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Cow"
+    ],
+    "match_on": [
+      "cow"
+    ]
+  },
+  "deer": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_deer_hit1.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_deer_atk1.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_deer_dead.wav"
+    ],
+    "battle_sounds": [],
+    "traits": [],
+    "creatures": [
+      "Deer"
+    ],
+    "match_on": [
+      "deer"
+    ]
+  },
+  "demon": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_demon_hit1.wav",
+      "NWN2-Creatures/c_demon_hit2.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_demon_atk1.wav",
+      "NWN2-Creatures/c_demon_atk2.wav",
+      "NWN2-Creatures/c_demon_atk3.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_demon_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_demon_bat2.wav",
+      "NWN2-Sounds/c_demon_bat1.WAV"
+    ],
+    "traits": [
+      "aberration",
+      "chaotic",
+      "evil",
+      "unholy"
+    ],
+    "creatures": [
+      "Demon",
+      "Demontangle"
+    ],
+    "match_on": [
+      "demon"
+    ]
+  },
+  "devil": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_devil_hit1.WAV",
+      "NWN2-Sounds/c_devil_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_devil_atk1.WAV",
+      "NWN2-Sounds/c_devil_atk2.WAV",
+      "NWN2-Sounds/c_devil_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_devil_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_devil_bat1.WAV",
+      "NWN2-Sounds/c_devil_bat2.WAV"
+    ],
+    "traits": [
+      "evil"
+    ],
+    "creatures": [
+      "Barbazu",
+      "Gelugon",
+      "Lemure",
+      "Phistophilus",
+      "Sea Devil Baron",
+      "Sea Devil Brute",
+      "Sea Devil Scout",
+      "Cornugon",
+      "Gylou",
+      "Hamatula",
+      "Osyluth",
+      "Sarglagon",
+      "Zebub",
+      "Deimavigga",
+      "Hellbound Attorney",
+      "Levaloch",
+      "Munagola",
+      "Azvalvigander",
+      "Barcumbuk",
+      "Deep End Sarglagon",
+      "Drill Field Barbazu",
+      "Hellforge Barbazu",
+      "Summoning Chamber Erinys",
+      "Torture Chamber Barbazu",
+      "Urevian",
+      "Thruneosaurus Rex",
+      "Coarti",
+      "Gylou",
+      "Nessari",
+      "Ort",
+      "Phistophilus",
+      "Sarglagon",
+      "Vordine"
+    ],
+    "match_on": [
+      "devil"
+    ]
+  },
+  "devilhorn": {
+    "notes": "minotaury sounding",
+    "hit_sounds": [
+      "NWN2-Sounds/c_devilhorn_hit1.WAV",
+      "NWN2-Sounds/c_devilhorn_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_devilhorn_atk1.WAV",
+      "NWN2-Sounds/c_devilhorn_atk2.WAV",
+      "NWN2-Sounds/c_devilhorn_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_devilhorn_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Mulventok"
+    ],
+    "match_on": [
+      "minotaur"
+    ]
+  },
+  "dog": {
+    "notes": "general dog sounds",
+    "hit_sounds": [
+      "NWN2-Sounds/c_doghell_hit1.WAV",
+      "NWN2-Sounds/c_dogshado_hit1.WAV",
+      "NWN2-Sounds/c_dogwolfdire_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_doghell_atk1.WAV",
+      "NWN2-Sounds/c_doghell_atk2.WAV",
+      "NWN2-Sounds/c_dogshado_atk1.WAV",
+      "NWN2-Sounds/c_dogshado_atk2.WAV",
+      "NWN2-Sounds/c_dogwolf_atk1.WAV",
+      "NWN2-Sounds/c_dogwolfdire_atk1.WAV",
+      "NWN2-Sounds/c_dogwolfdire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_doghell_bat1.WAV",
+      "NWN2-Sounds/c_dogshado_bat1.WAV",
+      "NWN2-Sounds/c_dogwolfdire_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Dog",
+      "Goblin Dog",
+      "Guard Dog",
+      "Riding Dog",
+      "Blink Dog",
+      "Trollhound"
+    ],
+    "match_on": [
+      "dog"
+    ]
+  },
+  "dragon": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_dragblack_hit1.WAV",
+      "NWN2-Sounds/c_draggreen_hit1.WAV",
+      "NWN2-Sounds/c_dragred_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_dragblack_atk1.WAV",
+      "NWN2-Sounds/c_dragblack_atk2.WAV",
+      "NWN2-Sounds/c_draggreen_atk1.WAV",
+      "NWN2-Sounds/c_draggreen_atk2.WAV",
+      "NWN2-Sounds/c_dragred_atk1.WAV",
+      "NWN2-Sounds/c_dragred_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_dragblack_bat1.WAV",
+      "NWN2-Sounds/c_draggreen_bat1.WAV",
+      "NWN2-Sounds/c_dragred_bat1.WAV"
+    ],
+    "traits": [
+      "environmental",
+      "magical"
+    ],
+    "creatures": [
+      [
+        "Black Dragon (Adult, Spellcaster)",
+        "Black Dragon (Adult)",
+        "Black Dragon (Ancient, Spellcaster)",
+        "Black Dragon (Ancient)",
+        "Black Dragon (Young, Spellcaster)",
+        "Black Dragon (Young)",
+        "Blue Dragon (Adult, Spellcaster)",
+        "Blue Dragon (Adult)",
+        "Blue Dragon (Ancient, Spellcaster)",
+        "Blue Dragon (Ancient)",
+        "Blue Dragon (Young, Spellcaster)",
+        "Blue Dragon (Young)",
+        "Brass Dragon (Adult, Spellcaster)",
+        "Brass Dragon (Adult)",
+        "Brass Dragon (Ancient, Spellcaster)",
+        "Brass Dragon (Ancient)",
+        "Brass Dragon (Young, Spellcaster)",
+        "Brass Dragon (Young)",
+        "Bronze Dragon (Adult, Spellcaster)",
+        "Bronze Dragon (Adult)",
+        "Bronze Dragon (Ancient, Spellcaster)",
+        "Bronze Dragon (Ancient)",
+        "Bronze Dragon (Young, Spellcaster)",
+        "Bronze Dragon (Young)",
+        "Copper Dragon (Adult, Spellcaster)",
+        "Copper Dragon (Adult)",
+        "Copper Dragon (Ancient, Spellcaster)",
+        "Copper Dragon (Ancient)",
+        "Copper Dragon (Young, Spellcaster)",
+        "Copper Dragon (Young)",
+        "Crag Linnorm",
+        "Desert Drake",
+        "Dragon Turtle",
+        "Faerie Dragon",
+        "Flame Drake",
+        "Frost Drake",
+        "Gold Dragon (Adult, Spellcaster)",
+        "Gold Dragon (Adult)",
+        "Gold Dragon (Ancient, Spellcaster)",
+        "Gold Dragon (Ancient)",
+        "Gold Dragon (Young, Spellcaster)",
+        "Gold Dragon (Young)",
+        "Green Dragon (Adult, Spellcaster)",
+        "Green Dragon (Adult)",
+        "Green Dragon (Ancient, Spellcaster)",
+        "Green Dragon (Ancient)",
+        "Green Dragon (Young, Spellcaster)",
+        "Green Dragon (Young)",
+        "Ice Linnorm",
+        "Jungle Drake",
+        "Red Dragon (Adult, Spellcaster)",
+        "Red Dragon (Adult)",
+        "Red Dragon (Ancient, Spellcaster)",
+        "Red Dragon (Ancient)",
+        "Red Dragon (Young, Spellcaster)",
+        "Red Dragon (Young)",
+        "River Drake",
+        "Silver Dragon (Adult, Spellcaster)",
+        "Silver Dragon (Adult)",
+        "Silver Dragon (Ancient, Spellcaster)",
+        "Silver Dragon (Ancient)",
+        "Silver Dragon (Young, Spellcaster)",
+        "Silver Dragon (Young)",
+        "Tarn Linnorm",
+        "Tor Linnorm",
+        "White Dragon (Adult, Spellcaster)",
+        "White Dragon (Adult)",
+        "White Dragon (Ancient, Spellcaster)",
+        "White Dragon (Ancient)",
+        "White Dragon (Young, Spellcaster)",
+        "White Dragon (Young)",
+        "Wyvern",
+        "Black Dracolisk",
+        "Blue Dracolisk",
+        "Brine Dragon (Adult, Spellcaster)",
+        "Brine Dragon (Adult)",
+        "Brine Dragon (Ancient, Spellcaster)",
+        "Brine Dragon (Ancient)",
+        "Brine Dragon (Young, Spellcaster)",
+        "Brine Dragon (Young)",
+        "Cairn Linnorm",
+        "Cloud Dragon (Adult, Spellcaster)",
+        "Cloud Dragon (Adult)",
+        "Cloud Dragon (Ancient, Spellcaster)",
+        "Cloud Dragon (Ancient)",
+        "Cloud Dragon (Young, Spellcaster)",
+        "Cloud Dragon (Young)",
+        "Crystal Dragon (Adult, Spellcaster)",
+        "Crystal Dragon (Adult)",
+        "Crystal Dragon (Ancient, Spellcaster)",
+        "Crystal Dragon (Ancient)",
+        "Crystal Dragon (Young, Spellcaster)",
+        "Crystal Dragon (Young)",
+        "Fjord Linnorm",
+        "Green Dracolisk",
+        "Jabberwock",
+        "Magma Dragon (Adult, Spellcaster)",
+        "Magma Dragon (Adult)",
+        "Magma Dragon (Ancient, Spellcaster)",
+        "Magma Dragon (Ancient)",
+        "Magma Dragon (Young, Spellcaster)",
+        "Magma Dragon (Young)",
+        "Peluda",
+        "Ravener Husk",
+        "Ravener",
+        "Red Dracolisk",
+        "Sea Drake",
+        "Shadow Drake",
+        "Shoal Linnorm",
+        "Taiga Linnorm",
+        "Tatzlwyrm",
+        "Umbral Dragon (Adult, Spellcaster)",
+        "Umbral Dragon (Adult)",
+        "Umbral Dragon (Ancient, Spellcaster)",
+        "Umbral Dragon (Ancient)",
+        "Umbral Dragon (Young, Spellcaster)",
+        "Umbral Dragon (Young)",
+        "White Dracolisk",
+        "Zomok",
+        "Elder Wyrmwraith",
+        "Forest Dragon (Adult, Spellcaster)",
+        "Forest Dragon (Adult)",
+        "Forest Dragon (Ancient, Spellcaster)",
+        "Forest Dragon (Ancient)",
+        "Forest Dragon (Young, Spellcaster)",
+        "Forest Dragon (Young)",
+        "House Drake",
+        "Kongamato",
+        "Sea Dragon (Adult, Spellcaster)",
+        "Sea Dragon (Adult)",
+        "Sea Dragon (Ancient, Spellcaster)",
+        "Sea Dragon (Ancient)",
+        "Sea Dragon (Young, Spellcaster)",
+        "Sea Dragon (Young)",
+        "Sky Dragon (Adult, Spellcaster)",
+        "Sky Dragon (Adult)",
+        "Sky Dragon (Ancient, Spellcaster)",
+        "Sky Dragon (Ancient)",
+        "Sky Dragon (Young, Spellcaster)",
+        "Sky Dragon (Young)",
+        "Sovereign Dragon (Adult, Spellcaster)",
+        "Sovereign Dragon (Adult)",
+        "Sovereign Dragon (Ancient, Spellcaster)",
+        "Sovereign Dragon (Ancient)",
+        "Sovereign Dragon (Young, Spellcaster)",
+        "Sovereign Dragon (Young)",
+        "Underworld Dragon (Adult, Spellcaster)",
+        "Underworld Dragon (Adult)",
+        "Underworld Dragon (Ancient, Spellcaster)",
+        "Underworld Dragon (Ancient)",
+        "Underworld Dragon (Young, Spellcaster)",
+        "Underworld Dragon (Young)",
+        "Wyrmwraith",
+        "Zombie Dragon",
+        "Belmazog",
+        "Bida",
+        "Charau-ka Dragon Priest",
+        "Grauladon",
+        "Lesser Manifestation Of Dahak",
+        "Manifestation Of Dahak",
+        "Mengkare",
+        "Racharak",
+        "Spawn of Dahak",
+        "Veshumirix",
+        "Drake Courser",
+        "Tamikan",
+        "Storm Snake",
+        "Myroga",
+        "Adamantine Dragon (Adult, Spellcaster)",
+        "Adamantine Dragon (Adult)",
+        "Adamantine Dragon (Ancient, Spellcaster)",
+        "Adamantine Dragon (Ancient)",
+        "Adamantine Dragon (Young, Spellcaster)",
+        "Adamantine Dragon (Young)",
+        "Conspirator Dragon (Adult, Spellcaster)",
+        "Conspirator Dragon (Adult)",
+        "Conspirator Dragon (Ancient, Spellcaster)",
+        "Conspirator Dragon (Ancient)",
+        "Conspirator Dragon (Young, Spellcaster)",
+        "Conspirator Dragon (Young)",
+        "Crag Linnorm",
+        "Desert Drake",
+        "Diabolic Dragon (Adult, Spellcaster)",
+        "Diabolic Dragon (Adult)",
+        "Diabolic Dragon (Ancient, Spellcaster)",
+        "Diabolic Dragon (Ancient)",
+        "Diabolic Dragon (Young, Spellcaster)",
+        "Diabolic Dragon (Young)",
+        "Empyreal Dragon (Adult, Spellcaster)",
+        "Empyreal Dragon (Adult)",
+        "Empyreal Dragon (Ancient, Spellcaster)",
+        "Empyreal Dragon (Ancient)",
+        "Empyreal Dragon (Young, Spellcaster)",
+        "Empyreal Dragon (Young)",
+        "Fey Dragonet",
+        "Flame Drake",
+        "Fortune Dragon (Adult, Spellcaster)",
+        "Fortune Dragon (Adult)",
+        "Fortune Dragon (Ancient, Spellcaster)",
+        "Fortune Dragon (Ancient)",
+        "Fortune Dragon (Young, Spellcaster)",
+        "Fortune Dragon (Young)",
+        "Frost Drake",
+        "Horned Dragon (Adult, Spellcaster)",
+        "Horned Dragon (Adult)",
+        "Horned Dragon (Ancient, Spellcaster)",
+        "Horned Dragon (Ancient)",
+        "Horned Dragon (Young, Spellcaster)",
+        "Horned Dragon (Young)",
+        "Ice Linnorm",
+        "Jungle Drake",
+        "Mirage Dragon (Adult, Spellcaster)",
+        "Mirage Dragon (Adult)",
+        "Mirage Dragon (Ancient, Spellcaster)",
+        "Mirage Dragon (Ancient)",
+        "Mirage Dragon (Young, Spellcaster)",
+        "Mirage Dragon (Young)",
+        "Omen Dragon (Adult, Spellcaster)",
+        "Omen Dragon (Adult)",
+        "Omen Dragon (Ancient, Spellcaster)",
+        "Omen Dragon (Ancient)",
+        "Omen Dragon (Young, Spellcaster)",
+        "Omen Dragon (Young)",
+        "River Drake",
+        "Tarn Linnorm",
+        "Tor Linnorm",
+        "Wyvern"
+      ]
+    ],
+    "match_on": [
+      "dragon"
+    ]
+  },
+  "dryad": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_dryad_hit1.WAV",
+      "NWN2-Sounds/c_dryad_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_dryad_atk3.wav",
+      "NWN2-Sounds/c_dryad_atk1.WAV",
+      "NWN2-Sounds/c_dryad_atk2.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_dryad_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_dryad_bat2.wav",
+      "NWN2-Sounds/c_dryad_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "fey",
+      "good",
+      "nymph",
+      "plant"
+    ],
+    "creatures": [
+      "Dryad Queen",
+      "Dryad",
+      "Naiad Queen",
+      "Naiad",
+      "Hesperid Queen",
+      "Hesperid",
+      "Lampad Queen",
+      "Lampad",
+      "Pholebis",
+      "Dryad Queen",
+      "Dryad",
+      "Naiad Queen",
+      "Naiad"
+    ],
+    "match_on": [
+      "dryad"
+    ]
+  },
+  "ear": {
+    "notes": "More earth Elemental sounds",
+    "hit_sounds": [],
+    "attack_sounds": [
+      "NWN2-Sounds/c_ear_ele_atk1.WAV",
+      "NWN2-Sounds/c_ear_ele_atk2.WAV",
+      "NWN2-Sounds/c_ear_ele_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_ear_ele_bat1.WAV",
+      "NWN2-Sounds/c_ear_ele_bat2.WAV",
+      "NWN2-Sounds/c_ear_ele_bat3.WAV"
+    ],
+    "traits": [
+      "earth",
+      "elemental"
+    ],
+    "creatures": [
+    ],
+    "match_on": [
+      "ear"
+    ]
+  },
+  "elee": {
+    "notes": "Earth Elemental sounding",
+    "hit_sounds": [],
+    "attack_sounds": [
+      "NWN2-Sounds/c_elee_atk1_01.WAV",
+      "NWN2-Sounds/c_elee_atk1_02.WAV",
+      "NWN2-Sounds/c_elee_atk1_03.WAV",
+      "NWN2-Sounds/c_elee_atk1_04.WAV",
+      "NWN2-Sounds/c_elee_atk2_01.WAV",
+      "NWN2-Sounds/c_elee_atk2_02.WAV",
+      "NWN2-Sounds/c_elee_atk2_03.WAV",
+      "NWN2-Sounds/c_elee_atk2_04.WAV",
+      "NWN2-Sounds/c_elee_atk3_01.WAV",
+      "NWN2-Sounds/c_elee_atk3_02.WAV",
+      "NWN2-Sounds/c_elee_atk3_03.WAV",
+      "NWN2-Sounds/c_elee_atk3_04.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_elee_bat1_01.WAV",
+      "NWN2-Sounds/c_elee_bat1_02.WAV",
+      "NWN2-Sounds/c_elee_bat1_03.WAV",
+      "NWN2-Sounds/c_elee_bat1_04.WAV",
+      "NWN2-Sounds/c_elee_bat2_01.WAV",
+      "NWN2-Sounds/c_elee_bat2_02.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Earth Elemental"
+    ],
+    "match_on": [
+      "earth elemental"
+    ]
+  },
+  "elmair": {
+    "notes": "Air Elemental",
+    "hit_sounds": [
+      "NWN2-Sounds/c_elmair_hit1.WAV",
+      "NWN2-Sounds/c_elmair_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_elmair_atk1.WAV",
+      "NWN2-Sounds/c_elmair_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_elmair_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Air Elemental"
+    ],
+    "match_on": [
+      "air elemental"
+    ]
+  },
+  "elmearth": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_elmearth_hit1.WAV",
+      "NWN2-Sounds/c_elmearth_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_elmearth_atk1.WAV",
+      "NWN2-Sounds/c_elmearth_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_elmearth_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Earth Mephit",
+      "Elemental Avalanche",
+      "Living Landslide",
+      "Sod Hound",
+      "Stone Mauler",
+      "Xorn",
+      "Zaramuun",
+      "Dust Mephit",
+      "Earthen Destrier",
+      "Granite Glyptodont",
+      "Lerritan",
+      "Living Boulder",
+      "Mudwretch",
+      "Sand Sentry",
+      "Consonite Choir",
+      "Earth Wisp",
+      "Abyssal Muckrager",
+      "Earth Scamp"
+    ],
+    "match_on": [
+      "earth elemental"
+    ]
+  },
+  "elmfire": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_elmfire_hit1.WAV",
+      "NWN2-Sounds/c_elmfire_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_elmfire_atk1.WAV",
+      "NWN2-Sounds/c_elmfire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_elmfire_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Elemental Inferno",
+      "Fire Mephit",
+      "Living Wildfire",
+      "Salamander",
+      "Filth Fire",
+      "Lerritan",
+      "Steam Mephit",
+      "Striding Fire",
+      "Azer",
+      "Fire Wisp"
+    ],
+    "match_on": [
+      "fire elemental"
+    ]
+  },
+  "elmwater": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_elmwater_hit1.WAV",
+      "NWN2-Sounds/c_elmwater_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_elmwater_atk1.WAV",
+      "NWN2-Sounds/c_elmwater_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_elmwater_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Brine Shark",
+      "Elemental Tsunami",
+      "Living Waterfall",
+      "Marid",
+      "Quatoid",
+      "Tidal Master",
+      "Water Mephit",
+      "Blizzardborn",
+      "Icicle Snake",
+      "Mist Stalker",
+      "Mudwretch",
+      "Ledalusca",
+      "Water Wisp",
+      "Faydhaan",
+      "Quatoid"
+    ],
+    "match_on": [
+      "water elemental"
+    ]
+  },
+  "erinyes": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_erinyes_hit1.WAV",
+      "NWN2-Sounds/c_erinyes_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_erinyes_atk1.WAV",
+      "NWN2-Sounds/c_erinyes_atk2.WAV",
+      "NWN2-Sounds/c_erinyes_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_erinyes_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Erinyes"
+    ],
+    "match_on": [
+      "erinyes"
+    ]
+  },
+  "fairy": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_fairy_hit1.wav",
+      "NWN2-Creatures/c_fairy_hit2.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_fairy_atk1.wav",
+      "NWN2-Creatures/c_fairy_atk2.wav",
+      "NWN2-Creatures/c_fairy_atk3.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_fairy_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_fairy_bat1.wav",
+      "NWN2-Creatures/c_fairy_bat2.wav"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "fey"
+    ],
+    "creatures": [
+      "Fairy",
+      "Tooth Fairy Swarm",
+      "Tooth Fairy"
+    ],
+    "match_on": [
+      "fairy"
+    ]
+  },
+  "fiend": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_fiend_hit1.WAV",
+      "NWN2-Sounds/c_fiend_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_fiend_atk1.WAV",
+      "NWN2-Sounds/c_fiend_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_fiend_bat1.WAV"
+    ],
+    "traits": [
+      "devil",
+      "evil",
+      "fiend",
+      "lawful",
+      "unholy"
+    ],
+    "creatures": [
+      "Fiend",
+      "Pit Fiend"
+    ],
+    "match_on": [
+      "fiend"
+    ]
+  },
+  "floatbat": {
+    "notes": "bat like creature - screechy",
+    "hit_sounds": [
+      "NWN2-Sounds/c_floatbat_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_floatbat_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_floatbat_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Bat",
+      "Giant Bat",
+      "Vampire Bat Swarm",
+      "Spark Bat",
+      "Werebat",
+      "Stony Bat"
+    ],
+    "match_on": [
+      "bat"
+    ]
+  },
+  "gargoyle": {
+    "notes": "generic monster sound",
+    "hit_sounds": [
+      "NWN2-Sounds/c_gargoyle_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_gargoyle_atk1.WAV",
+      "NWN2-Sounds/c_gargoyle_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_gargoyle_bat1.WAV"
+    ],
+    "traits": [
+      "beast",
+      "chaotic",
+      "earth",
+      "evil"
+    ],
+    "creatures": [
+      "Gargoyle"
+    ],
+    "match_on": [
+      "gargoyle"
+    ]
+  },
+  "ghast": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_ghast_hit1.WAV",
+      "NWN2-Sounds/c_ghast_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_ghast_atk1.WAV",
+      "NWN2-Sounds/c_ghast_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_ghast_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "ghoul",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Ghast",
+      "Ghoul",
+      "Leng Ghoul",
+      "Aller Rosk",
+      "Augrael",
+      "Canker Cultist",
+      "Nhakazarin",
+      "Falrok",
+      "Lacedon",
+      "Priest Of Kabriri",
+      "Ghoul Soldier",
+      "Ghoul Stalker"
+    ],
+    "match_on": [
+      "ghast"
+    ]
+  },
+  "ghost": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_ghost_hit1.WAV",
+      "NWN2-Sounds/c_ghost_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_ghost_atk1.WAV",
+      "NWN2-Sounds/c_ghost_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_ghost_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "ghost",
+      "incorporeal",
+      "spirit",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Ghost",
+      "Duskwalker Ghost Hunter",
+      "Ghost Commoner",
+      "Ghost Mage",
+      "Ghost Pirate Captain",
+      "Ghost Stampede",
+      "Hungry Ghost",
+      "Ghost Monk",
+      "Ghost Ape",
+      "Banshee",
+      "Ghost Commoner",
+      "Ghost Mage",
+      "Greater Shadow",
+      "Poltergeist",
+      "Shadow",
+      "Wraith",
+      "Dread Wraith",
+      "Specter",
+      "Witchfire",
+      "Abandoned Zealot",
+      "Corrupted Relic",
+      "Dybbuk",
+      "Elder Wyrmwraith",
+      "Fortune Eater",
+      "Nemhaith",
+      "Nightmarchers",
+      "Seething Spirit",
+      "Wyrmwraith",
+      "Belcorra Haruvex",
+      "Bright Walker",
+      "Chandriu Invisar",
+      "Jarelle Kaldrian",
+      "Otari Ilvashti",
+      "Poisoning Room Specter",
+      "Siora Fallowglade",
+      "Witchfire Warden",
+      "Aiudara Wraith",
+      "Remnant of Barzillai",
+      "Saggorak Poltergeist",
+      "Talamira",
+      "Bhuta",
+      "Death Coach",
+      "Fluxwraith",
+      "Geist",
+      "Ghost Pirate Captain",
+      "Grappling Spirit",
+      "Hungry Ghost",
+      "Last Guard",
+      "Llorona",
+      "Polong",
+      "Ghost Monk",
+      "Kannitri",
+      "Watchtower Poltergeist",
+      "Watchtower Shadow",
+      "Watchtower Wraith",
+      "Pale Horse",
+      "Banshee",
+      "Dybbuk",
+      "Ghost Commoner",
+      "Ghost Mage",
+      "Greater Shadow",
+      "Poltergeist",
+      "Shadow Spawn",
+      "Shadow"
+    ],
+    "match_on": [
+      "ghost"
+    ]
+  },
+  "ghoul": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_ghoul_hit1.WAV",
+      "NWN2-Sounds/c_ghoul_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_ghoul_atk3.wav",
+      "NWN2-Sounds/c_ghoul_atk1.WAV",
+      "NWN2-Sounds/c_ghoul_atk2.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_ghoul_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_ghoul_bat2.wav",
+      "NWN2-Sounds/c_ghoul_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "ghoul",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Ghoul",
+      "Leng Ghoul",
+      "Ghoul Soldier",
+      "Ghoul Stalker"
+    ],
+    "match_on": [
+      "ghoul"
+    ]
+  },
+  "giant": {
+    "notes": "giant - no actual fire or frost",
+    "hit_sounds": [
+      "NWN2-Sounds/c_giantfire_hit1.WAV",
+      "NWN2-Sounds/c_giantfire_hit2.WAV",
+      "NWN2-Sounds/c_giantfrost_hit1.WAV",
+      "NWN2-Sounds/c_giantfrost_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_giantfire_atk1.WAV",
+      "NWN2-Sounds/c_giantfire_atk2.WAV",
+      "NWN2-Sounds/c_giantfire_atk3.WAV",
+      "NWN2-Sounds/c_giantfrost_atk1.WAV",
+      "NWN2-Sounds/c_giantfrost_atk2.WAV",
+      "NWN2-Sounds/c_giantfrost_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_giantfire_bat1.WAV",
+      "NWN2-Sounds/c_giantfrost_bat1.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Cloud Giant",
+      "Cyclops",
+      "Ettin",
+      "Fire Giant",
+      "Frost Giant",
+      "Great Cyclops",
+      "Hill Giant",
+      "Ogre Boss",
+      "Ogre Glutton",
+      "Ogre Warrior",
+      "Rune Giant",
+      "Stone Giant",
+      "Storm Giant",
+      "Troll King",
+      "Troll",
+      "Athach",
+      "Fire Yai",
+      "Ice Yai",
+      "Marsh Giant",
+      "Onidoshi",
+      "Shadow Giant",
+      "Taiga Giant",
+      "Water Yai",
+      "Wood Giant",
+      "Cave Giant",
+      "Desert Giant",
+      "Plague Giant",
+      "Tomb Giant",
+      "Dragonstorm Fire Giant",
+      "Berberoka",
+      "Koto Zekora",
+      "Shadow Yai",
+      "Taiga Yai",
+      "Tino (Oni Form)",
+      "Caldera Oni",
+      "Cyclops",
+      "Fire Giant",
+      "Frost Giant",
+      "Great Cyclops",
+      "Island Oni",
+      "Marsh Giant",
+      "Mountain Oni",
+      "Ogre Boss",
+      "Ogre Glutton",
+      "Ogre Warrior",
+      "Rune Giant",
+      "Shadow Giant",
+      "Snow Oni"
+    ],
+    "match_on": [
+      "giant"
+    ]
+  },
+  "gith": {
+    "notes": "Male Githyanki - can probably be used for most humanoids",
+    "hit_sounds": [
+      "NWN2-Sounds/c_gith_hit1.WAV",
+      "NWN2-Sounds/c_gith_hit2.WAV",
+      "NWN2-Sounds/c_gith_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_gith_atk1.WAV",
+      "NWN2-Sounds/c_gith_atk2.WAV",
+      "NWN2-Sounds/c_gith_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_gith_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Gith"
+    ],
+    "match_on": [
+      "gith"
+    ]
+  },
+  "githf": {
+    "notes": "Female Githyanki - tchk",
+    "hit_sounds": [
+      "NWN2-Sounds/c_githf_hit1.WAV",
+      "NWN2-Sounds/c_githf_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_githf_atk1.WAV",
+      "NWN2-Sounds/c_githf_atk2.WAV",
+      "NWN2-Sounds/c_githf_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_githf_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Githf"
+    ],
+    "match_on": [
+      "githf"
+    ]
+  },
+  "gnoll": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_gnoll_hit1.WAV",
+      "NWN2-Sounds/c_gnoll_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_gnoll_atk1.WAV",
+      "NWN2-Sounds/c_gnoll_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_gnoll_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "gnoll",
+      "humanoid"
+    ],
+    "creatures": [
+      "Gnoll",
+      "Gnoll Cultist",
+      "Gnoll Hunter",
+      "Gnoll Sergeant",
+      "Speakers to the Wind (Gnoll Cascade Bearer)",
+      "Kholo Bonekeeper",
+      "Kholo Hunter",
+      "Kholo Sergeant"
+    ],
+    "match_on": [
+      "gnoll",
+      "kholo"
+    ]
+  },
+  "goblin": {
+    "notes": "very aggressive sounding - not very golarion gobliny :D",
+    "hit_sounds": [
+      "NWN2-Sounds/c_goblin_hit1.WAV",
+      "NWN2-Sounds/c_goblin_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_goblin_atk1.WAV",
+      "NWN2-Sounds/c_goblin_atk2.WAV",
+      "NWN2-Sounds/c_goblin_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_goblin_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_goblin_bat1.WAV",
+      "NWN2-Sounds/c_goblin_bat2.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "goblin",
+      "humanoid"
+    ],
+    "creatures": [
+      "Goblin",
+      "Goblin Commando",
+      "Goblin Dog",
+      "Goblin Pyro",
+      "Goblin War Chanter",
+      "Goblin Warrior"
+    ],
+    "match_on": [
+      "goblin"
+    ]
+  },
+  "golmiron": {
+    "notes": "metalic sounding golem - could be used for any metal construct",
+    "hit_sounds": [
+      "NWN2-Sounds/c_golmiron_hit1.WAV",
+      "NWN2-Sounds/c_golmiron_hit2.WAV",
+      "NWN2-Sounds/c_golmiron_hit3.WAV",
+      "NWN2-Sounds/c_irongol_hit1.WAV",
+      "NWN2-Sounds/c_irongol_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_golmiron_atk1.WAV",
+      "NWN2-Sounds/c_golmiron_atk2.WAV",
+      "NWN2-Sounds/c_golmiron_atk3.WAV",
+      "NWN2-Sounds/c_irongol_atk1.WAV",
+      "NWN2-Sounds/c_irongol_atk2.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_golmiron_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_golmiron_bat1.WAV"
+    ],
+    "traits": [
+      "construct",
+      "golem",
+      "mindless"
+    ],
+    "creatures": [
+      "Adamantine Golem", 
+      "Alchemical Golem", 
+      "Clay Golem", 
+      "Flesh Golem", 
+      "Iron Golem", 
+      "Stone Golem", 
+      "Carrion Golem", 
+      "Glass Golem", 
+      "Ice Golem", 
+      "Wood Golem", 
+      "Fossil Golem", 
+      "Mithral Golem", 
+      "Nhimbaloth's Cutter", 
+      "Lazurite-Infused Stone Golem"
+  ],
+    "match_on": [
+      "golem"
+    ]
+  },
+  "hezrou": {
+    "notes": "Very big beast sound",
+    "hit_sounds": [
+      "NWN2-Sounds/c_hezrou_hit1.WAV",
+      "NWN2-Sounds/c_hezrou_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_hezrou_atk1.WAV",
+      "NWN2-Sounds/c_hezrou_atk2.WAV",
+      "NWN2-Sounds/c_hezrou_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_hezrou_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "demon",
+      "evil",
+      "fiend",
+      "unholy"
+    ],
+    "creatures": [
+      "Hezrou"
+    ],
+    "match_on": [
+      "hezrou"
+    ]
+  },
+  "hobgob": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_hobgob_hit1.WAV",
+      "NWN2-Sounds/c_hobgob_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_hobgob_atk1.WAV",
+      "NWN2-Sounds/c_hobgob_atk2.WAV",
+      "NWN2-Sounds/c_hobgob_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_hobgob_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_hobgob_bat1.WAV",
+      "NWN2-Sounds/c_hobgob_bat2.WAV",
+      "NWN2-Sounds/c_hobgobwiz_bat1.WAV"
+    ],
+    "traits": [
+      "evil",
+      "goblin",
+      "humanoid",
+      "lawful"
+    ],
+    "creatures": [
+      "Hobgoblin",
+      "Hobgoblin Archer",
+      "Hobgoblin General",
+      "Hobgoblin Soldier"
+    ],
+    "match_on": [
+      "hobgoblin"
+    ]
+  },
+  "horror": {
+    "notes": "Metal sounding - more like a haunted item",
+    "hit_sounds": [
+      "NWN2-Sounds/c_horror_hit1.WAV",
+      "NWN2-Sounds/c_horror_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_horror_atk1.WAV",
+      "NWN2-Sounds/c_horror_atk2.WAV",
+      "NWN2-Sounds/c_horror_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_horror_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_horror_bat1.WAV",
+      "NWN2-Sounds/c_horror_bat2.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Horror"
+    ],
+    "match_on": [
+      "horror"
+    ]
+  },
+  "imp": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_imp_hit1.WAV",
+      "NWN2-Sounds/c_imp_hit2.WAV",
+      "NWN2-Sounds/c_impice_hit1.WAV",
+      "NWN2-Sounds/c_impice_hit2.WAV",
+      "NWN2-Sounds/c_impfire_hit1.WAV",
+      "NWN2-Sounds/c_impfire_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_imp_atk1.WAV",
+      "NWN2-Sounds/c_impfire_atk1.WAV",
+      "NWN2-Sounds/c_impfire_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_imp_bat1.WAV",
+      "NWN2-Sounds/c_impfire_bat1.WAV",
+      "NWN2-Sounds/c_impice_bat1.WAV"
+    ],
+    "traits": [
+      "devil",
+      "evil",
+      "fiend",
+      "lawful",
+      "unholy"
+    ],
+    "creatures": [
+      "Imp"
+    ],
+    "match_on": [
+      "imp"
+    ]
+  },
+  "kana": {
+    "notes": "angry female - barbarianesque",
+    "hit_sounds": [
+      "NWN2-Sounds/c_kana_hit1.WAV",
+      "NWN2-Sounds/c_kana_hit2.WAV",
+      "NWN2-Sounds/c_kana_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_kana_atk1.WAV",
+      "NWN2-Sounds/c_kana_atk2.WAV",
+      "NWN2-Sounds/c_kana_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [
+      "amphibious",
+      "beast"
+    ],
+    "creatures": [
+      "Kana",
+      "Amelekana"
+    ],
+    "match_on": [
+      "kana"
+    ]
+  },
+  "kistral": {
+    "notes": "gross insect sounding",
+    "hit_sounds": [
+      "NWN2-Sounds/c_kistral_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_kistral_atk1.WAV",
+      "NWN2-Sounds/c_kistral_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_kistral_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Kistral",
+      "Jafaki",
+      "Observation Deck Seugathi Researcher",
+      "Seugathi Guard",
+      "Seugathi Reality Warper",
+      "Seugathi Researcher",
+      "Seugathi Servant"
+    ],
+    "match_on": [
+      "kistral"
+    ]
+  },
+  "kobold": {
+    "notes": "quite dog sounding - less lizardy",
+    "hit_sounds": [
+      "NWN2-Sounds/c_kobold_hit1.WAV",
+      "NWN2-Sounds/c_kobold_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_kobold_atk1.WAV",
+      "NWN2-Sounds/c_kobold_atk2.WAV",
+      "NWN2-Sounds/c_kobold_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_kobold_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_kobold_bat1.WAV",
+      "NWN2-Sounds/c_kobold_bat2.WAV",
+      "NWN2-Sounds/c_koboldchf_bat1.WAV"
+    ],
+    "traits": [
+      "evil",
+      "humanoid",
+      "kobold",
+      "lawful"
+    ],
+    "creatures": [
+      "Kobold",
+      "Kobold Dragon Mage (Black)",
+      "Kobold Dragon Mage (Blue)",
+      "Kobold Dragon Mage (Green)",
+      "Kobold Dragon Mage (Red)",
+      "Kobold Dragon Mage (White)",
+      "Kobold Scout",
+      "Kobold Warrior",
+      "Kobold Cavern Mage"
+    ],
+    "match_on": [
+      "kobold"
+    ]
+  },
+  "koraboros": {
+    "notes": "deeper male humanoid",
+    "hit_sounds": [
+      "NWN2-Sounds/c_koraboros_hit1.WAV",
+      "NWN2-Sounds/c_koraboros_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_koraboros_atk1.WAV",
+      "NWN2-Sounds/c_koraboros_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_koraboros_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Koraboros"
+    ],
+    "match_on": [
+      "koraboros"
+    ]
+  },
+  "kos": {
+    "notes": "sounds like an orc boss",
+    "hit_sounds": [
+      "NWN2-Sounds/c_kos_hit1.WAV",
+      "NWN2-Sounds/c_kos_hit2.WAV",
+      "NWN2-Sounds/c_kos_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_kos_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_kos_bat3.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Kos"
+    ],
+    "match_on": [
+      "kos"
+    ]
+  },
+  "lich": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_lich_hit1.WAV",
+      "NWN2-Sounds/c_lich_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_lich_atk1.WAV",
+      "NWN2-Sounds/c_lich_atk2.WAV",
+      "NWN2-Sounds/c_lich_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_lich_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_lich_bat1.WAV",
+      "NWN2-Sounds/c_lich_bat2.WAV"
+    ],
+    "traits": [
+      "evil",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Lich",
+      "Demilich",
+      "Horde Lich",
+      "Runecarved Lich"
+    ],
+    "match_on": [
+      "lich"
+    ]
+  },
+  "lizardm": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_lizardm_hit1.WAV",
+      "NWN2-Sounds/c_lizardm_hit2.WAV",
+      "NWN2-Sounds/c_lizman_hit1.WAV",
+      "NWN2-Sounds/c_lizman_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_lizardm_atk1.WAV",
+      "NWN2-Sounds/c_lizardm_atk2.WAV",
+      "NWN2-Sounds/c_lizardm_atk3.WAV",
+      "NWN2-Sounds/c_lizman_atk1.WAV",
+      "NWN2-Sounds/c_lizman_atk2.WAV",
+      "NWN2-Sounds/c_lizman_bat1.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_lizardm_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_lizardm_bat1.WAV",
+      "NWN2-Sounds/c_lizardm_bat2.WAV",
+      "NWN2-Sounds/c_lizardmw_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Lizardfolk Defender",
+      "Lizardfolk Scout",
+      "Lizardfolk Stargazer",
+      "Iruxi Ossature"
+    ],
+    "match_on": [
+      "lizardfolk"
+    ]
+  },
+  "lornestarling": {
+    "notes": "generic evil human male",
+    "hit_sounds": [
+      "NWN2-Sounds/c_lornestarling_hit1.WAV",
+      "NWN2-Sounds/c_lornestarling_hit2.WAV",
+      "NWN2-Sounds/c_lornestarling_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_lornestarling_atk1.WAV",
+      "NWN2-Sounds/c_lornestarling_atk2.WAV",
+      "NWN2-Sounds/c_lornestarling_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_lornestarling_bat1.WAV",
+      "NWN2-Sounds/c_lornestarling_bat2.WAV",
+      "NWN2-Sounds/c_lornestarling_bat3.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Lornestarling"
+    ],
+    "match_on": [
+      "lornestarling"
+    ]
+  },
+  "mephit": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_mephit_hit1.wav",
+      "NWN2-Creatures/c_mephit_hit2.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_mephit_atk1.wav",
+      "NWN2-Creatures/c_mephit_atk2.wav",
+      "NWN2-Creatures/c_mephit_atk3.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_mephit_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_mephit_bat1.wav",
+      "NWN2-Creatures/c_mephit_bat2.wav"
+    ],
+    "traits": [
+      "air",
+      "elemental"
+    ],
+    "creatures": [
+      "Mephit",
+      "Air Mephit",
+      "Earth Mephit",
+      "Fire Mephit",
+      "Water Mephit",
+      "Dust Mephit",
+      "Ice Mephit",
+      "Ooze Mephit",
+      "Steam Mephit",
+      "Air Scamp",
+      "Earth Scamp",
+      "Fire Scamp",
+      "Water Scamp"
+    ],
+    "match_on": [
+      "mephit",
+      "scamp"
+    ]
+  },
+  "mindflayer": {
+    "notes": "monster sounding - not very tentacly",
+    "hit_sounds": [
+      "NWN2-Sounds/c_mindflayer_hit1.WAV",
+      "NWN2-Sounds/c_mindflayer_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_mindflayer_atk1.WAV",
+      "NWN2-Sounds/c_mindflayer_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_mindflayer_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Mindflayer"
+    ],
+    "match_on": [
+      "mindflayer"
+    ]
+  },
+  "minotaur": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_minotaur_hit1.WAV",
+      "NWN2-Sounds/c_minotaur_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_minotaur_atk1.WAV",
+      "NWN2-Sounds/c_minotaur_atk2.WAV",
+      "NWN2-Sounds/c_minotaur_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_minotaur_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_minotaur_bat1.WAV",
+      "NWN2-Sounds/c_minotaur_bat2.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "humanoid"
+    ],
+    "creatures": [
+      "Minotaur",
+      "Minotaur Hunter"
+    ],
+    "match_on": [
+      "minotaur"
+    ]
+  },
+  "mummy": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_mummy_hit1.WAV",
+      "NWN2-Sounds/c_mummy_hit2.WAV",
+      "NWN2-Sounds/c_mummygrt_hit1.WAV",
+      "NWN2-Sounds/c_mummygrt_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_mummy_atk1.WAV",
+      "NWN2-Sounds/c_mummy_atk2.WAV",
+      "NWN2-Sounds/c_mummygrt_atk1.WAV",
+      "NWN2-Sounds/c_mummygrt_atk2.WAV",
+      "NWN2-Sounds/c_mummygrt_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_mummygrt_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_mummy_bat1.WAV",
+      "NWN2-Sounds/c_mummygrt_bat1.WAV",
+      "NWN2-Sounds/c_mummygrt_bat2.WAV"
+    ],
+    "traits": [
+      "evil",
+      "lawful",
+      "mummy",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Mummy",
+      "Mummy Guardian",
+      "Mummy Pharaoh",
+      "Bog Mummy",
+      "Decrepit Mummy",
+      "Ice Mummy",
+      "Iroran Mummy",
+      "Mummy Prophet Of Set"
+    ],
+    "match_on": [
+      "mummy"
+    ]
+  },
+  "nightwalk": {
+    "notes": "Good for generic evil creatures",
+    "hit_sounds": [
+      "NWN2-Sounds/c_nightwalk_hit1.WAV",
+      "NWN2-Sounds/c_nightwalk_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_nightwalk_atk1.WAV",
+      "NWN2-Sounds/c_nightwalk_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_nightwalk_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Nightwalk"
+    ],
+    "match_on": [
+      "nightwalk"
+    ]
+  },
+  "ogre": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_ogre_hit1.WAV",
+      "NWN2-Sounds/c_ogre_hit2.WAV",
+      "NWN2-Sounds/c_ogremagi_hit1.WAV",
+      "NWN2-Sounds/c_ogremagi_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_ogre_atk1.WAV",
+      "NWN2-Sounds/c_ogre_atk2.WAV",
+      "NWN2-Sounds/c_ogre_atk3.WAV",
+      "NWN2-Sounds/c_ogremagi_atk1.WAV",
+      "NWN2-Sounds/c_ogremagi_atk2.WAV",
+      "NWN2-Sounds/c_ogremagi_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_ogre_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_ogre_bat1.WAV",
+      "NWN2-Sounds/c_ogre_bat2.WAV",
+      "NWN2-Sounds/c_ogrechf_bat1.WAV",
+      "NWN2-Sounds/c_ogremagi_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "giant",
+      "humanoid"
+    ],
+    "creatures": [
+      "Ogre",
+      "Ogre Boss",
+      "Ogre Glutton",
+      "Ogre Warrior"
+    ],
+    "match_on": [
+      "ogre"
+    ]
+  },
+  "orc": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_orc_hit1.WAV",
+      "NWN2-Sounds/c_orc_hit2.WAV",
+      "NWN2-Sounds/c_orc_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_orc_atk1.WAV",
+      "NWN2-Sounds/c_orc_atk2.WAV",
+      "NWN2-Sounds/c_orc_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_orc_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_orc_bat1.WAV",
+      "NWN2-Sounds/c_orc_bat2.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Orc",
+      "Orc Brute",
+      "Orc Warchief",
+      "Orc Warrior",
+      "Orc Commander",
+      "Orc Scrapper",
+      "Orc Veteran"
+    ],
+    "match_on": [
+      "orc"
+    ]
+  },
+  "pixie": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_pixie_hit1.WAV",
+      "NWN2-Sounds/c_pixie_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_pixie_atk1.WAV",
+      "NWN2-Sounds/c_pixie_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_pixie_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "fey",
+      "sprite"
+    ],
+    "creatures": [
+      "Pixie",
+      "Sprite"
+    ],
+    "match_on": [
+      "pixie"
+    ]
+  },
+  "rat": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_rat_hit1.WAV",
+      "NWN2-Sounds/c_rat_hit2.WAV",
+      "NWN2-Sounds/c_ratdire_hit1.WAV",
+      "NWN2-Sounds/c_ratdire_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_rat_atk1.WAV",
+      "NWN2-Sounds/c_rat_atk2.WAV",
+      "NWN2-Sounds/c_rat_atk3.WAV",
+      "NWN2-Sounds/c_ratdire_atk1.WAV",
+      "NWN2-Sounds/c_ratdire_atk2.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_rat_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_rat_bat1.WAV",
+      "NWN2-Sounds/c_rat_bat2.WAV",
+      "NWN2-Sounds/c_ratdire_bat1.WAV",
+      "NWN2-Sounds/c_rathuge_bat1.WAV"
+    ],
+    "traits": [
+      "animal",
+      "swarm"
+    ],
+    "creatures": [
+      "Rat",
+      "Cinder Rat",
+      "Giant Rat",
+      "Rat Swarm",
+      "Wererat",
+      "Rat Snake Swarm"
+    ],
+    "match_on": [
+      "rat"
+    ]
+  },
+  "shadowreaver": {
+    "notes": "evil undeady creatures",
+    "hit_sounds": [
+      "NWN2-Sounds/c_shadowreaver_hit1.WAV",
+      "NWN2-Sounds/c_shadowreaver_hit2.WAV",
+      "NWN2-Sounds/c_shadowreaver_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_shadowreaver_atk1.WAV",
+      "NWN2-Sounds/c_shadowreaver_atk2.WAV",
+      "NWN2-Sounds/c_shadowreaver_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_shadowreaver_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Shadowreaver",
+      "Wight",
+      "Cairn Wight",
+      "Hunter Wight",
+      "Prowler Wight",
+      "Wight Commander"
+    ],
+    "match_on": [
+      "shadowreaver"
+    ]
+  },
+  "skeleton": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_skeleton_hit1.WAV",
+      "NWN2-Sounds/c_skeleton_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_skeleton_atk1.WAV",
+      "NWN2-Sounds/c_skeleton_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_skeleton_bat1.WAV"
+    ],
+    "traits": [
+      "evil",
+      "mindless",
+      "skeleton",
+      "undead",
+      "unholy"
+    ],
+    "creatures": [
+      "Skeleton",
+      "Skeleton Guard",
+      "Harpy Skeleton",
+      "Skeleton Infantry",
+      "Tyrannosaurus Skeleton",
+      "Deadtide Skeleton Guard",
+      "Drake Skeleton",
+      "Wolf Skeleton"
+    ],
+    "match_on": [
+      "skeleton"
+    ]
+  },
+  "slaan": {
+    "notes": "Lizard man sounding",
+    "hit_sounds": [
+      "NWN2-Sounds/c_slaan_hit1.WAV",
+      "NWN2-Sounds/c_slaan_hit2.WAV",
+      "NWN2-Sounds/c_slaan_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_slaan_atk1.WAV",
+      "NWN2-Sounds/c_slaan_atk2.WAV",
+      "NWN2-Sounds/c_slaan_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [],
+    "creatures": [
+      "Slaan"
+    ],
+    "match_on": [
+      "slaan"
+    ]
+  },
+  "slyph": {
+    "notes": "annoying sounding fairy",
+    "hit_sounds": [
+      "NWN2-Sounds/c_slyph_hit1.WAV",
+      "NWN2-Sounds/c_slyph_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_slyph_atk1.WAV",
+      "NWN2-Sounds/c_slyph_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_slyph_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Slyph"
+    ],
+    "match_on": [
+      "slyph"
+    ]
+  },
+  "spidbn": {
+    "notes": "Generic Spider Sounds",
+    "hit_sounds": [
+      "NWN2-Sounds/c_spidbn_hit1.WAV",
+      "NWN2-Sounds/c_spidbn_hit1_01.WAV",
+      "NWN2-Sounds/c_spidbn_hit1_02.WAV",
+      "NWN2-Sounds/c_spidbn_hit1_03.WAV",
+      "NWN2-Sounds/c_spidbn_hit2.WAV",
+      "NWN2-Sounds/c_spidbn_hit2_01.WAV",
+      "NWN2-Sounds/c_spidbn_hit2_02.WAV",
+      "NWN2-Sounds/c_spidbn_hit2_03.WAV",
+      "NWN2-Sounds/c_spidbn_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_spidbn_atk1.WAV",
+      "NWN2-Sounds/c_spdbn_atk1_01.WAV",
+      "NWN2-Sounds/c_spidbn_atk1_02.WAV",
+      "NWN2-Sounds/c_spidbn_atk1_03.WAV",
+      "NWN2-Sounds/c_spidbn_atk1_04.WAV",
+      "NWN2-Sounds/c_spidbn_atk2.WAV",
+      "NWN2-Sounds/c_spidbn_atk2_01.WAV",
+      "NWN2-Sounds/c_spidbn_atk2_02.WAV",
+      "NWN2-Sounds/c_spidbn_atk2_03.WAV",
+      "NWN2-Sounds/c_spidbn_atk2_04.WAV",
+      "NWN2-Sounds/c_spidbn_atk3.WAV",
+      "NWN2-Sounds/c_spidbn_atk3_01.WAV",
+      "NWN2-Sounds/c_spidbn_atk3_02.WAV",
+      "NWN2-Sounds/c_spidbn_atk3_03.WAV",
+      "NWN2-Sounds/c_spidbn_atk3_04.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_spidbn_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_spidbn_bat1.WAV",
+      "NWN2-Sounds/c_spidbn_bat1_01.WAV",
+      "NWN2-Sounds/c_spidbn_bat1_02.WAV",
+      "NWN2-Sounds/c_spidbn_bat1_03.WAV",
+      "NWN2-Sounds/c_spidbn_bat1_04.WAV",
+      "NWN2-Sounds/c_spidbn_bat2.WAV",
+      "NWN2-Sounds/c_spidbn_bat3.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Giant Spider",
+      "Spider",
+      "Ether Spider",
+      "Goliath Spider"
+    ],
+    "match_on": [
+      "spider"
+    ]
+  },
+  "spidbone": {
+    "notes": "More Generic Spider Sounds",
+    "hit_sounds": [
+      "NWN2-Sounds/c_spidbone_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_spidbone_atk1.WAV",
+      "NWN2-Sounds/c_spidbone_atk2.WAV",
+      "NWN2-Sounds/c_spiddire_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_spidbone_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Hunting Spider",
+      "Spider Swarm"
+    ],
+    "match_on": [
+      "spider"
+    ]
+  },
+  "spider": {
+    "notes": "Even More Generic Spider Sounds",
+    "hit_sounds": [
+      "NWN2-Creatures/c_spider_hit1.WAV",
+      "NWN2-Creatures/c_spider_hit2.WAV",
+      "NWN2-Creatures/c_spider_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_spider_atk1.WAV",
+      "NWN2-Creatures/c_spider_atk2.WAV",
+      "NWN2-Creatures/c_spider_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_spider_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_spider_bat1.WAV",
+      "NWN2-Creatures/c_spider_bat2.WAV",
+      "NWN2-Creatures/c_spider_bat3.WAV"
+    ],
+    "traits": [
+      "animal",
+      "swarm"
+    ],
+    "creatures": [
+      "Leng Spider",
+      "Ogre Spider",
+      "Mud Spider"
+    ],
+    "match_on": [
+      "spider"
+    ]
+  },
+  "spidwraith": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_spidwraith_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_spidwraith_atk1.WAV",
+      "NWN2-Sounds/c_spidwraith_atk2.WAV",
+      "NWN2-Sounds/c_spidphase_atk1.WAV",
+      "NWN2-Sounds/c_spidgiant_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_spidwraith_bat1.WAV",
+      "NWN2-Sounds/c_spidphase_bat1.WAV",
+      "NWN2-Sounds/c_spidgiant_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Dream Spider",
+      "Leng Spider",
+      "Ettin"
+    ],
+    "match_on": [
+      "dream spider",
+      "leng spider"
+    ]
+  },
+  "succubus": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_succubus_hit1.WAV",
+      "NWN2-Sounds/c_succubus_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_succubus_atk3.wav",
+      "NWN2-Sounds/c_succubus_atk1.WAV",
+      "NWN2-Sounds/c_succubus_atk2.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_succubus_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_succubus_bat2.wav",
+      "NWN2-Sounds/c_succubus_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "demon",
+      "evil",
+      "fiend",
+      "unholy"
+    ],
+    "creatures": [
+      "Succubus"
+    ],
+    "match_on": [
+      "succubus"
+    ]
+  },
+  "tiefling": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_tiefling_hit1.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_tiefling_atk1.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_tiefling_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_tiefling_bat1.wav"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "human",
+      "humanoid",
+      "nephilim"
+    ],
+    "creatures": [
+      "Tiefling",
+      "Tiefling Adept"
+    ],
+    "match_on": [
+      "tiefling"
+    ]
+  },
+  "troll": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_troll_hit1.WAV",
+      "NWN2-Sounds/c_troll_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_troll_atk1.WAV",
+      "NWN2-Sounds/c_troll_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_troll_bat1.WAV"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "giant",
+      "troll"
+    ],
+    "creatures": [
+      "Troll King",
+      "Troll",
+      "Cavern Troll",
+      "Frost Troll",
+      "Jotund Troll",
+      "Two-Headed Troll",
+      "Forest Troll",
+      "Troll Warleader"
+    ],
+    "match_on": [
+      "troll"
+    ]
+  },
+  "umber": {
+    "notes": "Mix of bestial and giant",
+    "hit_sounds": [
+      "NWN2-Sounds/c_umber_hit1.WAV",
+      "NWN2-Sounds/c_umber_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_umber_atk1.WAV",
+      "NWN2-Sounds/c_umber_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_umber_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Umber"
+    ],
+    "match_on": [
+      "umber"
+    ]
+  },
+  "umberhlk": {
+    "notes": "insecty sounding",
+    "hit_sounds": [
+      "NWN2-Sounds/c_umberhlk_hit1.WAV",
+      "NWN2-Sounds/c_umberhlk_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_umberhlk_atk1.WAV",
+      "NWN2-Sounds/c_umberhlk_atk2.WAV",
+      "NWN2-Sounds/c_umberhlk_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Sounds/c_umberhlk_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_umberhlk_bat1.WAV",
+      "NWN2-Sounds/c_umberhlk_bat2.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Umberhlk"
+    ],
+    "match_on": [
+      "umberhlk"
+    ]
+  },
+  "umberhulk": {
+    "notes": "",
+    "hit_sounds": [],
+    "attack_sounds": [],
+    "death_sounds": [
+      "NWN2-Sounds/c_umberhulk_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_umberhulk_bat2.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Umberhulk"
+    ],
+    "match_on": [
+      "umberhulk"
+    ]
+  },
+  "vale": {
+    "notes": "Male human - a bit higher pitched",
+    "hit_sounds": [
+      "NWN2-Sounds/c_vale_hit1.WAV",
+      "NWN2-Sounds/c_vale_hit2.WAV",
+      "NWN2-Sounds/c_vale_hit3.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_vale_atk1.WAV",
+      "NWN2-Sounds/c_vale_atk2.WAV",
+      "NWN2-Sounds/c_vale_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [],
+    "creatures": [
+      "Vale"
+    ],
+    "match_on": [
+      "vale"
+    ]
+  },
+  "vampf": {
+    "notes": "Female Vampire Sounds",
+    "hit_sounds": [
+      "NWN2-Sounds/c_vampf_hit1.WAV",
+      "NWN2-Sounds/c_vampf_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_vampf_atk2.WAV",
+      "NWN2-Sounds/c_vampf_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_vampf_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Lamia",
+      "Lamia Matriarch"
+    ],
+    "match_on": [
+      "lamia"
+    ]
+  },
+  "vampire": {
+    "notes": "Boss vampire sounds",
+    "hit_sounds": [
+      "NWN2-Creatures/c_vampire_hit1.wav",
+      "NWN2-Creatures/c_vampire_hit2.wav"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_vampire_atk1.wav",
+      "NWN2-Creatures/c_vampire_atk2.wav",
+      "NWN2-Creatures/c_vampire_atk3.wav"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_vampire_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_vampire_bat1.wav",
+      "NWN2-Creatures/c_vampire_bat2.wav"
+    ],
+    "traits": [
+      "chaotic",
+      "evil",
+      "undead",
+      "unholy",
+      "vampire"
+    ],
+    "creatures": [
+      "Vampire",
+      "Vampire Bat Swarm",
+      "Vampire Count",
+      "Vampire Mastermind",
+      "Vampire Spawn Rogue",
+      "Vampire Squid",
+      "Vampire Servitor"
+    ],
+    "match_on": [
+      "vampire"
+    ]
+  },
+  "vampm": {
+    "notes": "Generic vampire sounds",
+    "hit_sounds": [
+      "NWN2-Sounds/c_vampm_hit1.WAV",
+      "NWN2-Sounds/c_vampm_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_vampm_atk1.WAV",
+      "NWN2-Sounds/c_vampm_atk2.WAV",
+      "NWN2-Sounds/c_vampm_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_vampm_dead.wav"
+    ],
+    "battle_sounds": [
+      "NWN2-Sounds/c_vampm_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Nosferatu Malefactor",
+      "Nosferatu Overlord",
+      "Nosferatu Thrall"
+    ],
+    "match_on": [
+      "vampm"
+    ]
+  },
+  "vashne": {
+    "notes": "Vampire or undead boss",
+    "hit_sounds": [
+      "NWN2-Sounds/c_vashne_hit1.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_vashne_atk1.WAV",
+      "NWN2-Sounds/c_vashne_atk2.WAV",
+      "NWN2-Sounds/c_vashne_atk3.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [],
+    "traits": [],
+    "creatures": [
+      "Vashne"
+    ],
+    "match_on": [
+      "vashne"
+    ]
+  },
+  "weasel": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_weasel_hit1.WAV",
+      "NWN2-Sounds/c_weasel_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_weasel_atk1.WAV",
+      "NWN2-Sounds/c_weasel_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_weasel_bat1.WAV"
+    ],
+    "traits": [
+      "animal"
+    ],
+    "creatures": [
+      "Weasel"
+    ],
+    "match_on": [
+      "weasel"
+    ]
+  },
+  "werewolf": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Sounds/c_werewolf_hit1.WAV",
+      "NWN2-Sounds/c_werewolf_hit2.WAV",
+      "NWN2-Sounds/c_werewolf_m_hit1.WAV",
+      "NWN2-Sounds/c_werewolf_m_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Sounds/c_werewolf_atk1.WAV",
+      "NWN2-Sounds/c_werewolf_atk2.WAV",
+      "NWN2-Sounds/c_werewolf_m_atk1.WAV",
+      "NWN2-Sounds/c_werewolf_m_atk2.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_werewolf_bat1.WAV",
+      "NWN2-Sounds/c_werewolf_m_bat1.WAV"
+    ],
+    "traits": [
+      "beast",
+      "chaotic",
+      "evil",
+      "human",
+      "humanoid",
+      "werecreature"
+    ],
+    "creatures": [
+      "Werewolf",
+      "Jaul Mezmin"
+    ],
+    "match_on": [
+      "werewolf"
+    ]
+  },
+  "wraith": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_wraith_hit1.WAV",
+      "NWN2-Creatures/c_wraith_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_wraith_atk1.WAV",
+      "NWN2-Creatures/c_wraith_atk2.WAV",
+      "NWN2-Creatures/c_wraith_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_wraith_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_wraith_bat1.WAV",
+      "NWN2-Creatures/c_wraith_bat2.WAV"
+    ],
+    "traits": [
+      "evil",
+      "incorporeal",
+      "lawful",
+      "undead",
+      "unholy",
+      "wraith"
+    ],
+    "creatures": [
+      "Wraith",
+      "Dread Wraith",
+      "Elder Wyrmwraith",
+      "Wyrmwraith",
+      "Aiudara Wraith",
+      "Fluxwraith",
+      "Watchtower Wraith"
+    ],
+    "match_on": [
+      "wraith"
+    ]
+  },
+  "zeeaire": {
+    "notes": "annoying imp",
+    "hit_sounds": [],
+    "attack_sounds": [
+      "NWN2-Sounds/c_zeeaire_atk.WAV",
+      "NWN2-Sounds/c_zeeaire_atk1.WAV"
+    ],
+    "death_sounds": [],
+    "battle_sounds": [
+      "NWN2-Sounds/c_zeeaire_bat1.WAV"
+    ],
+    "traits": [],
+    "creatures": [
+      "Zeeaire"
+    ],
+    "match_on": [
+      "zeeaire"
+    ]
+  },
+  "zombie": {
+    "notes": "",
+    "hit_sounds": [
+      "NWN2-Creatures/c_zombie_hit1.WAV",
+      "NWN2-Creatures/c_zombie_hit2.WAV"
+    ],
+    "attack_sounds": [
+      "NWN2-Creatures/c_zombie_atk1.WAV",
+      "NWN2-Creatures/c_zombie_atk2.WAV",
+      "NWN2-Creatures/c_zombie_atk3.WAV"
+    ],
+    "death_sounds": [
+      "NWN2-Creatures/c_zombie_dead.WAV"
+    ],
+    "battle_sounds": [
+      "NWN2-Creatures/c_zombie_bat1.WAV",
+      "NWN2-Creatures/c_zombie_bat2.WAV"
+    ],
+    "traits": [
+      "evil",
+      "mindless",
+      "undead",
+      "unholy",
+      "zombie"
+    ],
+    "creatures": [
+      "Zombie",
+      "Plague Zombie",
+      "Zombie Brute",
+      "Zombie Hulk",
+      "Zombie Shambler",
+      "Void Zombie",
+      "Sulfur Zombie",
+      "Zombie Dragon",
+      "Husk Zombie",
+      "Zombie Lord",
+      "Blackfrost Zombie"
+    ],
+    "match_on": [
+      "zombie"
+    ]
+  }
+}
