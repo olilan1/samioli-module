@@ -2,16 +2,17 @@ const fs = require('fs');
 const path = require('path');
 
 async function scanDirectoriesAndExtractData(directories) {
-  const database = [];
+  const databaseSet = new Set(); 
 
   for (const directory of directories) {
-    await scanDirectory(directory, database);
+    await scanDirectory(directory, databaseSet);
   }
 
+  const database = Array.from(databaseSet).map(JSON.parse); 
   return database;
 }
 
-async function scanDirectory(directory, database) {
+async function scanDirectory(directory, databaseSet) {
   const files = await fs.promises.readdir(directory);
 
   for (const file of files) {
@@ -19,14 +20,14 @@ async function scanDirectory(directory, database) {
     const stats = await fs.promises.stat(filePath);
 
     if (stats.isDirectory()) {
-      await scanDirectory(filePath, database);
+      await scanDirectory(filePath, databaseSet);
     } else if (stats.isFile() && file.endsWith('.json')) {
-      await extractDataFromFile(filePath, database);
+      await extractDataFromFile(filePath, databaseSet);
     }
   }
 }
 
-async function extractDataFromFile(filePath, database) {
+async function extractDataFromFile(filePath, databaseSet) {
   try {
     const data = await fs.promises.readFile(filePath, 'utf8');
     const jsonData = JSON.parse(data);
@@ -37,7 +38,7 @@ async function extractDataFromFile(filePath, database) {
     const type = jsonData.type;
 
     if (name && traits) {
-      database.push({ name, traits, size, type });
+      databaseSet.add(JSON.stringify({ name, traits, size, type }));
     }
   } catch (err) {
     console.error(`Error processing ${filePath}: ${err}`);
@@ -45,7 +46,18 @@ async function extractDataFromFile(filePath, database) {
 }
 
 async function main() {
-  const directories = ['./pathfinder-bestiary', './pathfinder-bestiary-2', './pathfinder-bestiary-3', './abomination-vaults-bestiary', './age-of-ashes-bestiary', './book-of-the-dead-bestiary', './fists-of-the-ruby-phoenix-bestiary', './howl-of-the-wild-bestiary', './gatewalkers-bestiary'];
+  const directories = [
+    './pathfinder-bestiary',
+    './pathfinder-bestiary-2',
+    './pathfinder-bestiary-3',
+    './abomination-vaults-bestiary',
+    './age-of-ashes-bestiary',
+    './book-of-the-dead-bestiary',
+    './fists-of-the-ruby-phoenix-bestiary',
+    './howl-of-the-wild-bestiary',
+    './gatewalkers-bestiary',
+    './pathfinder-monster-core',
+  ];
 
   const database = await scanDirectoriesAndExtractData(directories);
 
