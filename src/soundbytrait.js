@@ -1,28 +1,61 @@
-import hitSoundsDatabase from "../databases/hit_sounds_database.json" with { type: "json" };
+import soundsDatabase from "../databases/sounds_db.json" with { type: "json" };
 
 const HIT_SOUND_VOLUME = 0.5;
 
-export function onDamageTaken(flags) {
-  const rollOptions = flags.pf2e.rollOptions.all;
-  const bestMatch = findBestMatch(extractTraits(rollOptions));
+export function onDamageTaken(NPCPF2e) {
 
-  const returnedSounds = bestMatch.files;
-  const randomIndex = Math.floor(Math.random() * returnedSounds.length);
+  const tokenName = NPCPF2e.name;
+  let returnedSounds;
 
-  playSound(returnedSounds[randomIndex]);
+  //check for name match first
+  returnedSounds = findSoundByCreatureName(tokenName, hit)
+  if (returnedSounds) {
+    playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
+  } else {
+  //fallback to trait match
+    const rollOptions = NPCPF2e.flags.pf2e.rollOptions.all;
+    const returnedSounds = findSoundByTraits(extractTraits(rollOptions), hit);
+    playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
+  }
 }
 
-function findBestMatch(traits) {
+function findSoundByCreatureName(creatureName, soundType) {
+  for (const [key, value] of Object.entries(soundsDatabase)) {
+    if (value.creatures && value.creatures.includes(creatureName)) {
+      if (soundType === 'hit') {
+        const returnedSounds = value.hit_sounds;
+        return returnedSounds;
+      }
+      else if (soundType === 'death') {
+        const returnedSounds = value.death_sounds;
+        return returnedSounds;
+      }
+    }
+  }
+  return null;
+}
+
+function findSoundByTraits(traits, soundType) {
   let bestMatch = null;
   let maxMatchingTraits = 0;
-  for (const entry of hitSoundsDatabase) {
-    const matchingTraits = entry.traits.filter(trait => traits.includes(trait)).length;
+  for (const [key, value] of Object.entries(soundsDatabase)) {
+    const matchingTraits = value.traits.filter(trait => traits.includes(trait)).length;
     if (matchingTraits > maxMatchingTraits) {
-      bestMatch = entry;
+      bestMatch = value;
       maxMatchingTraits = matchingTraits;
     }
   }
-  return bestMatch;
+  if (bestMatch) {
+    if (soundType === 'hit') {
+      const returnedSounds = bestMatch.hit_sounds;
+      return returnedSounds;
+    }
+    else if (soundType === 'death') {
+      const returnedSounds = bestMatch.death_sounds;
+      return returnedSounds;
+    }
+  }
+  return null;
 }
 
 function extractTraits(obj) {
