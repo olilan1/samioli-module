@@ -1,4 +1,4 @@
-import soundsDatabase from "../databases/sounds_db.json" with { type: "json" };
+import soundsDatabase from "../databases/sounds_db.json" assert { type: "json" };
 
 const HIT_SOUND_VOLUME = 0.5;
 
