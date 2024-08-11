@@ -1569,7 +1569,7 @@
       "sound/NWN2-Sounds/c_goblin_atk3.WAV"
     ],
     "death_sounds": [
-      "sound/NWN2-Sounds/c_goblin_dead.WAV"
+      "sound/NWN2-Sounds/c_goblin_death.WAV"
     ],
     "battle_sounds": [
       "sound/NWN2-Sounds/c_goblin_bat1.WAV",
