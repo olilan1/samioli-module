@@ -8,7 +8,7 @@ export function onDamageTaken(NPCPF2e) {
   let returnedSounds;
 
   //check for name match first
-  returnedSounds = findSoundByCreatureName(tokenName, hit)
+  returnedSounds = findSoundByCreatureName(tokenName, "hit")
   if (returnedSounds) {
     playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
   } else {
