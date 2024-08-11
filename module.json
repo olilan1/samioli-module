@@ -13,7 +13,7 @@
     "esmodules": [
       "src/test.js",
       "src/hooks.js",
-      "src/soundbynameortrait.js"
+      "src/creaturesounds.js"
     ],
     "packFolders": [
         {
