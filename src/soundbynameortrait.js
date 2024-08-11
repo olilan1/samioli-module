@@ -29,7 +29,13 @@ function findSoundByCreatureName(creatureName, soundType) {
       }
       else if (soundType === 'death') {
         const returnedSounds = value.death_sounds;
-        return returnedSounds;
+        if (returnedSounds) {
+          return returnedSounds;
+        }
+        else {
+          console.log("No death sounds found, so using hit sound as fallback");
+          return value.hit_sounds;
+        }
       }
     }
   }
