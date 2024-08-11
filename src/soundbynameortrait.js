@@ -10,19 +10,27 @@ export function onDamageTaken(NPCPF2e) {
   const soundType = checkIfDamageKills(NPCPF2e);
   //check for name match first
   returnedSounds = findSoundByCreatureName(tokenName, soundType)
+  console.log("value of returnedSounds after findSoundByCreatureName(): " + returnedSounds)
   if (returnedSounds) {
     playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
   } else {
+  console.log("Falling back to trait matching.")
   //fallback to trait match
-    const rollOptions = NPCPF2e.flags.pf2e.rollOptions.all;
+    const rollOptions = NPCPF2e.flags.pf2e.rollOptions.all;    
     returnedSounds = findSoundByTraits(extractTraits(rollOptions), soundType);
-    playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
+    if (returnedSounds) {
+      playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
+    } else {
+      console.log("No Sounds found.")
+    }
   }
 }
 
 function findSoundByCreatureName(creatureName, soundType) {
+  console.log("Looking in db for: " + creatureName)
   for (const [key, value] of Object.entries(soundsDatabase)) {
     if (value.creatures && value.creatures.includes(creatureName)) {
+      console.log("Exact Match found!")
       if (soundType === 'hit') {
         const returnedSounds = value.hit_sounds;
         return returnedSounds;
@@ -39,6 +47,7 @@ function findSoundByCreatureName(creatureName, soundType) {
       }
     }
   }
+  console.log("Could not find in db: " + creatureName)
   return null;
 }
 
@@ -54,6 +63,7 @@ function checkIfDamageKills(args){
 function findSoundByTraits(traits, soundType) {
   let bestMatch = null;
   let maxMatchingTraits = 0;
+  console.log("Traits found for damaged creature are: " + traits);
   for (const [key, value] of Object.entries(soundsDatabase)) {
     const matchingTraits = value.traits.filter(trait => traits.includes(trait)).length;
     if (matchingTraits > maxMatchingTraits) {
@@ -86,6 +96,8 @@ function extractTraits(obj) {
 }
 
 function playSound(sound) {
+  console.log("sound to play:");
+  console.log(sound);
   foundry.audio.AudioHelper.play({
     src: sound,
     volume: HIT_SOUND_VOLUME,
