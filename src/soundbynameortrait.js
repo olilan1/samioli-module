@@ -29,7 +29,7 @@ function findSoundByCreatureName(creatureName, soundType) {
       }
       else if (soundType === 'death') {
         const returnedSounds = value.death_sounds;
-        if (returnedSounds) {
+        if (returnedSounds.length != 0) {
           return returnedSounds;
         }
         else {
