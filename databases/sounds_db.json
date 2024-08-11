@@ -115,25 +115,25 @@
   "bat": {
       "notes": "",
       "hit_sounds": [
-          "sound/NWN2-Creatures/c_bat_hit1.WAV"
+          "sound/NWN2-Creatures/c_bat_hit1.WAV",
+          "sound/NWN2-Sounds/c_floatbat_hit1.WAV"
       ],
       "attack_sounds": [
-          "sound/NWN2-Creatures/c_bat_atk1.WAV"
+          "sound/NWN2-Creatures/c_bat_atk1.WAV",
+          "sound/NWN2-Sounds/c_floatbat_atk1.WAV"
       ],
       "death_sounds": [
-          "sound/NWN2-Creatures/c_bat_death1.WAV"
+          "sound/NWN2-Creatures/c_bat_death1.WAV",
+          "sound/NWN2-Sounds/c_floatbat_death.WAV"
       ],
-      "battle_sounds": [],
+      "battle_sounds": [
+        "sound/NWN2-Sounds/c_floatbat_bat1.WAV"
+      ],
       "traits": [
           "beast"
       ],
       "creatures": [
-          "Bat",
-          "Giant Bat",
-          "Vampire Bat Swarm",
-          "Spark Bat",
-          "Werebat",
-          "Stony Bat"
+          "Werebat"
       ],
       "match_on": [
           "bat"
@@ -1211,33 +1211,6 @@
       ],
       "match_on": [
           "fiend"
-      ]
-  },
-  "floatbat": {
-      "notes": "bat like creature - screechy",
-      "hit_sounds": [
-          "sound/NWN2-Sounds/c_floatbat_hit1.WAV"
-      ],
-      "attack_sounds": [
-          "sound/NWN2-Sounds/c_floatbat_atk1.WAV"
-      ],
-      "death_sounds": [
-          "sound/NWN2-Sounds/c_floatbat_death.WAV"
-      ],
-      "battle_sounds": [
-          "sound/NWN2-Sounds/c_floatbat_bat1.WAV"
-      ],
-      "traits": [],
-      "creatures": [
-          "Bat",
-          "Giant Bat",
-          "Vampire Bat Swarm",
-          "Spark Bat",
-          "Werebat",
-          "Stony Bat"
-      ],
-      "match_on": [
-          "bat"
       ]
   },
   "gargoyle": {
