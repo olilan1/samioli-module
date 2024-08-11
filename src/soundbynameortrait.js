@@ -7,14 +7,15 @@ export function onDamageTaken(NPCPF2e) {
   const tokenName = NPCPF2e.name;
   let returnedSounds;
 
+  const soundType = checkIfDamageKills(NPCPF2e);
   //check for name match first
-  returnedSounds = findSoundByCreatureName(tokenName, "hit")
+  returnedSounds = findSoundByCreatureName(tokenName, soundType)
   if (returnedSounds) {
     playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
   } else {
   //fallback to trait match
     const rollOptions = NPCPF2e.flags.pf2e.rollOptions.all;
-    const returnedSounds = findSoundByTraits(extractTraits(rollOptions), hit);
+    returnedSounds = findSoundByTraits(extractTraits(rollOptions), soundType);
     playSound(returnedSounds[Math.floor(Math.random() * returnedSounds.length)]);
   }
 }
@@ -34,6 +35,15 @@ function findSoundByCreatureName(creatureName, soundType) {
   }
   return null;
 }
+
+function checkIfDamageKills(args){
+  if (args.system.attributes.hp.value === 0) {
+    return "death"
+  } else {
+    return "hit"
+  }
+}
+
 
 function findSoundByTraits(traits, soundType) {
   let bestMatch = null;
