@@ -11,6 +11,16 @@ let offset;
 let adjustedOffsetX;
 let adjustedOffsetY;
 
+// fire sounds options al_cv_firesmldr1.WAV - after the wall has been placed
+// sfx_hitarea_Fire.WAV when it is spreading
+// sff_firewhoosh02.WAV
+//sim_explflame.WAV on the cast
+
+let castSound = "sound/BG2-Sounds/sim_pulsfire.wav"
+let boltSound = "sound/NWN2-Sounds/sim_explflame.WAV"
+let fireSpreadSound ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
+let remainingSound = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
+
 if (controlledTokens.length === 1) {
   caster = controlledTokens[0];
 
@@ -231,8 +241,24 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function fileExistsAtPath(path) {
+    
+  try {
+    const response = await fetch(path, { method: 'HEAD' });
+    return response.ok; // Returns true if status code is 200-299, false otherwise
+  } catch (error) {
+    console.log("File not found at: " + path)
+    return false; 
+  }
+}
+
 async function animateSpellCasting(token) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+    .sound()
+        .volume(0.5)
+        .file(castSound, true, true)
+        .playIf(() => {
+            return fileExistsAtPath(castSound);})
     .effect()
         .atLocation(token)
         .file("jb2a.cast_generic.fire.01.orange.0")
@@ -265,11 +291,23 @@ async function animateCastingLine(token, location1, location2) {
     }
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+    .sound()
+        .volume(0.5)
+        .file(boltSound, true, true)
+        .playIf(() => {
+            return fileExistsAtPath(fireSpreadSound);   
+        })
     .effect()
         .atLocation(token)
         .file(boltOfFireAnim)
         .stretchTo({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
         .waitUntilFinished(-1100)
+    .sound()
+        .volume(0.5)
+        .file(fireSpreadSound, true, true)
+        .playIf(() => {
+          return fileExistsAtPath(fireSpreadSound);
+        })
     .effect()
         .file(fireJetAnim)
         .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
@@ -296,6 +334,13 @@ async function animateLine(templateToAttachTo) {
     console.log("wallOfFireAnim selected:" + wallOfFireAnim);
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+    .sound()
+    .volume(0.5)
+    .file(remainingSound, true, true)
+    .fadeOutAudio(1000)
+    .playIf(() => {
+      return fileExistsAtPath(remainingSound);
+    })
     .effect()
         .file(wallOfFireAnim)
         .fadeIn(300)
@@ -303,6 +348,7 @@ async function animateLine(templateToAttachTo) {
         .stretchTo(templateToAttachTo, {offset: { x : adjustedOffsetX * -1 , y : 0 }})
         .persist()
         .loopOptions({ loops: 3600 })
+
     .play()
 }
 
@@ -313,6 +359,13 @@ async function animateRing(token, templateToAttachTo) {
         .atLocation(templateToAttachTo)
         .scale(1.3)
         .file("jb2a.impact.fire.01.orange.0")
+    .sound()
+        .volume(0.5)
+        .file(fireSpreadSound, true, true)
+        .fadeOutAudio(500)
+        .playIf(() => {
+          return fileExistsAtPath(fireSpreadSound);
+      }) 
     .effect()
         .file("jb2a.wall_of_fire.ring.yellow")
         .attachTo(templateToAttachTo)
@@ -321,6 +374,13 @@ async function animateRing(token, templateToAttachTo) {
         .scale(1.15)
         .scaleIn(0, 1000, {ease: "easeOutBack"})
         .persist()
-        .loopOptions({ loops: 3600 })    
+        .loopOptions({ loops: 3600 })
+    .sound()
+        .volume(0.5)
+        .file(remainingSound, true, true)
+        .fadeOutAudio(500)
+        .playIf(() => {
+           return fileExistsAtPath(remainingSound);
+      })  
     .play()
 }
