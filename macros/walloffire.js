@@ -1,43 +1,37 @@
 /* {"name":"Wall of Fire","img":"systems/pf2e/icons/spells/wall-of-fire.webp","_id":"t0dtf3WjzeEI1Lhz"} */
 
-//TODO: add sound effects
 //TODO: investigate removing tokens that are too central for the circle template
 
-const controlledTokens = game.user.getActiveTokens();
-let caster;
 let casterXwithOffset;
 let casterYwithOffset;
 let offset;
 let adjustedOffsetX;
 let adjustedOffsetY;
 
-// fire sounds options al_cv_firesmldr1.WAV - after the wall has been placed
-// sfx_hitarea_Fire.WAV when it is spreading
-// sff_firewhoosh02.WAV
-//sim_explflame.WAV on the cast
-
 let castSound = "sound/BG2-Sounds/sim_pulsfire.wav"
 let boltSound = "sound/NWN2-Sounds/sim_explflame.WAV"
 let fireSpreadSound ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 let remainingSound = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-if (controlledTokens.length === 1) {
-  caster = controlledTokens[0];
+export async function startWallOfFire(tokenId) {
 
-  offset = game.canvas.scene.grid.size/2;
+    const token = canvas.tokens.placeables.find(t => t.id === tokenId);
 
-  casterXwithOffset = caster.x + offset;
-  casterYwithOffset = caster.y + offset;
+    if (token) {
+      offset = game.canvas.scene.grid.size/2;
 
-  await chooseWallOfFireShape();
+      casterXwithOffset = token.document.x + offset;
+      casterYwithOffset = token.document.y + offset;
+  
+      await chooseWallOfFireShape(token);
 
-} else if (controlledTokens.length > 1) {
-  ui.notifications.warn("Please select only a single token");
-} else {
-  ui.notifications.warn("No tokens selected.");
+    } else {
+      console.error("Token not found with ID:", tokenId);
+      return
+    }
 }
 
-async function chooseWallOfFireShape() {
+async function chooseWallOfFireShape(token) {
     let shapeChoice;
   
     new Dialog({
@@ -54,15 +48,15 @@ async function chooseWallOfFireShape() {
       },
       close: (html) => {
         if (shapeChoice === "line") {
-          wallOfFireLine();
+          wallOfFireLine(token);
         } else if (shapeChoice === "ring") {
-          wallOfFireRing();
+          wallOfFireRing(token);
         }
       }
     }).render(true);
 }
 
-async function wallOfFireLine() {
+async function wallOfFireLine(caster) {
     let firstLocation = await selectStartingPoint();
     let secondLocation = await selectEndPoint(firstLocation);
     let myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
@@ -73,7 +67,7 @@ async function wallOfFireLine() {
     await animateLine(myTemplate);
 }
 
-async function wallOfFireRing() {
+async function wallOfFireRing(caster) {
     let firstLocation = await selectCentrePoint();
     let myTemplateDocument = await createRingTemplateDocument(firstLocation);
     let myTemplate = await createTemplate(myTemplateDocument);
@@ -89,7 +83,7 @@ async function selectCentrePoint() {
       .size(22)
       .origin({ x: casterXwithOffset, y: casterYwithOffset })
       .range(120);
-      centrePoint = await portal.pick();
+    let centrePoint = await portal.pick();
     return centrePoint;
   }
 
@@ -100,22 +94,22 @@ async function selectStartingPoint() {
     .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
     .origin({ x: casterXwithOffset, y: casterYwithOffset })
     .range(120);
-  firstLocation = await portal.pick();
-  return firstLocation;
+  let startingPoint = await portal.pick();
+  return startingPoint;
 }
 
-async function selectEndPoint(secondLocation) {
+async function selectEndPoint(startingPoint) {
   const portal = new Portal()
     .color("#f59042")
     .size(5)
     .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
-    .origin(firstLocation)
+    .origin(startingPoint)
     .range(60);
-  secondLocation = await portal.pick();
-  return secondLocation;
+  let endPoint = await portal.pick();
+  return endPoint;
 }
 
-function createRingTemplateDocument(location){
+async function createRingTemplateDocument(location){
     let templateData = {
         t: "circle",
         x: location.x,
@@ -130,18 +124,13 @@ function createRingTemplateDocument(location){
     return templateData;
 }
 
-function createRayTemplateDocument(location1, location2) {
+async function createRayTemplateDocument(location1, location2) {
 
   let distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
 
   adjustedOffsetX = offset;
   adjustedOffsetY = offset;
-
-  console.log("location1.x: " + location1.x);
-  console.log("location2.x: " + location2.x);
-  console.log("location1.y: " + location1.y);
-  console.log("location2.y: " + location2.y);
 
   //if it's only a single square
   if (location1.x === location2.x && location1.y === location2.y) {
@@ -206,7 +195,7 @@ function createRayTemplateDocument(location1, location2) {
 
 async function createTemplate(templateData) {
 
-  myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+  let myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
 
   return myCustomTemplate;
 }
@@ -270,6 +259,8 @@ async function animateCastingLine(token, location1, location2) {
 
     let distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
 
+    let boltOfFireAnim;
+
     if (distanceMeasuredBolt < 10) {
         boltOfFireAnim = "jb2a.fire_bolt.orange.05ft";
     } else if (distanceMeasuredBolt < 30) {
@@ -283,6 +274,8 @@ async function animateCastingLine(token, location1, location2) {
     }
     
     let distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
+
+    let fireJetAnim;
 
     if (distanceMeasuredJet < 25) {
         fireJetAnim = "jb2a.fire_jet.orange.15ft";
@@ -323,6 +316,8 @@ async function animateCastingLine(token, location1, location2) {
 
 async function animateLine(templateToAttachTo) {
     
+    let wallOfFireAnim;
+
     if (templateToAttachTo.distance <= 20) {
         wallOfFireAnim = "jb2a.wall_of_fire.100x100.yellow";
     } else if (templateToAttachTo.distance <= 40) {
@@ -330,8 +325,6 @@ async function animateLine(templateToAttachTo) {
     } else {
         wallOfFireAnim = "jb2a.wall_of_fire.300x100.yellow";
     }
-
-    console.log("wallOfFireAnim selected:" + wallOfFireAnim);
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
