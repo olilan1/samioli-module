@@ -1,4 +1,5 @@
 import { startWallOfFire } from "./spells/walloffire.js";
+import { startDiveAndBreach } from "./spells/diveandbreach.js";
 
 export function chatMacroButton(ChatMessagePF2e, html) {
     
@@ -18,11 +19,22 @@ export function chatMacroButton(ChatMessagePF2e, html) {
 }
 
 function findRelevantSpell(spellSlug, ChatMessagePF2e, html) {
+    
+    let $spellButtonDiv;
+    let tokenId; 
+    let newButton;
+    
     switch (spellSlug) {
         case "wall-of-fire":
-            const $spellButtonDiv = html.find('.spell-button');
-            let tokenId = (ChatMessagePF2e.speaker.token) 
-            const newButton = createWallOfFireButton(tokenId);
+            $spellButtonDiv = html.find('.spell-button');
+            tokenId = (ChatMessagePF2e.speaker.token) 
+            newButton = createWallOfFireButton(tokenId);
+            $spellButtonDiv.after(newButton);
+        break;
+        case "dive-and-breach":
+            $spellButtonDiv = html.find('.spell-button');
+            tokenId = (ChatMessagePF2e.speaker.token) 
+            newButton = createDiveAndBreach(tokenId);
             $spellButtonDiv.after(newButton);
         break;
         default:
@@ -35,6 +47,15 @@ function createWallOfFireButton(speakerTokenId) {
     const button = $('<button type="button">Deploy Wall of Fire!</button>');
     button.click(function() {
         startWallOfFire(speakerTokenId);
+    });
+
+    return button;
+}
+
+function createDiveAndBreach(speakerTokenId) {
+    const button = $('<button type="button">Start diving!</button>');
+    button.click(function() {
+        startDiveAndBreach(speakerTokenId);
     });
 
     return button;

@@ -1,4 +1,3 @@
-/* {"name":"Dive and Breach","img":"systems/pf2e/icons/spells/dive-and-breach.webp","_id":"9z7488y7mXDuKBXU"} */
 
 let offset;
 let casterXwithOffset;
@@ -11,29 +10,23 @@ let secondLocationSequencer;
 let thirdLocationSequencer;
 let targets = new Set();
 let myTemplates = new Set();
-const emptyTargetArray = [];
 
-const controlledTokens = game.user.getActiveTokens();
-if (controlledTokens.length === 1) {
-  const caster = controlledTokens[0];
+export async function startDiveAndBreach(tokenId) {
+  const TOKEN = canvas.tokens.placeables.find(t => t.id === tokenId);
 
   offset = game.canvas.scene.grid.size/2;
 
-  casterXwithOffset = caster.x + offset;
-  casterYwithOffset = caster.y + offset;
+  casterXwithOffset = TOKEN.x + offset;
+  casterYwithOffset = TOKEN.y + offset;
 
   await clearUserTargets();
   await selectFirstTemplateLocation();
   await selectSecondTemplateLocation();
   await selectThirdTemplateLocation();
   await clearTemplates();
-  await doAnimation(caster);
-  await addTargetsToUser(caster);
+  await doAnimation(TOKEN);
+  await addTargetsToUser(TOKEN);
 
-} else if (controlledTokens.length > 1) {
-  ui.notifications.warn("Please select only a single token");
-} else {
-  ui.notifications.warn("No tokens selected.");
 }
 
 async function clearTemplates() {
@@ -102,7 +95,7 @@ async function createTemplate(atLocation) {
     borderColor: "#000000",
   };
 
-  myTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+  let myTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
   await delay(100);
 
   myTemplates.add(myTemplate);
@@ -154,9 +147,9 @@ async function doAnimation(token) {
     }
   }
   
-  let spellSound = "sound/BG2-Sounds/sim_pulswater.wav"
-  let entrySplashSound = "sound/NWN2-Sounds/pl_splash_idle01.WAV"
-  let exitSplashSound ="sound/NWN2-Sounds/pl_splash_idle02.WAV"
+  const spellSound = "sound/BG2-Sounds/sim_pulswater.wav"
+  const entrySplashSound = "sound/NWN2-Sounds/pl_splash_idle01.WAV"
+  const exitSplashSound ="sound/NWN2-Sounds/pl_splash_idle02.WAV"
 
   await new Sequence()
     //cast spell sound
