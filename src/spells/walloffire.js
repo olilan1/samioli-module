@@ -1,5 +1,3 @@
-/* {"name":"Wall of Fire","img":"systems/pf2e/icons/spells/wall-of-fire.webp","_id":"t0dtf3WjzeEI1Lhz"} */
-
 //TODO: investigate removing tokens that are too central for the circle template
 
 let casterXwithOffset;
@@ -8,10 +6,10 @@ let offset;
 let adjustedOffsetX;
 let adjustedOffsetY;
 
-let castSound = "sound/BG2-Sounds/sim_pulsfire.wav"
-let boltSound = "sound/NWN2-Sounds/sim_explflame.WAV"
-let fireSpreadSound ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
-let remainingSound = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
+const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
+const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
+const FIRESPREADSOUND ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
+const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
 export async function startWallOfFire(tokenId) {
 
@@ -173,7 +171,7 @@ async function createRayTemplateDocument(location1, location2) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 1;
   }
-    //if diagonal going from bottom right to top left
+  //if diagonal going from bottom right to top left
   else if (location1.x > location2.x && location1.y > location2.y) {
     adjustedOffsetX *= 1;
     adjustedOffsetY *= 1;
@@ -214,16 +212,28 @@ function calculateDistanceAndAngle(location1, location2) {
     // Calculate distance using the Pythagorean theorem
     const distance = Math.hypot(dx, dy);
 
-    // Calculate angle in radians using atan2
     let angleRadians = Math.atan2(dy, dx);
 
-    // Convert to degrees if needed
     const angleDegrees = (angleRadians * 180) / Math.PI; 
 
-    // Normalize angle to 0-360 degrees (optional)
     const normalizedAngleDegrees = (angleDegrees + 360) % 360;
 
     return { distance, normalizedAngleDegrees };
+}
+
+function calculateNewCoordinates(x, y, angleDegrees, hypotenuseLength) {
+  // Convert angle from degrees to radians
+  const angleRadians = angleDegrees * (Math.PI / 180);
+
+  // Calculate changes in x and y
+  const deltaX = hypotenuseLength * Math.cos(angleRadians);
+  const deltaY = hypotenuseLength * Math.sin(angleRadians);
+
+  // Calculate new coordinates
+  const newX = x + deltaX;
+  const newY = y + deltaY;
+
+  return { newX, newY };
 }
 
 function delay(ms) {
@@ -245,9 +255,9 @@ async function animateSpellCasting(token) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
         .volume(0.5)
-        .file(castSound, true, true)
+        .file(CASTSOUND, true, true)
         .playIf(() => {
-            return fileExistsAtPath(castSound);})
+            return fileExistsAtPath(CASTSOUND);})
     .effect()
         .atLocation(token)
         .file("jb2a.cast_generic.fire.01.orange.0")
@@ -274,6 +284,11 @@ async function animateCastingLine(token, location1, location2) {
     }
     
     let distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
+    console.log(`distance ${calculateDistanceAndAngle(location1, location2).distance}`)
+
+    let normalizedAngleDegrees = calculateDistanceAndAngle(location1,location2).normalizedAngleDegrees
+
+    let newLocation2 = calculateNewCoordinates(location1.x, location1.y, normalizedAngleDegrees, calculateDistanceAndAngle(location1, location2).distance + 200)
 
     let fireJetAnim;
 
@@ -286,9 +301,9 @@ async function animateCastingLine(token, location1, location2) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
         .volume(0.5)
-        .file(boltSound, true, true)
+        .file(BOLTSOUNDS, true, true)
         .playIf(() => {
-            return fileExistsAtPath(fireSpreadSound);   
+            return fileExistsAtPath(BOLTSOUNDS);   
         })
     .effect()
         .atLocation(token)
@@ -297,14 +312,14 @@ async function animateCastingLine(token, location1, location2) {
         .waitUntilFinished(-1100)
     .sound()
         .volume(0.5)
-        .file(fireSpreadSound, true, true)
+        .file(FIRESPREADSOUND, true, true)
         .playIf(() => {
-          return fileExistsAtPath(fireSpreadSound);
+          return fileExistsAtPath(FIRESPREADSOUND);
         })
     .effect()
         .file(fireJetAnim)
         .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
-        .stretchTo({ x: location2.x + ((adjustedOffsetX * -1) * 2), y: location2.y + ((adjustedOffsetY * -1) * 2)})
+        .stretchTo({ x: newLocation2.newX, y: newLocation2.newY})
         .scale({ x: 1.0, y: 3 })
         .fadeIn(100)
         .startTime(400)
@@ -329,15 +344,15 @@ async function animateLine(templateToAttachTo) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
     .volume(0.5)
-    .file(remainingSound, true, true)
+    .file(REMAININGSOUNDS, true, true)
     .fadeOutAudio(1000)
     .playIf(() => {
-      return fileExistsAtPath(remainingSound);
+      return fileExistsAtPath(REMAININGSOUNDS);
     })
     .effect()
         .file(wallOfFireAnim)
         .fadeIn(300)
-        .attachTo(templateToAttachTo, {align: "center", edge: "on", offset: { x : adjustedOffsetX, y : 0 }})
+        .attachTo(templateToAttachTo, {align: "center", edge: "inner", offset: { x : adjustedOffsetX, y : 0 }})
         .stretchTo(templateToAttachTo, {offset: { x : adjustedOffsetX * -1 , y : 0 }})
         .persist()
         .loopOptions({ loops: 3600 })
@@ -345,7 +360,7 @@ async function animateLine(templateToAttachTo) {
     .play()
 }
 
-async function animateRing(token, templateToAttachTo) {
+async function animateRing(templateToAttachTo) {
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .effect()
@@ -354,10 +369,10 @@ async function animateRing(token, templateToAttachTo) {
         .file("jb2a.impact.fire.01.orange.0")
     .sound()
         .volume(0.5)
-        .file(fireSpreadSound, true, true)
+        .file(FIRESPREADSOUND, true, true)
         .fadeOutAudio(500)
         .playIf(() => {
-          return fileExistsAtPath(fireSpreadSound);
+          return fileExistsAtPath(FIRESPREADSOUND);
       }) 
     .effect()
         .file("jb2a.wall_of_fire.ring.yellow")
@@ -370,10 +385,10 @@ async function animateRing(token, templateToAttachTo) {
         .loopOptions({ loops: 3600 })
     .sound()
         .volume(0.5)
-        .file(remainingSound, true, true)
+        .file(REMAININGSOUNDS, true, true)
         .fadeOutAudio(500)
         .playIf(() => {
-           return fileExistsAtPath(remainingSound);
+           return fileExistsAtPath(REMAININGSOUNDS);
       })  
     .play()
 }

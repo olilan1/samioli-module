@@ -13,7 +13,9 @@
     "esmodules": [
       "src/test.js",
       "src/hooks.js",
-      "src/creaturesounds.js"
+      "src/creaturesounds.js",
+      "src/chatmacrobutton.js",
+      "src/spells/walloffire.js"
     ],
     "packFolders": [
         {
