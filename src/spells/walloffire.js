@@ -1,43 +1,35 @@
-/* {"name":"Wall of Fire","img":"systems/pf2e/icons/spells/wall-of-fire.webp","_id":"t0dtf3WjzeEI1Lhz"} */
-
-//TODO: add sound effects
 //TODO: investigate removing tokens that are too central for the circle template
 
-const controlledTokens = game.user.getActiveTokens();
-let caster;
 let casterXwithOffset;
 let casterYwithOffset;
 let offset;
 let adjustedOffsetX;
 let adjustedOffsetY;
 
-// fire sounds options al_cv_firesmldr1.WAV - after the wall has been placed
-// sfx_hitarea_Fire.WAV when it is spreading
-// sff_firewhoosh02.WAV
-//sim_explflame.WAV on the cast
+const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
+const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
+const FIRESPREADSOUND ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
+const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-let castSound = "sound/BG2-Sounds/sim_pulsfire.wav"
-let boltSound = "sound/NWN2-Sounds/sim_explflame.WAV"
-let fireSpreadSound ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
-let remainingSound = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
+export async function startWallOfFire(tokenId) {
 
-if (controlledTokens.length === 1) {
-  caster = controlledTokens[0];
+    const token = canvas.tokens.placeables.find(t => t.id === tokenId);
 
-  offset = game.canvas.scene.grid.size/2;
+    if (token) {
+      offset = game.canvas.scene.grid.size/2;
 
-  casterXwithOffset = caster.x + offset;
-  casterYwithOffset = caster.y + offset;
+      casterXwithOffset = token.document.x + offset;
+      casterYwithOffset = token.document.y + offset;
+  
+      await chooseWallOfFireShape(token);
 
-  await chooseWallOfFireShape();
-
-} else if (controlledTokens.length > 1) {
-  ui.notifications.warn("Please select only a single token");
-} else {
-  ui.notifications.warn("No tokens selected.");
+    } else {
+      console.error("Token not found with ID:", tokenId);
+      return
+    }
 }
 
-async function chooseWallOfFireShape() {
+async function chooseWallOfFireShape(token) {
     let shapeChoice;
   
     new Dialog({
@@ -54,15 +46,15 @@ async function chooseWallOfFireShape() {
       },
       close: (html) => {
         if (shapeChoice === "line") {
-          wallOfFireLine();
+          wallOfFireLine(token);
         } else if (shapeChoice === "ring") {
-          wallOfFireRing();
+          wallOfFireRing(token);
         }
       }
     }).render(true);
 }
 
-async function wallOfFireLine() {
+async function wallOfFireLine(caster) {
     let firstLocation = await selectStartingPoint();
     let secondLocation = await selectEndPoint(firstLocation);
     let myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
@@ -73,7 +65,7 @@ async function wallOfFireLine() {
     await animateLine(myTemplate);
 }
 
-async function wallOfFireRing() {
+async function wallOfFireRing(caster) {
     let firstLocation = await selectCentrePoint();
     let myTemplateDocument = await createRingTemplateDocument(firstLocation);
     let myTemplate = await createTemplate(myTemplateDocument);
@@ -89,7 +81,7 @@ async function selectCentrePoint() {
       .size(22)
       .origin({ x: casterXwithOffset, y: casterYwithOffset })
       .range(120);
-      centrePoint = await portal.pick();
+    let centrePoint = await portal.pick();
     return centrePoint;
   }
 
@@ -100,22 +92,22 @@ async function selectStartingPoint() {
     .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
     .origin({ x: casterXwithOffset, y: casterYwithOffset })
     .range(120);
-  firstLocation = await portal.pick();
-  return firstLocation;
+  let startingPoint = await portal.pick();
+  return startingPoint;
 }
 
-async function selectEndPoint(secondLocation) {
+async function selectEndPoint(startingPoint) {
   const portal = new Portal()
     .color("#f59042")
     .size(5)
     .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
-    .origin(firstLocation)
+    .origin(startingPoint)
     .range(60);
-  secondLocation = await portal.pick();
-  return secondLocation;
+  let endPoint = await portal.pick();
+  return endPoint;
 }
 
-function createRingTemplateDocument(location){
+async function createRingTemplateDocument(location){
     let templateData = {
         t: "circle",
         x: location.x,
@@ -130,18 +122,13 @@ function createRingTemplateDocument(location){
     return templateData;
 }
 
-function createRayTemplateDocument(location1, location2) {
+async function createRayTemplateDocument(location1, location2) {
 
   let distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
 
   adjustedOffsetX = offset;
   adjustedOffsetY = offset;
-
-  console.log("location1.x: " + location1.x);
-  console.log("location2.x: " + location2.x);
-  console.log("location1.y: " + location1.y);
-  console.log("location2.y: " + location2.y);
 
   //if it's only a single square
   if (location1.x === location2.x && location1.y === location2.y) {
@@ -184,7 +171,7 @@ function createRayTemplateDocument(location1, location2) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 1;
   }
-    //if diagonal going from bottom right to top left
+  //if diagonal going from bottom right to top left
   else if (location1.x > location2.x && location1.y > location2.y) {
     adjustedOffsetX *= 1;
     adjustedOffsetY *= 1;
@@ -206,7 +193,7 @@ function createRayTemplateDocument(location1, location2) {
 
 async function createTemplate(templateData) {
 
-  myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+  let myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
 
   return myCustomTemplate;
 }
@@ -225,16 +212,28 @@ function calculateDistanceAndAngle(location1, location2) {
     // Calculate distance using the Pythagorean theorem
     const distance = Math.hypot(dx, dy);
 
-    // Calculate angle in radians using atan2
     let angleRadians = Math.atan2(dy, dx);
 
-    // Convert to degrees if needed
     const angleDegrees = (angleRadians * 180) / Math.PI; 
 
-    // Normalize angle to 0-360 degrees (optional)
     const normalizedAngleDegrees = (angleDegrees + 360) % 360;
 
     return { distance, normalizedAngleDegrees };
+}
+
+function calculateNewCoordinates(x, y, angleDegrees, hypotenuseLength) {
+  // Convert angle from degrees to radians
+  const angleRadians = angleDegrees * (Math.PI / 180);
+
+  // Calculate changes in x and y
+  const deltaX = hypotenuseLength * Math.cos(angleRadians);
+  const deltaY = hypotenuseLength * Math.sin(angleRadians);
+
+  // Calculate new coordinates
+  const newX = x + deltaX;
+  const newY = y + deltaY;
+
+  return { newX, newY };
 }
 
 function delay(ms) {
@@ -256,9 +255,9 @@ async function animateSpellCasting(token) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
         .volume(0.5)
-        .file(castSound, true, true)
+        .file(CASTSOUND, true, true)
         .playIf(() => {
-            return fileExistsAtPath(castSound);})
+            return fileExistsAtPath(CASTSOUND);})
     .effect()
         .atLocation(token)
         .file("jb2a.cast_generic.fire.01.orange.0")
@@ -269,6 +268,8 @@ async function animateSpellCasting(token) {
 async function animateCastingLine(token, location1, location2) {
 
     let distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
+
+    let boltOfFireAnim;
 
     if (distanceMeasuredBolt < 10) {
         boltOfFireAnim = "jb2a.fire_bolt.orange.05ft";
@@ -283,6 +284,13 @@ async function animateCastingLine(token, location1, location2) {
     }
     
     let distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
+    console.log(`distance ${calculateDistanceAndAngle(location1, location2).distance}`)
+
+    let normalizedAngleDegrees = calculateDistanceAndAngle(location1,location2).normalizedAngleDegrees
+
+    let newLocation2 = calculateNewCoordinates(location1.x, location1.y, normalizedAngleDegrees, calculateDistanceAndAngle(location1, location2).distance + 200)
+
+    let fireJetAnim;
 
     if (distanceMeasuredJet < 25) {
         fireJetAnim = "jb2a.fire_jet.orange.15ft";
@@ -293,9 +301,9 @@ async function animateCastingLine(token, location1, location2) {
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
         .volume(0.5)
-        .file(boltSound, true, true)
+        .file(BOLTSOUNDS, true, true)
         .playIf(() => {
-            return fileExistsAtPath(fireSpreadSound);   
+            return fileExistsAtPath(BOLTSOUNDS);   
         })
     .effect()
         .atLocation(token)
@@ -304,14 +312,14 @@ async function animateCastingLine(token, location1, location2) {
         .waitUntilFinished(-1100)
     .sound()
         .volume(0.5)
-        .file(fireSpreadSound, true, true)
+        .file(FIRESPREADSOUND, true, true)
         .playIf(() => {
-          return fileExistsAtPath(fireSpreadSound);
+          return fileExistsAtPath(FIRESPREADSOUND);
         })
     .effect()
         .file(fireJetAnim)
         .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
-        .stretchTo({ x: location2.x + ((adjustedOffsetX * -1) * 2), y: location2.y + ((adjustedOffsetY * -1) * 2)})
+        .stretchTo({ x: newLocation2.newX, y: newLocation2.newY})
         .scale({ x: 1.0, y: 3 })
         .fadeIn(100)
         .startTime(400)
@@ -323,6 +331,8 @@ async function animateCastingLine(token, location1, location2) {
 
 async function animateLine(templateToAttachTo) {
     
+    let wallOfFireAnim;
+
     if (templateToAttachTo.distance <= 20) {
         wallOfFireAnim = "jb2a.wall_of_fire.100x100.yellow";
     } else if (templateToAttachTo.distance <= 40) {
@@ -331,20 +341,18 @@ async function animateLine(templateToAttachTo) {
         wallOfFireAnim = "jb2a.wall_of_fire.300x100.yellow";
     }
 
-    console.log("wallOfFireAnim selected:" + wallOfFireAnim);
-
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .sound()
     .volume(0.5)
-    .file(remainingSound, true, true)
+    .file(REMAININGSOUNDS, true, true)
     .fadeOutAudio(1000)
     .playIf(() => {
-      return fileExistsAtPath(remainingSound);
+      return fileExistsAtPath(REMAININGSOUNDS);
     })
     .effect()
         .file(wallOfFireAnim)
         .fadeIn(300)
-        .attachTo(templateToAttachTo, {align: "center", edge: "on", offset: { x : adjustedOffsetX, y : 0 }})
+        .attachTo(templateToAttachTo, {align: "center", edge: "inner", offset: { x : adjustedOffsetX, y : 0 }})
         .stretchTo(templateToAttachTo, {offset: { x : adjustedOffsetX * -1 , y : 0 }})
         .persist()
         .loopOptions({ loops: 3600 })
@@ -352,7 +360,7 @@ async function animateLine(templateToAttachTo) {
     .play()
 }
 
-async function animateRing(token, templateToAttachTo) {
+async function animateRing(templateToAttachTo) {
 
     await new Sequence({ moduleName: "PF2e Animations", softFail: true })
     .effect()
@@ -361,10 +369,10 @@ async function animateRing(token, templateToAttachTo) {
         .file("jb2a.impact.fire.01.orange.0")
     .sound()
         .volume(0.5)
-        .file(fireSpreadSound, true, true)
+        .file(FIRESPREADSOUND, true, true)
         .fadeOutAudio(500)
         .playIf(() => {
-          return fileExistsAtPath(fireSpreadSound);
+          return fileExistsAtPath(FIRESPREADSOUND);
       }) 
     .effect()
         .file("jb2a.wall_of_fire.ring.yellow")
@@ -377,10 +385,10 @@ async function animateRing(token, templateToAttachTo) {
         .loopOptions({ loops: 3600 })
     .sound()
         .volume(0.5)
-        .file(remainingSound, true, true)
+        .file(REMAININGSOUNDS, true, true)
         .fadeOutAudio(500)
         .playIf(() => {
-           return fileExistsAtPath(remainingSound);
+           return fileExistsAtPath(REMAININGSOUNDS);
       })  
     .play()
 }
