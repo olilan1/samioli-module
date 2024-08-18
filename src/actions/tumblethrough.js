@@ -3,10 +3,10 @@ export async function startTumbleThrough(ChatMessagePF2e) {
     //first check if the message is eligible
     if (!checkIfASkillCheck(ChatMessagePF2e)){
     } else {
+        console.log(`ChatMessagePF2e.flags.pf2e.context.options`, ChatMessagePF2e.flags.pf2e.context.options)
 
         //check if the skill check was for a tumblethrough
-        if (!ChatMessagePF2e.flags.pf2e.context.options.includes("action:tumble-through") 
-            && ChatMessagePF2e.flags.pf2e.context.type !== "skill-check") {
+        if (!ChatMessagePF2e.flags.pf2e.context.options.includes("action:tumble-through")) {
             return
     
         } else {
