@@ -50,7 +50,7 @@ export async function startTumbleThrough(ChatMessagePF2e) {
             if (ChatMessagePF2e.flags.pf2e.context.outcome === "criticalSuccess"
                 || ChatMessagePF2e.flags.pf2e.context.outcome === "success") {
 
-                const ANIMATIONTIME = 4000
+                const animationTime = 4000
 
                 let sequence = new Sequence({moduleName: "PF2e Animations", softFail: true})
                 
@@ -58,7 +58,7 @@ export async function startTumbleThrough(ChatMessagePF2e) {
                     .on(token)
                     .opacity(0)
                     .fadeIn(200)
-                    .duration(ANIMATIONTIME)
+                    .duration(animationTime)
                 .sound()
                     .file(WOOSH_SOUND_1, true, true)
                     .delay(500)
@@ -132,25 +132,25 @@ export async function startTumbleThrough(ChatMessagePF2e) {
                     .from(token)
                     .loopProperty("sprite", "rotation", {
                         values: [0, rotationValue],
-                        duration: ANIMATIONTIME/2,
+                        duration: animationTime/2,
                         pingPong: true,
                         ease: "easeInOutCirc"
                     })
                     .loopProperty("sprite", "position.x", {
                         values: [0, x, 0],
-                        duration: ANIMATIONTIME/2, 
+                        duration: animationTime/2, 
                         pingPong: true,
                         gridUnits: false,
                         ease: "easeInOutBack"
                     })
                     .loopProperty("sprite", "position.y", {
                         values: [0, y, 0],
-                        duration: ANIMATIONTIME/2, 
+                        duration: animationTime/2, 
                         pingPong: true,
                         gridUnits: false,
                         ease: "easeInOutBack"
                     })
-                    .duration(ANIMATIONTIME)
+                    .duration(animationTime)
                     .waitUntilFinished(-195)
                 .animation()
                     .on(token)
@@ -287,7 +287,6 @@ export async function startTumbleThrough(ChatMessagePF2e) {
             } else {
                 console.log(`did you target anyone? ${ChatMessagePF2e.flags.pf2e.context.outcome}`)
             }
-
         }
     }
 }
