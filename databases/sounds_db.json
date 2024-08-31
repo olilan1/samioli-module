@@ -1,7 +1,7 @@
 {
   "aasimar": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_aasimar_hit1.wav"
       ],
       "attack_sounds": [
@@ -23,13 +23,13 @@
           "Aasimar",
           "Aasimar Redeemer"
       ],
-      "match_on": [
+      "keywords": [
           "aasimar"
       ]
   },
   "badger": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_badger_hit1.WAV",
           "sound/NWN2-Sounds/c_badgerdire_hit1.WAV",
           "sound/NWN2-Sounds/c_badgerdire_hit2.WAV"
@@ -53,13 +53,13 @@
           "Badger",
           "Giant Badger"
       ],
-      "match_on": [
+      "keywords": [
           "badger"
       ]
   },
   "balor": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_balor_hit1.WAV",
           "sound/NWN2-Sounds/c_balor_hit2.WAV"
       ],
@@ -108,13 +108,13 @@
           "Treerazer",
           "Vrolikai"
       ],
-      "match_on": [
+      "keywords": [
           "balor"
       ]
   },
   "bat": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_bat_hit1.WAV",
           "sound/NWN2-Sounds/c_floatbat_hit1.WAV"
       ],
@@ -135,13 +135,13 @@
       "creatures": [
           "Werebat"
       ],
-      "match_on": [
+      "keywords": [
           "bat"
       ]
   },
   "bear": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_bear_hit1.WAV",
           "sound/NWN2-Sounds/c_beardire_hit1.WAV",
           "sound/NWN2-Sounds/c_beardire_hit2.WAV"
@@ -177,13 +177,13 @@
           "Zombie Owlbear",
           "Mist Bear"
       ],
-      "match_on": [
+      "keywords": [
           "bear"
       ]
   },
   "beetle": {
       "notes": "insect sounding - could be used for other insects",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_beetle_hit1.wav",
           "sound/NWN2-Creatures/c_beetle_hit2.wav",
           "sound/NWN2-Sounds/c_beetlebomb_hit1.WAV",
@@ -218,13 +218,13 @@
           "Skin Beetle Swarm",
           "Skin Beetle"
       ],
-      "match_on": [
+      "keywords": [
           "beetle"
       ]
   },
   "bevil": {
       "notes": "human male",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [
           "sound/NWN2-Sounds/c_bevil_atk.WAV",
           "sound/NWN2-Sounds/c_bevil_atk1.WAV",
@@ -243,13 +243,13 @@
       "creatures": [
           "Bevil"
       ],
-      "match_on": [
+      "keywords": [
           "bevil"
       ]
   },
   "blackgarius": {
       "notes": "human male - barbarian",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_blackgarius_hit1.WAV",
           "sound/NWN2-Sounds/c_blackgarius_hit2.WAV",
           "sound/NWN2-Sounds/c_blackgarius_hit3.WAV"
@@ -267,13 +267,13 @@
       "creatures": [
           "Blackgarius"
       ],
-      "match_on": [
+      "keywords": [
           "blackgarius"
       ]
   },
   "bladegol": {
       "notes": "golem sounds with blade",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_bladegol_hit1.WAV",
           "sound/NWN2-Sounds/c_bladegol_hit2.WAV"
       ],
@@ -291,13 +291,13 @@
       "creatures": [
           "Blade Golem"
       ],
-      "match_on": [
+      "keywords": [
           "Blade Golem"
       ]
   },
   "bladeling": {
       "notes": "angry humanoid",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_bladeling_hit1.WAV",
           "sound/NWN2-Sounds/c_bladeling_hit2.WAV"
       ],
@@ -316,13 +316,13 @@
           "Pirate",
           "Ghost Pirate Captain"
       ],
-      "match_on": [
+      "keywords": [
           "Pirate"
       ]
   },
   "boar": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_boardire_hit1.WAV",
           "sound/NWN2-Sounds/c_boardire_hit2.WAV",
           "sound/NWN2-Sounds/c_boar_hit1.WAV"
@@ -347,13 +347,13 @@
           "Wereboar",
           "Blood Boar"
       ],
-      "match_on": [
+      "keywords": [
           "boar"
       ]
   },
   "bugbear": {
       "notes": "big brutish",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_bugbear_hit1.WAV",
           "sound/NWN2-Sounds/c_bugbear_hit2.WAV"
       ],
@@ -379,13 +379,13 @@
           "Bugbear Tormentor",
           "Bugbear Prowler"
       ],
-      "match_on": [
+      "keywords": [
           "bugbear"
       ]
   },
   "cat": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_cat_hit1.WAV"
       ],
       "attack_sounds": [
@@ -415,13 +415,13 @@
           "Tormented (Dislocation)",
           "Azarketi Crab Catcher"
       ],
-      "match_on": [
+      "keywords": [
           "cat"
       ]
   },
   "chicken": {
       "notes": "",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [],
       "death_sounds": [],
       "battle_sounds": [
@@ -432,13 +432,13 @@
       "creatures": [
           "Chicken"
       ],
-      "match_on": [
+      "keywords": [
           "chicken"
       ]
   },
   "cow": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_cow_hit1.wav"
       ],
       "attack_sounds": [
@@ -454,13 +454,13 @@
       "creatures": [
           "Cow"
       ],
-      "match_on": [
+      "keywords": [
           "cow"
       ]
   },
   "deer": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_deer_hit1.wav"
       ],
       "attack_sounds": [
@@ -474,13 +474,13 @@
       "creatures": [
           "Deer"
       ],
-      "match_on": [
+      "keywords": [
           "deer"
       ]
   },
   "demon": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_demon_hit1.wav",
           "sound/NWN2-Creatures/c_demon_hit2.wav"
       ],
@@ -506,13 +506,13 @@
           "Demon",
           "Demontangle"
       ],
-      "match_on": [
+      "keywords": [
           "demon"
       ]
   },
   "devil": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_devil_hit1.WAV",
           "sound/NWN2-Sounds/c_devil_hit2.WAV"
       ],
@@ -566,13 +566,13 @@
           "Sarglagon",
           "Vordine"
       ],
-      "match_on": [
+      "keywords": [
           "devil"
       ]
   },
   "devilhorn": {
       "notes": "minotaury sounding",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_devilhorn_hit1.WAV",
           "sound/NWN2-Sounds/c_devilhorn_hit2.WAV"
       ],
@@ -591,13 +591,13 @@
       "creatures": [
           "Mulventok"
       ],
-      "match_on": [
+      "keywords": [
           "minotaur"
       ]
   },
   "dog": {
       "notes": "general dog sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_doghell_hit1.WAV",
           "sound/NWN2-Sounds/c_dogshado_hit1.WAV",
           "sound/NWN2-Sounds/c_dogwolfdire_hit1.WAV"
@@ -626,13 +626,13 @@
           "Blink Dog",
           "Trollhound"
       ],
-      "match_on": [
+      "keywords": [
           "dog"
       ]
   },
   "dragon": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_dragblack_hit1.WAV",
           "sound/NWN2-Sounds/c_draggreen_hit1.WAV",
           "sound/NWN2-Sounds/c_dragred_hit1.WAV"
@@ -657,54 +657,12 @@
           "dragon"
       ],
       "creatures": [
-          "Black Dragon (Adult, Spellcaster)",
-          "Black Dragon (Adult)",
-          "Black Dragon (Ancient, Spellcaster)",
-          "Black Dragon (Ancient)",
-          "Black Dragon (Young, Spellcaster)",
-          "Black Dragon (Young)",
-          "Blue Dragon (Adult, Spellcaster)",
-          "Blue Dragon (Adult)",
-          "Blue Dragon (Ancient, Spellcaster)",
-          "Blue Dragon (Ancient)",
-          "Blue Dragon (Young, Spellcaster)",
-          "Blue Dragon (Young)",
-          "Brass Dragon (Adult, Spellcaster)",
-          "Brass Dragon (Adult)",
-          "Brass Dragon (Ancient, Spellcaster)",
-          "Brass Dragon (Ancient)",
-          "Brass Dragon (Young, Spellcaster)",
-          "Brass Dragon (Young)",
-          "Bronze Dragon (Adult, Spellcaster)",
-          "Bronze Dragon (Adult)",
-          "Bronze Dragon (Ancient, Spellcaster)",
-          "Bronze Dragon (Ancient)",
-          "Bronze Dragon (Young, Spellcaster)",
-          "Bronze Dragon (Young)",
-          "Copper Dragon (Adult, Spellcaster)",
-          "Copper Dragon (Adult)",
-          "Copper Dragon (Ancient, Spellcaster)",
-          "Copper Dragon (Ancient)",
-          "Copper Dragon (Young, Spellcaster)",
-          "Copper Dragon (Young)",
           "Crag Linnorm",
           "Desert Drake",
           "Dragon Turtle",
           "Faerie Dragon",
           "Flame Drake",
           "Frost Drake",
-          "Gold Dragon (Adult, Spellcaster)",
-          "Gold Dragon (Adult)",
-          "Gold Dragon (Ancient, Spellcaster)",
-          "Gold Dragon (Ancient)",
-          "Gold Dragon (Young, Spellcaster)",
-          "Gold Dragon (Young)",
-          "Green Dragon (Adult, Spellcaster)",
-          "Green Dragon (Adult)",
-          "Green Dragon (Ancient, Spellcaster)",
-          "Green Dragon (Ancient)",
-          "Green Dragon (Young, Spellcaster)",
-          "Green Dragon (Young)",
           "Ice Linnorm",
           "Jungle Drake",
           "Red Dragon (Adult, Spellcaster)",
@@ -885,13 +843,12 @@
           "Tor Linnorm",
           "Wyvern"
       ],
-      "match_on": [
-          "dragon"
+      "keywords": [
       ]
   },
   "dryad": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_dryad_hit1.WAV",
           "sound/NWN2-Sounds/c_dryad_hit2.WAV"
       ],
@@ -930,13 +887,13 @@
           "Naiad Queen",
           "Naiad"
       ],
-      "match_on": [
+      "keywords": [
           "dryad"
       ]
   },
   "ear": {
       "notes": "More earth Elemental sounds",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [
           "sound/NWN2-Sounds/c_ear_ele_atk1.WAV",
           "sound/NWN2-Sounds/c_ear_ele_atk2.WAV",
@@ -953,13 +910,13 @@
           "elemental"
       ],
       "creatures": [],
-      "match_on": [
+      "keywords": [
           "ear"
       ]
   },
   "elee": {
       "notes": "Earth Elemental sounding",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [
           "sound/NWN2-Sounds/c_elee_atk1_01.WAV",
           "sound/NWN2-Sounds/c_elee_atk1_02.WAV",
@@ -987,13 +944,13 @@
       "creatures": [
           "Earth Elemental"
       ],
-      "match_on": [
+      "keywords": [
           "earth elemental"
       ]
   },
   "elmair": {
       "notes": "Air Elemental",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_elmair_hit1.WAV",
           "sound/NWN2-Sounds/c_elmair_hit2.WAV"
       ],
@@ -1009,13 +966,13 @@
       "creatures": [
           "Air Elemental"
       ],
-      "match_on": [
+      "keywords": [
           "air elemental"
       ]
   },
   "elmearth": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_elmearth_hit1.WAV",
           "sound/NWN2-Sounds/c_elmearth_hit2.WAV"
       ],
@@ -1050,13 +1007,13 @@
           "Abyssal Muckrager",
           "Earth Scamp"
       ],
-      "match_on": [
+      "keywords": [
           "earth elemental"
       ]
   },
   "elmfire": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_elmfire_hit1.WAV",
           "sound/NWN2-Sounds/c_elmfire_hit2.WAV"
       ],
@@ -1083,13 +1040,13 @@
           "Azer",
           "Fire Wisp"
       ],
-      "match_on": [
+      "keywords": [
           "fire elemental"
       ]
   },
   "elmwater": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_elmwater_hit1.WAV",
           "sound/NWN2-Sounds/c_elmwater_hit2.WAV"
       ],
@@ -1121,13 +1078,13 @@
           "Faydhaan",
           "Quatoid"
       ],
-      "match_on": [
+      "keywords": [
           "water elemental"
       ]
   },
   "erinyes": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_erinyes_hit1.WAV",
           "sound/NWN2-Sounds/c_erinyes_hit2.WAV"
       ],
@@ -1146,13 +1103,13 @@
       "creatures": [
           "Erinyes"
       ],
-      "match_on": [
+      "keywords": [
           "erinyes"
       ]
   },
   "fairy": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_fairy_hit1.wav",
           "sound/NWN2-Creatures/c_fairy_hit2.wav"
       ],
@@ -1178,13 +1135,13 @@
           "Tooth Fairy Swarm",
           "Tooth Fairy"
       ],
-      "match_on": [
+      "keywords": [
           "fairy"
       ]
   },
   "fiend": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_fiend_hit1.WAV",
           "sound/NWN2-Sounds/c_fiend_hit2.WAV"
       ],
@@ -1209,13 +1166,13 @@
           "Fiend",
           "Pit Fiend"
       ],
-      "match_on": [
+      "keywords": [
           "fiend"
       ]
   },
   "gargoyle": {
       "notes": "generic monster sound",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_gargoyle_hit1.WAV"
       ],
       "attack_sounds": [
@@ -1237,13 +1194,13 @@
       "creatures": [
           "Gargoyle"
       ],
-      "match_on": [
+      "keywords": [
           "gargoyle"
       ]
   },
   "ghast": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_ghast_hit1.WAV",
           "sound/NWN2-Sounds/c_ghast_hit2.WAV"
       ],
@@ -1278,13 +1235,13 @@
           "Ghoul Soldier",
           "Ghoul Stalker"
       ],
-      "match_on": [
+      "keywords": [
           "ghast"
       ]
   },
   "ghost": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_ghost_hit1.WAV",
           "sound/NWN2-Sounds/c_ghost_hit2.WAV"
       ],
@@ -1373,13 +1330,13 @@
           "Shadow Spawn",
           "Shadow"
       ],
-      "match_on": [
+      "keywords": [
           "ghost"
       ]
   },
   "ghoul": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_ghoul_hit1.WAV",
           "sound/NWN2-Sounds/c_ghoul_hit2.WAV"
       ],
@@ -1409,13 +1366,13 @@
           "Ghoul Soldier",
           "Ghoul Stalker"
       ],
-      "match_on": [
+      "keywords": [
           "ghoul"
       ]
   },
   "giant": {
       "notes": "giant - no actual fire or frost",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_giantfire_hit1.WAV",
           "sound/NWN2-Sounds/c_giantfire_hit2.WAV",
           "sound/NWN2-Sounds/c_giantfrost_hit1.WAV",
@@ -1487,13 +1444,13 @@
           "Shadow Giant",
           "Snow Oni"
       ],
-      "match_on": [
+      "keywords": [
           "giant"
       ]
   },
   "gith": {
       "notes": "Male Githyanki - can probably be used for most humanoids",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_gith_hit1.WAV",
           "sound/NWN2-Sounds/c_gith_hit2.WAV",
           "sound/NWN2-Sounds/c_gith_hit3.WAV"
@@ -1513,13 +1470,13 @@
       "creatures": [
           "Gith"
       ],
-      "match_on": [
+      "keywords": [
           "gith"
       ]
   },
   "githf": {
       "notes": "Female Githyanki - tchk",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_githf_hit1.WAV",
           "sound/NWN2-Sounds/c_githf_hit2.WAV"
       ],
@@ -1538,13 +1495,13 @@
       "creatures": [
           "Githf"
       ],
-      "match_on": [
+      "keywords": [
           "githf"
       ]
   },
   "gnoll": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_gnoll_hit1.WAV",
           "sound/NWN2-Sounds/c_gnoll_hit2.WAV"
       ],
@@ -1574,14 +1531,14 @@
           "Kholo Hunter",
           "Kholo Sergeant"
       ],
-      "match_on": [
+      "keywords": [
           "gnoll",
           "kholo"
       ]
   },
   "goblin": {
       "notes": "very aggressive sounding - not very golarion gobliny :D",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_goblin_hit1.WAV",
           "sound/NWN2-Sounds/c_goblin_hit2.WAV"
       ],
@@ -1611,13 +1568,13 @@
           "Goblin War Chanter",
           "Goblin Warrior"
       ],
-      "match_on": [
+      "keywords": [
           "goblin"
       ]
   },
   "golmiron": {
       "notes": "metalic sounding golem - could be used for any metal construct",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_golmiron_hit1.WAV",
           "sound/NWN2-Sounds/c_golmiron_hit2.WAV",
           "sound/NWN2-Sounds/c_golmiron_hit3.WAV",
@@ -1658,13 +1615,13 @@
           "Nhimbaloth's Cutter",
           "Lazurite-Infused Stone Golem"
       ],
-      "match_on": [
+      "keywords": [
           "golem"
       ]
   },
   "hezrou": {
       "notes": "Very big beast sound",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_hezrou_hit1.WAV",
           "sound/NWN2-Sounds/c_hezrou_hit2.WAV"
       ],
@@ -1689,13 +1646,13 @@
       "creatures": [
           "Hezrou"
       ],
-      "match_on": [
+      "keywords": [
           "hezrou"
       ]
   },
   "hobgob": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_hobgob_hit1.WAV",
           "sound/NWN2-Sounds/c_hobgob_hit2.WAV"
       ],
@@ -1724,13 +1681,13 @@
           "Hobgoblin General",
           "Hobgoblin Soldier"
       ],
-      "match_on": [
+      "keywords": [
           "hobgoblin"
       ]
   },
   "horror": {
       "notes": "Metal sounding - more like a haunted item",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_horror_hit1.WAV",
           "sound/NWN2-Sounds/c_horror_hit2.WAV"
       ],
@@ -1750,13 +1707,13 @@
       "creatures": [
           "Horror"
       ],
-      "match_on": [
+      "keywords": [
           "horror"
       ]
   },
   "imp": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_imp_hit1.WAV",
           "sound/NWN2-Sounds/c_imp_hit2.WAV",
           "sound/NWN2-Sounds/c_impice_hit1.WAV",
@@ -1787,13 +1744,13 @@
       "creatures": [
           "Imp"
       ],
-      "match_on": [
+      "keywords": [
           "imp"
       ]
   },
   "kana": {
       "notes": "angry female - barbarianesque",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_kana_hit1.WAV",
           "sound/NWN2-Sounds/c_kana_hit2.WAV",
           "sound/NWN2-Sounds/c_kana_hit3.WAV"
@@ -1815,13 +1772,13 @@
           "Kana",
           "Amelekana"
       ],
-      "match_on": [
+      "keywords": [
           "kana"
       ]
   },
   "kistral": {
       "notes": "gross insect sounding",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_kistral_hit1.WAV"
       ],
       "attack_sounds": [
@@ -1844,13 +1801,13 @@
           "Seugathi Researcher",
           "Seugathi Servant"
       ],
-      "match_on": [
+      "keywords": [
           "kistral"
       ]
   },
   "kobold": {
       "notes": "quite dog sounding - less lizardy",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_kobold_hit1.WAV",
           "sound/NWN2-Sounds/c_kobold_hit2.WAV"
       ],
@@ -1885,13 +1842,13 @@
           "Kobold Warrior",
           "Kobold Cavern Mage"
       ],
-      "match_on": [
+      "keywords": [
           "kobold"
       ]
   },
   "koraboros": {
       "notes": "deeper male humanoid",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_koraboros_hit1.WAV",
           "sound/NWN2-Sounds/c_koraboros_hit2.WAV"
       ],
@@ -1909,13 +1866,13 @@
       "creatures": [
           "Koraboros"
       ],
-      "match_on": [
+      "keywords": [
           "koraboros"
       ]
   },
   "kos": {
       "notes": "sounds like an orc boss",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_kos_hit1.WAV",
           "sound/NWN2-Sounds/c_kos_hit2.WAV",
           "sound/NWN2-Sounds/c_kos_hit3.WAV"
@@ -1931,13 +1888,13 @@
       "creatures": [
           "Kos"
       ],
-      "match_on": [
+      "keywords": [
           "kos"
       ]
   },
   "lich": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_lich_hit1.WAV",
           "sound/NWN2-Sounds/c_lich_hit2.WAV"
       ],
@@ -1965,13 +1922,13 @@
           "Horde Lich",
           "Runecarved Lich"
       ],
-      "match_on": [
+      "keywords": [
           "lich"
       ]
   },
   "lizardm": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_lizardm_hit1.WAV",
           "sound/NWN2-Sounds/c_lizardm_hit2.WAV",
           "sound/NWN2-Sounds/c_lizman_hit1.WAV",
@@ -2000,13 +1957,13 @@
           "Lizardfolk Stargazer",
           "Iruxi Ossature"
       ],
-      "match_on": [
+      "keywords": [
           "lizardfolk"
       ]
   },
   "lornestarling": {
       "notes": "generic evil human male",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_lornestarling_hit1.WAV",
           "sound/NWN2-Sounds/c_lornestarling_hit2.WAV",
           "sound/NWN2-Sounds/c_lornestarling_hit3.WAV"
@@ -2028,13 +1985,13 @@
       "creatures": [
           "Lornestarling"
       ],
-      "match_on": [
+      "keywords": [
           "lornestarling"
       ]
   },
   "mephit": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_mephit_hit1.wav",
           "sound/NWN2-Creatures/c_mephit_hit2.wav"
       ],
@@ -2069,14 +2026,14 @@
           "Fire Scamp",
           "Water Scamp"
       ],
-      "match_on": [
+      "keywords": [
           "mephit",
           "scamp"
       ]
   },
   "mindflayer": {
       "notes": "monster sounding - not very tentacly",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_mindflayer_hit1.WAV",
           "sound/NWN2-Sounds/c_mindflayer_hit2.WAV"
       ],
@@ -2094,13 +2051,13 @@
       "creatures": [
           "Mindflayer"
       ],
-      "match_on": [
+      "keywords": [
           "mindflayer"
       ]
   },
   "minotaur": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_minotaur_hit1.WAV",
           "sound/NWN2-Sounds/c_minotaur_hit2.WAV"
       ],
@@ -2125,13 +2082,13 @@
           "Minotaur",
           "Minotaur Hunter"
       ],
-      "match_on": [
+      "keywords": [
           "minotaur"
       ]
   },
   "mummy": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_mummy_hit1.WAV",
           "sound/NWN2-Sounds/c_mummy_hit2.WAV",
           "sound/NWN2-Sounds/c_mummygrt_hit1.WAV",
@@ -2170,13 +2127,13 @@
           "Iroran Mummy",
           "Mummy Prophet Of Set"
       ],
-      "match_on": [
+      "keywords": [
           "mummy"
       ]
   },
   "nightwalk": {
       "notes": "Good for generic evil creatures",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_nightwalk_hit1.WAV",
           "sound/NWN2-Sounds/c_nightwalk_hit2.WAV"
       ],
@@ -2194,13 +2151,13 @@
       "creatures": [
           "Nightwalk"
       ],
-      "match_on": [
+      "keywords": [
           "nightwalk"
       ]
   },
   "ogre": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_ogre_hit1.WAV",
           "sound/NWN2-Sounds/c_ogre_hit2.WAV",
           "sound/NWN2-Sounds/c_ogremagi_hit1.WAV",
@@ -2236,13 +2193,13 @@
           "Ogre Glutton",
           "Ogre Warrior"
       ],
-      "match_on": [
+      "keywords": [
           "ogre"
       ]
   },
   "orc": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_orc_hit1.WAV",
           "sound/NWN2-Sounds/c_orc_hit2.WAV",
           "sound/NWN2-Sounds/c_orc_hit3.WAV"
@@ -2272,13 +2229,13 @@
           "Orc Scrapper",
           "Orc Veteran"
       ],
-      "match_on": [
+      "keywords": [
           "orc"
       ]
   },
   "pixie": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_pixie_hit1.WAV",
           "sound/NWN2-Sounds/c_pixie_hit2.WAV"
       ],
@@ -2301,13 +2258,13 @@
           "Pixie",
           "Sprite"
       ],
-      "match_on": [
+      "keywords": [
           "pixie"
       ]
   },
   "rat": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_rat_hit1.WAV",
           "sound/NWN2-Sounds/c_rat_hit2.WAV",
           "sound/NWN2-Sounds/c_ratdire_hit1.WAV",
@@ -2342,13 +2299,13 @@
           "Wererat",
           "Rat Snake Swarm"
       ],
-      "match_on": [
+      "keywords": [
           "rat"
       ]
   },
   "shadowreaver": {
       "notes": "evil undeady creatures",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_shadowreaver_hit1.WAV",
           "sound/NWN2-Sounds/c_shadowreaver_hit2.WAV",
           "sound/NWN2-Sounds/c_shadowreaver_hit3.WAV"
@@ -2373,13 +2330,13 @@
           "Prowler Wight",
           "Wight Commander"
       ],
-      "match_on": [
+      "keywords": [
           "shadowreaver"
       ]
   },
   "skeleton": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_skeleton_hit1.WAV",
           "sound/NWN2-Sounds/c_skeleton_hit2.WAV"
       ],
@@ -2410,13 +2367,13 @@
           "Drake Skeleton",
           "Wolf Skeleton"
       ],
-      "match_on": [
+      "keywords": [
           "skeleton"
       ]
   },
   "slaan": {
       "notes": "Lizard man sounding",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_slaan_hit1.WAV",
           "sound/NWN2-Sounds/c_slaan_hit2.WAV",
           "sound/NWN2-Sounds/c_slaan_hit3.WAV"
@@ -2434,13 +2391,13 @@
       "creatures": [
           "Slaan"
       ],
-      "match_on": [
+      "keywords": [
           "slaan"
       ]
   },
   "slyph": {
       "notes": "annoying sounding fairy",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_slyph_hit1.WAV",
           "sound/NWN2-Sounds/c_slyph_hit2.WAV"
       ],
@@ -2458,13 +2415,13 @@
       "creatures": [
           "Slyph"
       ],
-      "match_on": [
+      "keywords": [
           "slyph"
       ]
   },
   "spidbn": {
       "notes": "Generic Spider Sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_spidbn_hit1.WAV",
           "sound/NWN2-Sounds/c_spidbn_hit1_01.WAV",
           "sound/NWN2-Sounds/c_spidbn_hit1_02.WAV",
@@ -2511,13 +2468,13 @@
           "Ether Spider",
           "Goliath Spider"
       ],
-      "match_on": [
+      "keywords": [
           "spider"
       ]
   },
   "spidbone": {
       "notes": "More Generic Spider Sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_spidbone_hit1.WAV"
       ],
       "attack_sounds": [
@@ -2537,13 +2494,13 @@
           "Hunting Spider",
           "Spider Swarm"
       ],
-      "match_on": [
+      "keywords": [
           "spider"
       ]
   },
   "spider": {
       "notes": "Even More Generic Spider Sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_spider_hit1.WAV",
           "sound/NWN2-Creatures/c_spider_hit2.WAV",
           "sound/NWN2-Creatures/c_spider_hit3.WAV"
@@ -2570,13 +2527,13 @@
           "Ogre Spider",
           "Mud Spider"
       ],
-      "match_on": [
+      "keywords": [
           "spider"
       ]
   },
   "spidwraith": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_spidwraith_hit1.WAV"
       ],
       "attack_sounds": [
@@ -2598,14 +2555,14 @@
           "Dream Spider",
           "Leng Spider"
       ],
-      "match_on": [
+      "keywords": [
           "dream spider",
           "leng spider"
       ]
   },
   "succubus": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_succubus_hit1.WAV",
           "sound/NWN2-Sounds/c_succubus_hit2.WAV"
       ],
@@ -2632,13 +2589,13 @@
       "creatures": [
           "Succubus"
       ],
-      "match_on": [
+      "keywords": [
           "succubus"
       ]
   },
   "tiefling": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_tiefling_hit1.wav"
       ],
       "attack_sounds": [
@@ -2661,13 +2618,13 @@
           "Tiefling",
           "Tiefling Adept"
       ],
-      "match_on": [
+      "keywords": [
           "tiefling"
       ]
   },
   "troll": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_troll_hit1.WAV",
           "sound/NWN2-Sounds/c_troll_hit2.WAV"
       ],
@@ -2697,13 +2654,13 @@
           "Forest Troll",
           "Troll Warleader"
       ],
-      "match_on": [
+      "keywords": [
           "troll"
       ]
   },
   "umber": {
       "notes": "Mix of bestial and giant",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_umber_hit1.WAV",
           "sound/NWN2-Sounds/c_umber_hit2.WAV"
       ],
@@ -2721,13 +2678,13 @@
       "creatures": [
           "Umber"
       ],
-      "match_on": [
+      "keywords": [
           "umber"
       ]
   },
   "umberhlk": {
       "notes": "insecty sounding",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_umberhlk_hit1.WAV",
           "sound/NWN2-Sounds/c_umberhlk_hit2.WAV"
       ],
@@ -2747,13 +2704,13 @@
       "creatures": [
           "Umberhlk"
       ],
-      "match_on": [
+      "keywords": [
           "umberhlk"
       ]
   },
   "umberhulk": {
       "notes": "",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [],
       "death_sounds": [
           "sound/NWN2-Sounds/c_umberhulk_dead.WAV"
@@ -2765,13 +2722,13 @@
       "creatures": [
           "Umberhulk"
       ],
-      "match_on": [
+      "keywords": [
           "umberhulk"
       ]
   },
   "vale": {
       "notes": "Male human - a bit higher pitched",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_vale_hit1.WAV",
           "sound/NWN2-Sounds/c_vale_hit2.WAV",
           "sound/NWN2-Sounds/c_vale_hit3.WAV"
@@ -2789,13 +2746,13 @@
       "creatures": [
           "Vale"
       ],
-      "match_on": [
+      "keywords": [
           "vale"
       ]
   },
   "vampf": {
       "notes": "Female Vampire Sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_vampf_hit1.WAV",
           "sound/NWN2-Sounds/c_vampf_hit2.WAV"
       ],
@@ -2814,13 +2771,13 @@
           "Lamia",
           "Lamia Matriarch"
       ],
-      "match_on": [
+      "keywords": [
           "lamia"
       ]
   },
   "vampire": {
       "notes": "Boss vampire sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_vampire_hit1.wav",
           "sound/NWN2-Creatures/c_vampire_hit2.wav"
       ],
@@ -2852,13 +2809,13 @@
           "Vampire Squid",
           "Vampire Servitor"
       ],
-      "match_on": [
+      "keywords": [
           "vampire"
       ]
   },
   "vampm": {
       "notes": "Generic vampire sounds",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_vampm_hit1.WAV",
           "sound/NWN2-Sounds/c_vampm_hit2.WAV"
       ],
@@ -2879,13 +2836,13 @@
           "Nosferatu Overlord",
           "Nosferatu Thrall"
       ],
-      "match_on": [
+      "keywords": [
           "vampm"
       ]
   },
   "vashne": {
       "notes": "Vampire or undead boss",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_vashne_hit1.WAV"
       ],
       "attack_sounds": [
@@ -2901,13 +2858,13 @@
       "creatures": [
           "Vashne"
       ],
-      "match_on": [
+      "keywords": [
           "vashne"
       ]
   },
   "weasel": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_weasel_hit1.WAV",
           "sound/NWN2-Sounds/c_weasel_hit2.WAV"
       ],
@@ -2927,13 +2884,13 @@
       "creatures": [
           "Weasel"
       ],
-      "match_on": [
+      "keywords": [
           "weasel"
       ]
   },
   "werewolf": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Sounds/c_werewolf_hit1.WAV",
           "sound/NWN2-Sounds/c_werewolf_hit2.WAV",
           "sound/NWN2-Sounds/c_werewolf_m_hit1.WAV",
@@ -2965,13 +2922,13 @@
           "Werewolf",
           "Jaul Mezmin"
       ],
-      "match_on": [
+      "keywords": [
           "werewolf"
       ]
   },
   "wraith": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_wraith_hit1.WAV",
           "sound/NWN2-Creatures/c_wraith_hit2.WAV"
       ],
@@ -3004,13 +2961,13 @@
           "Fluxwraith",
           "Watchtower Wraith"
       ],
-      "match_on": [
+      "keywords": [
           "wraith"
       ]
   },
   "zeeaire": {
       "notes": "annoying imp",
-      "hit_sounds": [],
+      "hurt_sounds": [],
       "attack_sounds": [
           "sound/NWN2-Sounds/c_zeeaire_atk.WAV",
           "sound/NWN2-Sounds/c_zeeaire_atk1.WAV"
@@ -3025,13 +2982,13 @@
       "creatures": [
           "Zeeaire"
       ],
-      "match_on": [
+      "keywords": [
           "zeeaire"
       ]
   },
   "zombie": {
       "notes": "",
-      "hit_sounds": [
+      "hurt_sounds": [
           "sound/NWN2-Creatures/c_zombie_hit1.WAV",
           "sound/NWN2-Creatures/c_zombie_hit2.WAV"
       ],
@@ -3067,7 +3024,7 @@
           "Zombie Lord",
           "Blackfrost Zombie"
       ],
-      "match_on": [
+      "keywords": [
           "zombie"
       ]
   }
