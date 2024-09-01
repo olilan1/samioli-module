@@ -4,8 +4,12 @@ import {delay} from "./utils.js";
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;
 
-export async function targetTokensUnderTemplate(template) {
+export async function targetTokensUnderTemplate(template, userId) {
     if (!getSetting(SETTINGS.TEMPLATE_TARGET_ENABLE)) {
+        return;
+    }
+
+    if (game.user.id !== userId) {
         return;
     }
 
