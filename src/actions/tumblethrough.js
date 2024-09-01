@@ -151,7 +151,7 @@ export async function startTumbleThrough(ChatMessagePF2e) {
                         ease: "easeInOutBack"
                     })
                     .duration(animationTime)
-                    .waitUntilFinished(-195)
+                    .waitUntilFinished(-250)
                 .animation()
                     .on(token)
                     .opacity(1)
