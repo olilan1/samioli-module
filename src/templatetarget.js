@@ -1,4 +1,5 @@
 import {getSetting, SETTINGS} from "./settings.js";
+import {delay} from "./utils.js";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;
@@ -90,8 +91,4 @@ async function getTemplateTokens(measuredTemplateDocument) {
     }
 
     return containedTokens;
-}
-
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
