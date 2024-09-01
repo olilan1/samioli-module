@@ -15,6 +15,7 @@
       "src/hooks.js",
       "src/creaturesounds.js",
       "src/chatmacrobutton.js",
+      "src/templatetarget.js",
       "src/spells/walloffire.js"
     ],
     "packFolders": [
