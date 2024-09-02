@@ -22,12 +22,12 @@ export async function checkForHuntPrey(chatMessage) {
 async function applyHuntPrey(actor, targets) {
     try {
         const huntPreyEffectData = {
-            name: `Hunted by ${actor.name}`,
+            name: `Hunted by ${actor.prototypeToken.name}`,
             type: "effect",
             img: actor.prototypeToken.texture.src,
             system: {
                 description: {
-                    value: `<p>This creature has been hunted by ${actor.name}</p>`
+                    value: `<p>This creature has been hunted by ${actor.prototypeToken.name}</p>`
                 },
                 slug: `hunt-prey-${actor.id}`,
                 duration: { value: 1, unit: "days" },
