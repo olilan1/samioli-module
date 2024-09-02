@@ -29,7 +29,8 @@ function randomRetort(outcome) {
         "I am not left handed!",
         "Sigh... I was itching for a REAL fight",
         "I'm starting to think you enjoy being ignored",
-        "Does anyone else feel bad for them?"
+        "Does anyone else feel bad for them?",
+        "Are you not entertained?!"
     ]
 
     const failedRetorts = [
