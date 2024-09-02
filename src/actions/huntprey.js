@@ -1,5 +1,5 @@
 export async function checkForHuntPrey(chatMessage) {
-    if (!chatMessage.flags.pf2e.origin.rollOptions.includes("origin:item:hunt-prey")) return;
+    if (!chatMessage.flags?.pf2e?.origin?.rollOptions.includes("origin:item:hunt-prey")) return;
 
     const ranger = game.actors.get(chatMessage.speaker.actor);
     const rangerTargets = game.user.targets;
