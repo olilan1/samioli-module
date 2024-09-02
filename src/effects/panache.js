@@ -21,7 +21,6 @@ async function applyPanache(actor) {
     const panacheItemId = "uBJsxCzNhje8m8jj";
     const compendiumPack = game.packs.get("pf2e.feat-effects");
     const panacheEffect = await compendiumPack.getDocument(panacheItemId);
-    await delay(4000);
     await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
 }
 
@@ -35,7 +34,6 @@ export async function checkForFinisher(chatMessage) {
     if ((hasFinisher && isDamageRoll) || (hasFinisher && isFailure)) {
         const panacheItems = await returnPanacheItems(game.actors.get(chatMessage.speaker.actor));
         if (panacheItems.length > 0) {
-            await delay(4000);
             for (const panacheItem of panacheItems) {
                 await panacheItem.delete(); 
             }
