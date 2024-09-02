@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const soundDirectory = '..\\sounds\\GameDevMarket';
+const soundDirectory = '../sounds/GameDevMarket/Humanoid_Creatures_2';
 
-const soundDirectories = findSubdirectories(soundDirectory)
+const soundDirectories = findSubdirectories(soundDirectory);
 
 createSoundDatabase();
 
@@ -16,10 +16,16 @@ async function createSoundDatabase() {
 
             for (const file of files) {
                 if ((file.endsWith('.wav') || file.endsWith('.mp3') || file.endsWith('.ogg') || file.endsWith('.WAV'))) { // Adjust extensions as needed
-                    const fileParts = file.split("_");
+                    // const regex =  /(\w+)_Monster_([a-zA-Z]+)(\w)*/;  // Evolved_Game_Creatures
+                    const regex = /CREAHmn_(.*?)(?=\sAttack|\sDeath|\sPain)\s(Attack|Death|Pain)(.*)/;   // Humanoid Creatures
+                    const matches = file.match(regex);
+                    
+                    if (!matches) {
+                        continue;
+                    }
 
-                    const soundSetName = fileParts[1];
-                    const soundType = fileParts[2];
+                    const soundSetName = matches[1];
+                    const soundType = matches[2];
 
                     if (!soundDatabase[soundSetName]) {
                         soundDatabase[soundSetName] = {
@@ -33,12 +39,14 @@ async function createSoundDatabase() {
                         };
                     }
 
-                    if (soundType === "Hurt") {
-                        soundDatabase[soundSetName].hurt_sounds.push(path.join(directory, file));
+                    const fixedPath = fixPath(path.join(directory, file));
+
+                    if (soundType === "Pain") {
+                        soundDatabase[soundSetName].hurt_sounds.push(fixedPath);
                     } else if (soundType === 'Attack') {
-                        soundDatabase[soundSetName].attack_sounds.push(path.join(directory, file));
+                        soundDatabase[soundSetName].attack_sounds.push(fixedPath);
                     } else if (soundType === 'Death') {
-                        soundDatabase[soundSetName].death_sounds.push(path.join(directory, file));
+                        soundDatabase[soundSetName].death_sounds.push(fixedPath);
                     }
                 }
             }
@@ -47,8 +55,12 @@ async function createSoundDatabase() {
         }
     }
 
-    fs.writeFileSync('./sounds_db_death.json', JSON.stringify(soundDatabase, null, 2));
+    fs.writeFileSync('./sounds_db.json', JSON.stringify(soundDatabase, null, 2));
     console.log('Sound database v3 created successfully!');
+}
+
+function fixPath(path) {
+    return path.replace(/\\/g, "/").replace("..", "modules/samioli-module");
 }
 
 function findSubdirectories(directoryPath) {
