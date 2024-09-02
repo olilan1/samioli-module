@@ -18,6 +18,7 @@ function checkIfProvidesPanache(chatMessage) {
 }
 
 async function applyPanache(actor) {
+    //TODO - check if panache is not already present
     const panacheItemId = "uBJsxCzNhje8m8jj";
     const compendiumPack = game.packs.get("pf2e.feat-effects");
     const panacheEffect = await compendiumPack.getDocument(panacheItemId);

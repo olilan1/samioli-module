@@ -54,6 +54,10 @@ export async function startTumbleThrough(ChatMessagePF2e) {
 
                 let sequence = new Sequence({moduleName: "PF2e Animations", softFail: true})
                 
+                .effect()
+                    .from(token)
+                    .duration(500)
+                    .waitUntilFinished(-450)
                 .animation()
                     .on(token)
                     .opacity(0)
