@@ -25,8 +25,6 @@ async function applyPanache(actor) {
     await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
 }
 
-
-
 export async function checkForFinisher(chatMessage) {
     const { flags } = chatMessage;
     const hasFinisher = flags?.pf2e?.context?.options.includes("finisher");
