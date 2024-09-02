@@ -1,3 +1,5 @@
+import {delay} from "../utils.js";
+
 export function checkForBravado(chatMessage) {
     if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")) {
         checkIfProvidesPanache(chatMessage);
@@ -23,9 +25,7 @@ async function applyPanache(actor) {
     await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 
 export async function checkForFinisher(chatMessage) {
     const { flags } = chatMessage;
