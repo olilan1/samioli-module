@@ -1,4 +1,3 @@
-/* {"name":"Dive and Breach","img":"systems/pf2e/icons/spells/dive-and-breach.webp","_id":"9z7488y7mXDuKBXU"} */
 
 let offset;
 let casterXwithOffset;
@@ -11,29 +10,23 @@ let secondLocationSequencer;
 let thirdLocationSequencer;
 let targets = new Set();
 let myTemplates = new Set();
-const emptyTargetArray = [];
 
-const controlledTokens = game.user.getActiveTokens();
-if (controlledTokens.length === 1) {
-  const caster = controlledTokens[0];
+export async function startDiveAndBreach(tokenId) {
+  const TOKEN = canvas.tokens.placeables.find(t => t.id === tokenId);
 
   offset = game.canvas.scene.grid.size/2;
 
-  casterXwithOffset = caster.x + offset;
-  casterYwithOffset = caster.y + offset;
+  casterXwithOffset = TOKEN.x + offset;
+  casterYwithOffset = TOKEN.y + offset;
 
   await clearUserTargets();
   await selectFirstTemplateLocation();
   await selectSecondTemplateLocation();
   await selectThirdTemplateLocation();
   await clearTemplates();
-  await doAnimation(caster);
-  await addTargetsToUser(caster);
+  await doAnimation(TOKEN);
+  await addTargetsToUser(TOKEN);
 
-} else if (controlledTokens.length > 1) {
-  ui.notifications.warn("Please select only a single token");
-} else {
-  ui.notifications.warn("No tokens selected.");
 }
 
 async function clearTemplates() {
@@ -102,7 +95,7 @@ async function createTemplate(atLocation) {
     borderColor: "#000000",
   };
 
-  myTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+  let myTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
   await delay(100);
 
   myTemplates.add(myTemplate);
@@ -118,30 +111,21 @@ async function captureTargets() {
   }
 }
 
-async function addTargetsToUser(user) {
-  console.log("users current targets:")
-  console.log(game.user.targets)
+async function addTargetsToUser(player) {
   let targetIds = Array.from(targets).map(token => token.document._id);
-  //add some logic to check that the player isn't included
-  targetIds = targetIds.filter(targetIds => targetIds !== user.actorId);
+  targetIds = targetIds.filter(targetIds => targetIds !== player._id);
   await game.user.updateTokenTargets(targetIds);
-  console.log("users updated targets:")
-  console.log(game.user.targets)  
 }
 
 async function clearUserTargets() {
   await game.user.clearTargets();
-  console.log("Targets have been cleared")
   await delay(200);
-  console.log(game.user.targets);
 }
 
 async function doAnimation(token) {
 
   //clear targets for the animation
   await clearUserTargets();
-  console.log("game.user.targets after clearUserTargets():");  
-  console.log(game.user.targets);
   let rotation
 
   if (token.x > firstLocationSequencer.x) {
@@ -152,11 +136,29 @@ async function doAnimation(token) {
       rotation = 140
   }
 
+  async function fileExistsAtPath(path) {
+    
+    try {
+      const response = await fetch(path, { method: 'HEAD' });
+      return response.ok; // Returns true if status code is 200-299, false otherwise
+    } catch (error) {
+      console.log("File not found at: " + path)
+      return false; 
+    }
+  }
+  
+  const spellSound = "sound/BG2-Sounds/sim_pulswater.wav"
+  const entrySplashSound = "sound/NWN2-Sounds/pl_splash_idle01.WAV"
+  const exitSplashSound ="sound/NWN2-Sounds/pl_splash_idle02.WAV"
+
   await new Sequence()
     //cast spell sound
     .sound()
       .volume(0.7)
-      .file("sound/BG2-Sounds/sim_pulswater.wav", true, true)  
+      .file(spellSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(spellSound);
+    })
     //cast spell animation
     .effect()
       .atLocation(token)
@@ -181,7 +183,10 @@ async function doAnimation(token) {
     //entry splash sound
     .sound()
       .volume(0.5)
-      .file("sound/NWN2-Sounds/pl_splash_idle01.WAV", true, true)
+      .file(entrySplashSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(entrySplashSound);
+    })
     //entry splash effect
     .effect()
       .atLocation(firstLocation)
@@ -192,7 +197,10 @@ async function doAnimation(token) {
     //exit splash sound
     .sound()
       .volume(0.5)
-      .file("sound/NWN2-Sounds/pl_splash_idle02.WAV", true, true)
+      .file(exitSplashSound, true, true)
+      .playIf(() => {
+        return fileExistsAtPath(exitSplashSound);
+    })
     //exit splash
     .effect()
       .atLocation(secondLocation)
