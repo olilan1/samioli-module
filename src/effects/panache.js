@@ -73,25 +73,34 @@ async function editPanacheEffect(actor, outcome) {
   }
 }
 
-export async function checkForFinisher(chatMessage) {
-  const { flags } = chatMessage;
-  const hasFinisher = flags?.pf2e?.context?.options.includes("finisher");
-  const isDamageRoll = flags?.pf2e?.context?.type === "damage-roll";
-  const isAttackRoll = flags?.pf2e?.context?.type === "attack-roll";
-  const isFailure = flags?.pf2e?.context?.outcome === "failure" || flags?.pf2e?.context?.outcome === "criticalFailure";
+export async function checkForFinisherAttack(chatMessage) {
+  const context = chatMessage.flags?.pf2e?.context;
+  if (!context?.options.includes("finisher")) {
+    return;
+  }
+  if (context?.outcome === "failure" || context?.outcome === "criticalFailure") {
+    clearPanache(chatMessage);
+  }
+}
 
-  if ((hasFinisher && isDamageRoll) || (hasFinisher && isFailure && isAttackRoll)) {
-    const panacheItems = await returnPanacheItems(game.actors.get(chatMessage.speaker.actor));
-    if (panacheItems.length > 0) {
-      for (const panacheItem of panacheItems) {
-        await panacheItem.delete();
-      }
+export async function checkForFinisherDamage(chatMessage) {
+  if (!chatMessage.flags?.pf2e?.context?.options.includes("finisher")) {
+    return;
+  }
+  clearPanache(chatMessage);
+}
+
+function clearPanache(chatMessage) {
+  const panacheItems = returnPanacheItems(game.actors.get(chatMessage.speaker.actor));
+  if (panacheItems.length > 0) {
+    for (const panacheItem of panacheItems) {
+      panacheItem.delete();
     }
   }
 }
 
-async function returnPanacheItems(actor) {
-  const items = await actor.items.contents;
+function returnPanacheItems(actor) {
+  const items = actor.items.contents;
   return items.filter(item => item.type === "effect" && item.system.slug === "effect-panache");
 }
 

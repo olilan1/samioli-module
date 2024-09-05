@@ -12,12 +12,8 @@ export function editSkillRoll(html, actor) {
 }
 
 export function startEnjoyTheShow(ChatMessagePF2e) {
-    if (ChatMessagePF2e.flags.pf2e?.context?.type === "skill-check" ){
-        if (ChatMessagePF2e.flags.pf2e.context.options.includes("item:slug:enjoy-the-show")) {
-            animateEnjoyTheShow(ChatMessagePF2e);
-        } else{
-            return;
-        }
+    if (ChatMessagePF2e.flags.pf2e.context.options.includes("item:slug:enjoy-the-show")) {
+        animateEnjoyTheShow(ChatMessagePF2e);
     }
 }
 
