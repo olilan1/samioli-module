@@ -1,6 +1,6 @@
 import { ClassicLevel } from "classic-level"
 import * as fs from "node:fs/promises"
-import { existsSync, createWriteStream } from "node:fs"
+import { existsSync } from "node:fs"
 import * as path from "node:path"
 
 const DOCUMENT_DEFAULT = {

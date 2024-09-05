@@ -65,18 +65,17 @@ function fixPath(path) {
 
 function findSubdirectories(directoryPath) {
     const subdirectories = [];
-  
+
     const items = fs.readdirSync(directoryPath);
     for (const item of items) {
-      const itemPath = path.join(directoryPath, item);
-      const stats = fs.statSync(itemPath);
-  
-      if (stats.isDirectory())   
-   {
-        subdirectories.push(itemPath);
-        subdirectories.push(...findSubdirectories(itemPath)); // Recursively find subdirectories within subdirectories
-      }
+        const itemPath = path.join(directoryPath, item);
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+            subdirectories.push(itemPath);
+            subdirectories.push(...findSubdirectories(itemPath)); // Recursively find subdirectories within subdirectories
+        }
     }
-  
+
     return subdirectories;
 }
