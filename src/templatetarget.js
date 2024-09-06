@@ -1,14 +1,11 @@
-import {getSetting, SETTINGS} from "./settings.js";
 import {delay} from "./utils.js";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;
 
-export async function targetTokensUnderTemplate(template, userId) {
-    if (!getSetting(SETTINGS.TEMPLATE_TARGET_ENABLE)) {
-        return;
-    }
+let lastTemplateDetails;
 
+export async function targetTokensUnderTemplate(template, userId) {
     if (game.user.id !== userId) {
         return;
     }
@@ -18,6 +15,28 @@ export async function targetTokensUnderTemplate(template, userId) {
 
     game.user.updateTokenTargets(tokenIds);
     game.user.broadcastActivity({ targets: tokenIds });
+
+    lastTemplateDetails = {
+        templateId: template.id,
+        tokenIds: tokenIds
+    };
+}
+
+export function deleteTemplateTargets(template) {
+    if (lastTemplateDetails?.templateId != template.id) {
+        return;
+    }
+
+    const currentTargets = game.user.targets.map((token) => token.id);
+    const newTargets = currentTargets.filter(item => !lastTemplateDetails.tokenIds.includes(item));
+    console.log(newTargets);
+    game.user.updateTokenTargets(newTargets);
+    if (newTargets.size > 0) {
+        game.user.broadcastActivity({ targets: newTargets });
+    } else {
+        game.user.broadcastActivity({ targets: [] });
+    }
+    lastTemplateDetails = null;
 }
 
 async function getTemplateTokens(measuredTemplateDocument) {
