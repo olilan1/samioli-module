@@ -29,7 +29,6 @@ export function deleteTemplateTargets(template) {
 
     const currentTargets = game.user.targets.map((token) => token.id);
     const newTargets = currentTargets.filter(item => !lastTemplateDetails.tokenIds.includes(item));
-    console.log(newTargets);
     game.user.updateTokenTargets(newTargets);
     if (newTargets.size > 0) {
         game.user.broadcastActivity({ targets: newTargets });
