@@ -71,7 +71,7 @@ async function wallOfFireRing(caster) {
     let myTemplate = await createTemplate(myTemplateDocument);
     await delay(500);
     await animateSpellCasting(caster);
-    await animateRing(caster, myTemplate);
+    await animateRing(myTemplate);
     //remove tokens that are too central
 }
 
