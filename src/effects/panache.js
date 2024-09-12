@@ -1,8 +1,8 @@
 export function checkForBravado(chatMessage) {
-    if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")) {
-      checkIfProvidesPanache(chatMessage);
-    }
+  if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")) {
+    checkIfProvidesPanache(chatMessage);
   }
+}
   
 async function checkIfProvidesPanache(chatMessage) {
   const outcome = chatMessage.flags.pf2e.context.outcome;
