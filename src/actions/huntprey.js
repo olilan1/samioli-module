@@ -18,6 +18,9 @@ export async function checkForHuntPreyGM(chatMessage, userId) {
 }
 
 export async function checkForHuntPreyPlayer(chatMessage, userId) {
+    
+    const ranger = game.actors.get(chatMessage.speaker.actor);
+
     if (!chatMessage.flags?.pf2e?.origin?.rollOptions.includes("origin:item:hunt-prey")) return;
 
     if (game.users.get(userId).targets.size === 0) {
