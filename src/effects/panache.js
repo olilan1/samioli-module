@@ -1,10 +1,14 @@
 export function checkForBravado(chatMessage) {
-  if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")) {
+
+//don't run if tumble through or enjoy the show - those hooks will call this function after the animation
+if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")
+  && !chatMessage.flags?.pf2e?.context?.options.includes("action:tumble-through")
+  && !chatMessage.flags?.pf2e?.context?.options.includes("item:slug:enjoy-the-show")) {
     checkIfProvidesPanache(chatMessage);
   }
 }
   
-async function checkIfProvidesPanache(chatMessage) {
+export async function checkIfProvidesPanache(chatMessage) {
   const outcome = chatMessage.flags.pf2e.context.outcome;
   if (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure") {
     await applyPanache(game.actors.get(chatMessage.speaker.actor), outcome);

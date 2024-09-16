@@ -1,3 +1,6 @@
+import { checkIfProvidesPanache } from "../effects/panache.js";
+import { delay } from "../utils.js";
+
 export function editSkillRoll(html, actor) {
     html.find('.inline-check.with-repost').attr('data-against', 'will');
     
@@ -11,7 +14,7 @@ export function editSkillRoll(html, actor) {
     }
 }
 
-export function startEnjoyTheShow(ChatMessagePF2e) {
+export async function startEnjoyTheShow(ChatMessagePF2e) {
     if (ChatMessagePF2e.flags.pf2e.context.options.includes("item:slug:enjoy-the-show")) {
         animateEnjoyTheShow(ChatMessagePF2e);
     }
@@ -81,13 +84,15 @@ async function animateEnjoyTheShow(ChatMessagePF2e) {
         wordWrapWidth: 200
     });
 
+    const animationTime = 4000;
+
     let sequence = new Sequence({moduleName: "PF2e Animations", softFail: true})
 
     .effect()
         .atLocation(token, {offset: {x:0, y:-100}})
         .fadeIn(500)
         .text(randomRetort(ChatMessagePF2e.flags.pf2e.context.outcome), style)
-        .duration(4000)
+        .duration(animationTime)
         .fadeOut(500)
         .animateProperty("sprite", "scale.x", {
             from: 0, 
@@ -104,7 +109,7 @@ async function animateEnjoyTheShow(ChatMessagePF2e) {
             to: -100, 
             duration: 300, 
         })
-        .waitUntilFinished(-3600)
+        .waitUntilFinished(-400)
     .effect()
         .atLocation(targetTokens[0])
         .fadeIn(200)
@@ -114,4 +119,6 @@ async function animateEnjoyTheShow(ChatMessagePF2e) {
         .opacity(0.5)
         .playIf(checkIfSuccess(ChatMessagePF2e.flags.pf2e.context.outcome))
     sequence.play()
+    await delay(animationTime);
+    checkIfProvidesPanache(ChatMessagePF2e);
 }
