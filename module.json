@@ -40,6 +40,10 @@
         "flags": {}
       }
     ],
+    "compatibility": {
+      "minimum": "12",
+      "verified": "12"
+    },
     "version": "#{VERSION}#",
     "url": "#{URL}#",
     "manifest": "#{MANIFEST}#",
