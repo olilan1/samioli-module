@@ -312,7 +312,7 @@ async function fileExistsAtPath(path) {
         const response = await fetch(path, { method: 'HEAD' });
         return response.ok; // Returns true if status code is 200-299, false otherwise
     } catch (error) {
-        console.log("File not found at: " + path)
+        console.log("File not found at: " + path + " error: " + error);
         return false; 
     }
 }

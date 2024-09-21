@@ -2,24 +2,24 @@ import { startWallOfFire } from "./spells/walloffire.js";
 import { startDiveAndBreach } from "./spells/diveandbreach.js";
 import { editSkillRoll } from "./actions/enjoytheshow.js";
 
-export function chatMacroButton(ChatMessagePF2e, html) {
+export function chatMacroButton(chatMessagePF2e, html) {
     
     //Check if passed message is a spell
-    if (ChatMessagePF2e.flags.pf2e.origin?.type === 'spell') {
+    if (chatMessagePF2e.flags.pf2e.origin?.type === 'spell') {
         //if it is a spell, check if it's one we have a macro for
         let slugPrefix = 'origin:item:slug:';
-        let spellSlugIndex = ChatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
-        let spellSlug = ChatMessagePF2e.flags.pf2e.origin.rollOptions[spellSlugIndex].slice(slugPrefix.length);
+        let spellSlugIndex = chatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
+        let spellSlug = chatMessagePF2e.flags.pf2e.origin.rollOptions[spellSlugIndex].slice(slugPrefix.length);
         
-        findRelevantSpell(spellSlug, ChatMessagePF2e, html)      
+        findRelevantSpell(spellSlug, chatMessagePF2e, html)      
 
-    } else if (ChatMessagePF2e.flags.pf2e.origin?.type === 'feat') {
+    } else if (chatMessagePF2e.flags.pf2e.origin?.type === 'feat') {
         //if it's a feat, check if it's one we have a macro for
         let slugPrefix = 'origin:item:slug:';
-        let featSlugIndex = ChatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
-        let featSlug = ChatMessagePF2e.flags.pf2e.origin.rollOptions[featSlugIndex].slice(slugPrefix.length);
+        let featSlugIndex = chatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
+        let featSlug = chatMessagePF2e.flags.pf2e.origin.rollOptions[featSlugIndex].slice(slugPrefix.length);
 
-        findRelevantFeat(featSlug, ChatMessagePF2e, html)
+        findRelevantFeat(featSlug, chatMessagePF2e, html)
     }
     else    
     {
@@ -27,7 +27,7 @@ export function chatMacroButton(ChatMessagePF2e, html) {
     }
 }
 
-function findRelevantSpell(spellSlug, ChatMessagePF2e, html) {
+function findRelevantSpell(spellSlug, chatMessagePF2e, html) {
     
     let $spellButtonDiv;
     let tokenId; 
@@ -36,32 +36,31 @@ function findRelevantSpell(spellSlug, ChatMessagePF2e, html) {
     switch (spellSlug) {
         case "wall-of-fire":
             $spellButtonDiv = html.find('.spell-button');
-            tokenId = (ChatMessagePF2e.speaker.token) 
+            tokenId = (chatMessagePF2e.speaker.token) 
             newButton = createWallOfFireButton(tokenId);
             $spellButtonDiv.after(newButton);
-        break;
+            break;
         case "dive-and-breach":
             $spellButtonDiv = html.find('.spell-button');
-            tokenId = (ChatMessagePF2e.speaker.token) 
+            tokenId = (chatMessagePF2e.speaker.token) 
             newButton = createDiveAndBreach(tokenId);
             $spellButtonDiv.after(newButton);
-        break;
+            break;
         default:
-        //console.log("Spell Slug did not match to any macros.");
-        return
+            return;
       }
 }
 
-function findRelevantFeat(featSlug, ChatMessagePF2e, html) {
+function findRelevantFeat(featSlug, chatMessagePF2e, html) {
+
+    let actor = game.actors.get(chatMessagePF2e.speaker.actor);
 
     switch (featSlug) {
         case "enjoy-the-show":
-            let actor = game.actors.get(ChatMessagePF2e.speaker.actor)
             editSkillRoll(html, actor);
-        break;
+            break;
         default:
-        //console.log("Feat Slug did not match to any macros.");
-        return
+            return;
       }
 }
 
