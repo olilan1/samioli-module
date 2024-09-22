@@ -1,5 +1,7 @@
 /* {"name":"Lightning Dash","img":"icons/magic/lightning/bolt-blue.webp","_id":"UetbJZLBcLzzZp8h"} */
 
+import { logd } from "../src/utils.js";
+
 let opts = {};
 const [tokenD, tokenScale] = await pf2eAnimations.macroHelpers(args)
 const template = args[1]?.templateData ?? canvas.templates.placeables[canvas.templates.placeables.length - 1];
@@ -12,7 +14,7 @@ if (template !== undefined) {
     
     let targetLocation = await new Portal().texture(tokenD.document.texture.src).origin(tokenD).range(35).pick();
     
-    console.log(tokenD);
+    logd(tokenD);
     
     await Sequencer.Preloader.preloadForClients([
                 "jb2a.static_electricity.02.blue",
