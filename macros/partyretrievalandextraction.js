@@ -1,5 +1,7 @@
 /* {"name":"Party Retrieval and Extraction","img":"systems/pf2e/icons/default-icons/party.svg","_id":"0WVdcr2RiAfsFEuc"} */
 
+import { logd } from "../src/utils.js";
+
 const PartyActorId = game.actors.party._id;
 const PartyMembersActors = Actor.get(PartyActorId).members;
 const PartyMembersActorIds = [];
@@ -49,7 +51,7 @@ function checkIfTokenIsActiveOnScene(id) {
 
 async function deleteTokenWithActorId(actorId) {
     let tokenToDelete = game.canvas.tokens.get(translateActorIdToTokenId(actorId));
-    console.log("Value of tokenToDelete: " + tokenToDelete);
+    logd("Value of tokenToDelete: " + tokenToDelete);
     if (!tokenToDelete) {
         console.error(`Token with ActorID ${actorId} not found.`);
         return null;
@@ -118,9 +120,6 @@ async function animateTokenMovingToToken(ActorSourceId, ActorDestinationId) {
         return;
     }
 
-    // console.log(tokenPF2eSource);
-    // console.log(tokenPF2eDestination);
-
     let sourcePositionX = tokenPF2eSource.x;
     let sourcePositionY = tokenPF2eSource.y;
     let targetPositionX = tokenPF2eDestination.x;
@@ -131,11 +130,6 @@ async function animateTokenMovingToToken(ActorSourceId, ActorDestinationId) {
         console.error('Invalid token positions.');
         return;
     }
-
-    // console.log("sourcePositionX: " + sourcePositionX);
-    // console.log("sourcePositionY: " + sourcePositionY);
-    // console.log("targetPositionX: " + targetPositionX);
-    // console.log("targetPositionY: " + targetPositionY);
 
     let animationTime = 750
 

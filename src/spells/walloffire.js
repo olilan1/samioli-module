@@ -1,5 +1,7 @@
 //TODO: investigate removing tokens that are too central for the circle template
 
+import { logd } from "../utils.js";
+
 let casterXwithOffset;
 let casterYwithOffset;
 let offset;
@@ -284,7 +286,7 @@ async function animateCastingLine(token, location1, location2) {
     }
     
     let distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
-    console.log(`distance ${calculateDistanceAndAngle(location1, location2).distance}`)
+    logd(`distance ${calculateDistanceAndAngle(location1, location2).distance}`)
 
     let normalizedAngleDegrees = calculateDistanceAndAngle(location1,location2).normalizedAngleDegrees
 
