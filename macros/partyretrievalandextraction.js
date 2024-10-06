@@ -1,7 +1,5 @@
 /* {"name":"Party Retrieval and Extraction","img":"systems/pf2e/icons/default-icons/party.svg","_id":"0WVdcr2RiAfsFEuc"} */
 
-import { logd } from "../src/utils.js";
-
 const PartyActorId = game.actors.party._id;
 const PartyMembersActors = Actor.get(PartyActorId).members;
 const PartyMembersActorIds = [];
@@ -51,7 +49,6 @@ function checkIfTokenIsActiveOnScene(id) {
 
 async function deleteTokenWithActorId(actorId) {
     let tokenToDelete = game.canvas.tokens.get(translateActorIdToTokenId(actorId));
-    logd("Value of tokenToDelete: " + tokenToDelete);
     if (!tokenToDelete) {
         console.error(`Token with ActorID ${actorId} not found.`);
         return null;
