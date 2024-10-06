@@ -1,6 +1,8 @@
 import { startWallOfFire } from "./spells/walloffire.js";
 import { startDiveAndBreach } from "./spells/diveandbreach.js";
 import { editSkillRoll } from "./actions/enjoytheshow.js";
+import { deployRisingHurricaneTemplate } from "./actions/risinghurricane.js";
+import { logd } from "./utils.js";
 
 export function chatMacroButton(chatMessagePF2e, html) {
     
@@ -21,6 +23,7 @@ export function chatMacroButton(chatMessagePF2e, html) {
 
         findRelevantFeat(featSlug, chatMessagePF2e, html)
     }
+    
     else    
     {
         return;
@@ -55,13 +58,32 @@ function findRelevantFeat(featSlug, chatMessagePF2e, html) {
 
     let actor = game.actors.get(chatMessagePF2e.speaker.actor);
 
+    let $featButtonDiv;
+    let tokenId; 
+    let newButton;
+
     switch (featSlug) {
         case "enjoy-the-show":
             editSkillRoll(html, actor);
             break;
+        case "rising-hurricane":
+            $featButtonDiv = html.find('.card-content');
+            tokenId = (chatMessagePF2e.speaker.token) 
+            newButton = createRisingHurricaneButton(tokenId);
+            $featButtonDiv.after(newButton);
+            break;
         default:
             return;
       }
+}
+
+function createRisingHurricaneButton(speakerTokenId) {
+    const button = $('<button type="button">Deploy Rising Hurricane!</button>');
+    button.click(function() {
+        deployRisingHurricaneTemplate(speakerTokenId);
+    });
+
+    return button;
 }
 
 function createWallOfFireButton(speakerTokenId) {
