@@ -2,48 +2,27 @@ import { logd, delay } from "../utils.js";
 const { GRID_SNAPPING_MODES } = foundry.CONST;
 const { CONST } = foundry;
 
-export async function deployRisingHurricaneTemplate(tokenId) {
-    const token = canvas.tokens.placeables.find(t => t.id === tokenId);
-    const player = game.user;
-    //use portal to select a location
-    const location = await selectLocation(token);
-    //create a circle template at that location
-    const myTemplate = await createTemplate(location);
-    //store target tokens in memory
-    let targets = new Set();
-    targets = await captureTargets(player);
-    await clearTargets(player);
-    //remove template
-    await myTemplate[0].delete();
-    //animate on target tokens
-    await playAnimation(targets, token, location);
-    //add tokens back to player targets 
-    await addTargetsToUser(targets, token);
-}
-
-async function selectLocation(token) {
-    const location = await Sequencer.Crosshair.show({
-        location: {
-            obj: token,
-            limitMaxRange: 120,
-            showRange: true
-        },
-        snap: {
-            position: GRID_SNAPPING_MODES.CORNER,
-        },
-        gridhighlight: true,
-        distanceMin: 15,
-        distanceMax: 15,
-        type: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE
+export async function playRisingHurricaneAtLastPlacedTemplate(tokenId) {
+    
+    Hooks.once('createMeasuredTemplate', async (measuredTemplateDocumentPF2e) => {
+        const token = canvas.tokens.placeables.find(t => t.id === tokenId);
+        const player = game.user;
+        
+        await delay(200);
+        let targets = new Set();
+        targets = await captureTargets(player);
+        await clearTargets(player);
+        //remove template
+        const location = { x: measuredTemplateDocumentPF2e.x, y: measuredTemplateDocumentPF2e.y };
+        await measuredTemplateDocumentPF2e.delete();
+        //animate on target tokens
+        await playAnimation(targets, token, location);
+        //add tokens back to player targets 
+        await addTargetsToUser(targets, token);
     });
-    return location;
-}
 
-async function createTemplate(atLocation) {
     let templateData = {
         t: "circle",
-        x: atLocation.x,
-        y: atLocation.y,
         sort: 99,
         distance: 15,
         direction: 0,
@@ -51,11 +30,8 @@ async function createTemplate(atLocation) {
         borderColor: "#000000",
     };
 
-    let myTemplate = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [templateData]);
+    await canvas.templates.createPreview(templateData);
 
-    await delay(100);
-
-    return myTemplate;
 }
 
 async function captureTargets(player) {
