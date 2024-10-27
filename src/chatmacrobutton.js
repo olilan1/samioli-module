@@ -1,7 +1,7 @@
 import { startWallOfFire } from "./spells/walloffire.js";
 import { startDiveAndBreach } from "./spells/diveandbreach.js";
 import { editSkillRoll } from "./actions/enjoytheshow.js";
-import { deployRisingHurricaneTemplate } from "./actions/risinghurricane.js";
+import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.js";
 import { logd } from "./utils.js";
 
 export function chatMacroButton(chatMessagePF2e, html) {
@@ -80,7 +80,7 @@ function findRelevantFeat(featSlug, chatMessagePF2e, html) {
 function createRisingHurricaneButton(speakerTokenId) {
     const button = $('<button type="button">Deploy Rising Hurricane!</button>');
     button.click(function() {
-        deployRisingHurricaneTemplate(speakerTokenId);
+        playRisingHurricaneAtLastPlacedTemplate(speakerTokenId);
     });
 
     return button;
