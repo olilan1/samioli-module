@@ -45,7 +45,7 @@ class MyApplication extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 }
 
-export function renderCreatureSoundsUI(characterSheetPF2e) {
-  const actor = game.actors.get(characterSheetPF2e.options.token.actorId);
+export function renderCreatureSoundsUI(actorSheet) {
+  const actor = actorSheet.object;
   new MyApplication(actor, {}).render(true);
 }
