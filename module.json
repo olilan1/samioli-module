@@ -12,12 +12,7 @@
     ],
     "esmodules": [
       "src/test.js",
-      "src/hooks.js",
-      "src/creaturesounds.js",
-      "src/chatmacrobutton.js",
-      "src/templatetarget.js",
-      "src/utils.js",
-      "src/spells/walloffire.js"
+      "src/hooks.js"
     ],
     "packFolders": [
         {

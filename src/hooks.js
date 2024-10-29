@@ -1,5 +1,4 @@
 import { registerSettings, getSetting, SETTINGS } from "./settings.js"
-import { creatureSoundOnDamage, creatureSoundOnAttack } from "./creaturesounds.js"
 import { chatMacroButton } from "./chatmacrobutton.js";
 import { startTumbleThrough } from "./actions/tumblethrough.js";
 import { startEnjoyTheShow } from "./actions/enjoytheshow.js";
@@ -7,17 +6,9 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.js";
 import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.js";
 import { checkForUnstableCheck } from "./effects/unstablecheck.js";
-import { ActorSoundSelectApp } from "./actorsoundselect.js";
 
 Hooks.on("init", () => {
     registerSettings();
-});
-
-Hooks.on("updateActor", (actor, _changed, options/*, userId*/) => {
-    hook(creatureSoundOnDamage, actor, options)
-            .ifEnabled(SETTINGS.CREATURE_SOUNDS, SETTINGS.CREATURE_HURT_SOUNDS)
-            .ifGM()
-            .run();
 });
 
 Hooks.on('renderChatMessage', async (ChatMessagePF2e, html) => {
@@ -37,7 +28,6 @@ Hooks.on("deleteMeasuredTemplate", (/* MeasuredTemplateDocumentPF2e */ template)
 });
 
 Hooks.on("createChatMessage", (message, rollmode, userId) => {
-    handleChatMessagePreRoll(message);
     if (game.modules.get('dice-so-nice')?.active
             && message.isRoll 
             && message.rolls.some(roll => roll.dice.length > 0)) {
@@ -53,28 +43,6 @@ Hooks.on('diceSoNiceRollComplete', (id) => {
       handleChatMessagePostRoll(message);
     };
 });
-
-Hooks.on("getActorSheetPF2eHeaderButtons", (actorSheet, buttons) => {
-    buttons.unshift({
-      class: "sounds-control",
-      icon: "fas fa-volume-up",
-      label: "Sounds",
-      onclick: () => {
-        new ActorSoundSelectApp(actorSheet.object, {}).render(true);
-      }
-    });
-  });
-
-function handleChatMessagePreRoll(message) {
-    switch (getMessageType(message)) {
-        case "attack-roll":
-            hook(creatureSoundOnAttack, message)
-                    .ifEnabled(SETTINGS.CREATURE_SOUNDS, SETTINGS.CREATURE_ATTACK_SOUNDS)
-                    .ifGM()
-                    .run();
-            break;
-    }
-}
 
 function handleChatMessagePostRoll(message, userId) {
     switch (getMessageType(message)) {
