@@ -20,8 +20,11 @@ export async function startDiveAndBreach(tokenId) {
   casterYwithOffset = TOKEN.y + offset;
 
   await clearUserTargets();
+  ui.notifications.info("Select a dive location within 10 feet!"); 
   await selectFirstTemplateLocation();
+  ui.notifications.info("Select a breach location within 40 feet."); 
   await selectSecondTemplateLocation();
+  ui.notifications.info("Select a landing location within 10 feet."); 
   await selectThirdTemplateLocation();
   await clearTemplates();
   await doAnimation(TOKEN);
