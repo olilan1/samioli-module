@@ -10,7 +10,8 @@ if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")
   
 export async function checkIfProvidesPanache(chatMessage) {
   const outcome = chatMessage.flags.pf2e.context.outcome;
-  if (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure") {
+  if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado") 
+    && (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure")) {
     await applyPanache(game.actors.get(chatMessage.speaker.actor), outcome);
   }
 }
