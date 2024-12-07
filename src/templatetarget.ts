@@ -1,4 +1,4 @@
-import {delay} from "./utils.js";
+import {delay} from "./utils.ts";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;

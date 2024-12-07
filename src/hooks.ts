@@ -1,11 +1,11 @@
-import { registerSettings, getSetting, SETTINGS } from "./settings.js"
-import { chatMacroButton } from "./chatmacrobutton.js";
-import { startTumbleThrough } from "./actions/tumblethrough.js";
-import { startEnjoyTheShow } from "./actions/enjoytheshow.js";
-import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.js";
-import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.js";
-import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.js";
-import { checkForUnstableCheck } from "./effects/unstablecheck.js";
+import { registerSettings, getSetting, SETTINGS } from "./settings.ts"
+import { chatMacroButton } from "./chatmacrobutton.ts";
+import { startTumbleThrough } from "./actions/tumblethrough.ts";
+import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
+import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.ts";
+import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
+import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.ts";
+import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 
 Hooks.on("init", () => {
     registerSettings();

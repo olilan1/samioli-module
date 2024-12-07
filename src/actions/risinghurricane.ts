@@ -1,4 +1,4 @@
-import { logd, delay } from "../utils.js";
+import { logd, delay } from "../utils.ts";
 const { GRID_SNAPPING_MODES } = foundry.CONST;
 const { CONST } = foundry;
 

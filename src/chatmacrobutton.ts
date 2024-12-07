@@ -1,8 +1,8 @@
-import { startWallOfFire } from "./spells/walloffire.js";
-import { startDiveAndBreach } from "./spells/diveandbreach.js";
-import { editSkillRoll } from "./actions/enjoytheshow.js";
-import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.js";
-import { logd } from "./utils.js";
+import { startWallOfFire } from "./spells/walloffire.ts";
+import { startDiveAndBreach } from "./spells/diveandbreach.ts";
+import { editSkillRoll } from "./actions/enjoytheshow.ts";
+import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.ts";
+import { logd } from "./utils.ts";
 
 export function chatMacroButton(chatMessagePF2e, html) {
     

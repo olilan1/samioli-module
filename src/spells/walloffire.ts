@@ -1,6 +1,6 @@
 //TODO: investigate removing tokens that are too central for the circle template
 
-import { logd } from "../utils.js";
+import { logd } from "../utils.ts";
 
 let casterXwithOffset;
 let casterYwithOffset;

@@ -1,4 +1,4 @@
-import { getSetting, SETTINGS } from "./settings.js";
+import { getSetting, SETTINGS } from "./settings.ts";
 
 export function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
