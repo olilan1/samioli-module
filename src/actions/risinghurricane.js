@@ -38,7 +38,10 @@ async function captureTargets(player) {
     let targets = new Set();
     if (player.targets.size > 0) {
         player.targets.forEach(token => {
-            targets.add(token);
+            const actor = game.actors.get(token.document.actorId);
+            if (actor.type === "character" || actor.type === "npc") {
+                targets.add(token);
+            }            
         });
     }
     await delay(200);
@@ -124,7 +127,7 @@ async function playAnimation(targets, playerToken, centreLocation) {
                 .fadeIn(200)
                 .duration(duration)
             .effect()
-                .from(target)
+                .copySprite(target)
                 .opacity(opacityVariance)
                 .zIndex(1000)
                 .animateProperty("sprite", "scale.x",
@@ -195,7 +198,7 @@ async function playAnimation(targets, playerToken, centreLocation) {
             .effect()
                 .fadeIn(200)
                 .opacity(1)
-                .from(target)
+                .copySprite(target)
                 .rotate(fallAngle)
                 .duration(3000)
                 .fadeOut(500)
