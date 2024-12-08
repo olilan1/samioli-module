@@ -14,6 +14,7 @@
     "eslint": "^9.16.0",
     "foundry-pf2e": "github:7H3LaughingMan/foundry-pf2e",
     "globals": "^15.9.0",
+    "sequencer": "github:fantasycalendar/FoundryVTT-Sequencer",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.17.0",
     "vite": "^6.0.3"

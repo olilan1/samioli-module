@@ -11,7 +11,8 @@
             "vite/client",
             "foundry-pf2e",
             "foundry-pf2e/lib-wrapper",
-            "jquery"
+            "jquery",
+            "sequencer"
         ],
         "resolveJsonModule": true,
         "noEmit": true,
