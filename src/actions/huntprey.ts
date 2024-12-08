@@ -1,10 +1,12 @@
-export async function checkForHuntPreyGM(chatMessage, userId) {
-    if (!chatMessage.flags?.pf2e?.origin?.rollOptions.includes("origin:item:hunt-prey")) return;
+import { ChatMessagePF2e } from "foundry-pf2e";
+
+export async function checkForHuntPreyGM(chatMessage: ChatMessagePF2e) {
+    if (!chatMessage.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:hunt-prey")) return;
 
     const ranger = game.actors.get(chatMessage.speaker.actor);
-    const rangerTargets = game.users.get(userId).targets;
+    const rangerTargets = chatMessage.author?.targets;
 
-    if (rangerTargets.size === 0) {
+    if (!rangerTargets || rangerTargets.size === 0) {
         return;
     }
 
@@ -17,19 +19,22 @@ export async function checkForHuntPreyGM(chatMessage, userId) {
     await applyHuntPrey(ranger, rangerTargets);
 }
 
-export async function checkForHuntPreyPlayer(chatMessage, userId) {
-    
+export async function checkForHuntPreyPlayer(chatMessage: ChatMessagePF2e) {
     const ranger = game.actors.get(chatMessage.speaker.actor);
 
-    if (!chatMessage.flags?.pf2e?.origin?.rollOptions.includes("origin:item:hunt-prey")) return;
+    if (!chatMessage.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:hunt-prey")) {
+        return;
+    }
 
-    if (game.users.get(userId).targets.size === 0) {
+    const targets = chatMessage.author?.targets;
+
+    if (!targets || targets.size === 0) {
         ui.notifications.error("Please target a creature to hunt");
         return;
     }
 
     const allowedNumberOfTargets = await calculateNumberOfTargetsRangerCanHunt(ranger);
-    if (game.users.get(userId).targets.size > allowedNumberOfTargets) {
+    if (targets.size > allowedNumberOfTargets) {
         ui.notifications.error(`Please select a maximum of ${allowedNumberOfTargets} creature(s) to hunt`);
         return;
     }

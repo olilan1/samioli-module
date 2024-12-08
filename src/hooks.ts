@@ -6,45 +6,46 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
+import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 
 Hooks.on("init", () => {
     registerSettings();
 });
 
-Hooks.on('renderChatMessage', async (ChatMessagePF2e, html) => {
-    chatMacroButton(ChatMessagePF2e, html);
+Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
+    chatMacroButton(message, html);
 });
 
-Hooks.on("createMeasuredTemplate", async (/* MeasuredTemplateDocumentPF2e */ template, _context, userId) => {
+Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
     hook(targetTokensUnderTemplate, template, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
 });
 
-Hooks.on("deleteMeasuredTemplate", (/* MeasuredTemplateDocumentPF2e */ template) => {
+Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
     hook(deleteTemplateTargets, template)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
 });
 
-Hooks.on("createChatMessage", (message, rollmode, userId) => {
+Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, userId) => {
     if (game.modules.get('dice-so-nice')?.active
             && message.isRoll 
             && message.rolls.some(roll => roll.dice.length > 0)) {
         // Includes a roll, message will be posted by DiceSoNice
         return;
     }
-    handleChatMessagePostRoll(message, userId);
+    handleChatMessagePostRoll(message);
 });
 
-Hooks.on('diceSoNiceRollComplete', (id) => {
+Hooks.on('diceSoNiceRollComplete', (id: string) => {
     const message = game.messages.get(id);
     if (message) {
       handleChatMessagePostRoll(message);
     };
 });
 
-function handleChatMessagePostRoll(message, userId) {
+function handleChatMessagePostRoll(message: ChatMessagePF2e) {
     switch (getMessageType(message)) {
         case "attack-roll":
             hook(checkForExtravagantParryOrElegantBuckler, message)
@@ -85,11 +86,11 @@ function handleChatMessagePostRoll(message, userId) {
                     .run();
             break;
         case "action":
-            hook(checkForHuntPreyGM, message, userId)
+            hook(checkForHuntPreyGM, message)
                     .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
                     .ifGM()
                     .run();
-            hook(checkForHuntPreyPlayer, message, userId)
+            hook(checkForHuntPreyPlayer, message)
                     .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
                     .ifMessagePoster()
                     .run();
@@ -97,22 +98,26 @@ function handleChatMessagePostRoll(message, userId) {
     }
 }
 
-function getMessageType(message) {
+function getMessageType(message: ChatMessagePF2e) {
     return message.flags?.pf2e?.context?.type ?? message.flags?.pf2e?.origin?.type;
 }
 
-function hook(func, ...args) {
-    return new HookRunner(func, ...args);
+function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): HookRunner<T> {
+    return new HookRunner<T>(func, ...args);
 }
 
-class HookRunner {
-    constructor(func, ...args) {
+class HookRunner<T extends unknown[]> {
+    func: (...args: T) => void;
+    args: T;
+    shouldRun: boolean;
+
+    constructor(func: (...args: T) => void, ...args: T) {
         this.func = func;
         this.args = args;
         this.shouldRun = true;
     }
 
-    ifEnabled(...settings) {
+    ifEnabled(...settings: string[]): this {
         for (const setting of settings) {
             if (!getSetting(setting)) {
                 this.shouldRun = false;
@@ -121,25 +126,22 @@ class HookRunner {
         return this;
     }
 
-    ifGM() {
+    ifGM(): this {
         if (!game.user.isGM) {
             this.shouldRun = false;
         }
         return this;
     }
 
-    ifMessagePoster() {
-        const message = this.args[0];
-        if (message.constructor.name != "ChatMessagePF2e") {
-            throw new Error("First arg is not ChatMessagePF2e");
-        }
-        if (game.user.id != message.user.id) {
+    ifMessagePoster(): this {
+        const message = this.args[0] as ChatMessagePF2e;
+        if (game.user.id != message.author?.id) {
             this.shouldRun = false;
         }
         return this;
     }
 
-    run() {
+    run(): void {
         if (this.shouldRun) {
             this.func(...this.args);
         }

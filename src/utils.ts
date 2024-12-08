@@ -1,10 +1,10 @@
 import { getSetting, SETTINGS } from "./settings.ts";
 
-export function delay(ms) {
+export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function getHashCode(str) {
+export function getHashCode(str: string) {
     let hash = 0;
     if (str.length === 0) return hash;
 
@@ -17,7 +17,7 @@ export function getHashCode(str) {
     return hash;
 }
 
-export function logd(message) {
+export function logd(message: unknown) {
     if (getSetting(SETTINGS.DEBUG_LOGGING)) {
         console.log(message);
     }
