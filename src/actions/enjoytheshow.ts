@@ -1,5 +1,5 @@
-import { checkIfProvidesPanache } from "../effects/panache.js";
-import { delay } from "../utils.js";
+import { checkIfProvidesPanache } from "../effects/panache.ts";
+import { delay } from "../utils.ts";
 
 export function editSkillRoll(html, actor) {
     html.find('.inline-check.with-repost').attr('data-against', 'will');

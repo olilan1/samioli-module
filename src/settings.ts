@@ -6,7 +6,7 @@ export const SETTINGS = {
     AUTO_HUNT_PREY: "automatic_hunt_prey_enable",
     AUTO_UNSTABLE_CHECK: "automatic_unstable_check_enable",
     DEBUG_LOGGING: "debug_logging"
-};
+} as const;
 
 export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.TEMPLATE_TARGET, {
@@ -55,6 +55,6 @@ export function registerSettings() {
     });
 }
 
-export function getSetting(setting) {
+export function getSetting(setting: typeof SETTINGS[keyof typeof SETTINGS]) {
     return game.settings.get(SETTINGS_NAMESPACE, setting);
 }

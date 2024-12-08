@@ -11,8 +11,7 @@
       }
     ],
     "esmodules": [
-      "src/test.js",
-      "src/hooks.js"
+      "dist/samioli-module.js"
     ],
     "packFolders": [
         {

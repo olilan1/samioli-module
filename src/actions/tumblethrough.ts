@@ -1,5 +1,5 @@
-import { checkIfProvidesPanache } from "../effects/panache.js";
-import { delay } from "../utils.js";
+import { checkIfProvidesPanache } from "../effects/panache.ts";
+import { delay } from "../utils.ts";
 
 const WOOSH_SOUND_1 = "sound/NWN2-Sounds/cb_sw_unarmed04.WAV";
 const WOOSH_SOUND_2 = "sound/NWN2-Sounds/cb_sw_unarmed01.WAV";

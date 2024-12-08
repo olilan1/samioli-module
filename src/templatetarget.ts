@@ -1,12 +1,19 @@
-import {delay} from "./utils.js";
+import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { delay } from "./utils.ts";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;
 
-let lastTemplateDetails;
+interface TemplateDetails {
+    templateId: string,
+    tokenIds: string[]
+}
 
-export async function targetTokensUnderTemplate(template, userId) {
-    if (game.user.id !== userId) {
+let lastTemplateDetails: TemplateDetails | null;
+
+export async function targetTokensUnderTemplate(
+        template: MeasuredTemplateDocumentPF2e, creatorUserId: string) {
+    if (game.user.id !== creatorUserId) {
         return;
     }
 
@@ -22,15 +29,17 @@ export async function targetTokensUnderTemplate(template, userId) {
     };
 }
 
-export function deleteTemplateTargets(template) {
-    if (lastTemplateDetails?.templateId != template.id) {
+export function deleteTemplateTargets(template: MeasuredTemplateDocumentPF2e) {
+    const lastDetails = lastTemplateDetails;
+    if (!lastDetails || lastDetails?.templateId != template.id) {
         return;
     }
 
     const currentTargets = game.user.targets.map((token) => token.id);
-    const newTargets = currentTargets.filter(item => !lastTemplateDetails.tokenIds.includes(item));
+    const newTargets = Array.from(
+        currentTargets.filter(item => !lastDetails.tokenIds.includes(item)));
     game.user.updateTokenTargets(newTargets);
-    if (newTargets.size > 0) {
+    if (newTargets.length > 0) {
         game.user.broadcastActivity({ targets: newTargets });
     } else {
         game.user.broadcastActivity({ targets: [] });
@@ -38,10 +47,14 @@ export function deleteTemplateTargets(template) {
     lastTemplateDetails = null;
 }
 
-async function getTemplateTokens(measuredTemplateDocument) {
+async function getTemplateTokens(measuredTemplateDocument: MeasuredTemplateDocumentPF2e) {
     const grid = canvas.interface.grid;
     const dimensions = canvas.dimensions;
     const template = measuredTemplateDocument.object;
+
+    if (!template) {
+        return [];
+    }
 
     const gridSize = canvas.grid.size;
     const origin = template.center;
