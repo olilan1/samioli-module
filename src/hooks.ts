@@ -1,4 +1,4 @@
-import { registerSettings, getSetting, SETTINGS } from "./settings.ts"
+import { registerSettings, getSetting, SETTINGS, SettingsKey } from "./settings.ts"
 import { chatMacroButton } from "./chatmacrobutton.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
 import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
@@ -28,7 +28,7 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
             .run();
 });
 
-Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, userId) => {
+Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => {
     if (game.modules.get('dice-so-nice')?.active
             && message.isRoll 
             && message.rolls.some(roll => roll.dice.length > 0)) {
@@ -117,7 +117,7 @@ class HookRunner<T extends unknown[]> {
         this.shouldRun = true;
     }
 
-    ifEnabled(...settings: string[]): this {
+    ifEnabled(...settings: SettingsKey[]): this {
         for (const setting of settings) {
             if (!getSetting(setting)) {
                 this.shouldRun = false;

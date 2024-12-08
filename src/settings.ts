@@ -8,6 +8,8 @@ export const SETTINGS = {
     DEBUG_LOGGING: "debug_logging"
 } as const;
 
+export type SettingsKey = typeof SETTINGS[keyof typeof SETTINGS];
+
 export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.TEMPLATE_TARGET, {
         name: "Template targetting",
@@ -55,6 +57,6 @@ export function registerSettings() {
     });
 }
 
-export function getSetting(setting: typeof SETTINGS[keyof typeof SETTINGS]) {
+export function getSetting(setting: SettingsKey) {
     return game.settings.get(SETTINGS_NAMESPACE, setting);
 }
