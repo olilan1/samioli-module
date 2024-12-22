@@ -2,10 +2,9 @@ import { logd, delay } from "../utils.ts";
 const { GRID_SNAPPING_MODES } = foundry.CONST;
 const { CONST } = foundry;
 
-export async function playRisingHurricaneAtLastPlacedTemplate(tokenId) {
+export async function playRisingHurricaneAtLastPlacedTemplate(token) {
     
     Hooks.once('createMeasuredTemplate', async (measuredTemplateDocumentPF2e) => {
-        const token = canvas.tokens.placeables.find(t => t.id === tokenId);
         const player = game.user;
         
         await delay(200);

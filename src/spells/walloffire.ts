@@ -13,22 +13,14 @@ const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
 const FIRESPREADSOUND ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-export async function startWallOfFire(tokenId) {
+export async function startWallOfFire(token) {
+    console.log(token);
+    offset = game.canvas.scene.grid.size/2;
 
-    const token = canvas.tokens.placeables.find(t => t.id === tokenId);
+    casterXwithOffset = token.document.x + offset;
+    casterYwithOffset = token.document.y + offset;
 
-    if (token) {
-      offset = game.canvas.scene.grid.size/2;
-
-      casterXwithOffset = token.document.x + offset;
-      casterYwithOffset = token.document.y + offset;
-  
-      await chooseWallOfFireShape(token);
-
-    } else {
-      console.error("Token not found with ID:", tokenId);
-      return
-    }
+    await chooseWallOfFireShape(token);
 }
 
 async function chooseWallOfFireShape(token) {

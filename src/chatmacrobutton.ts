@@ -2,103 +2,94 @@ import { startWallOfFire } from "./spells/walloffire.ts";
 import { startDiveAndBreach } from "./spells/diveandbreach.ts";
 import { editSkillRoll } from "./actions/enjoytheshow.ts";
 import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.ts";
-import { logd } from "./utils.ts";
+import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
 
-export function chatMacroButton(chatMessagePF2e, html) {
-    
-    //Check if passed message is a spell
-    if (chatMessagePF2e.flags.pf2e.origin?.type === 'spell') {
-        //if it is a spell, check if it's one we have a macro for
-        let slugPrefix = 'origin:item:slug:';
-        let spellSlugIndex = chatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
-        let spellSlug = chatMessagePF2e.flags.pf2e.origin.rollOptions[spellSlugIndex].slice(slugPrefix.length);
-        
-        findRelevantSpell(spellSlug, chatMessagePF2e, html)      
+const SLUG_PREFIX = 'origin:item:slug:';
 
-    } else if (chatMessagePF2e.flags.pf2e.origin?.type === 'feat') {
-        //if it's a feat, check if it's one we have a macro for
-        let slugPrefix = 'origin:item:slug:';
-        let featSlugIndex = chatMessagePF2e.flags.pf2e.origin.rollOptions.findIndex(item => item.startsWith(slugPrefix));
-        let featSlug = chatMessagePF2e.flags.pf2e.origin.rollOptions[featSlugIndex].slice(slugPrefix.length);
-
-        findRelevantFeat(featSlug, chatMessagePF2e, html)
-    }
-    
-    else    
-    {
+export function addMacroButtonIfSupported(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const origin = chatMessagePF2e.flags.pf2e.origin;
+    const rollOptions = origin?.rollOptions;
+    if (!rollOptions) {
         return;
     }
+
+    const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
+    if (!slug) {
+        return;
+    }
+
+    if (origin.type === 'spell') {
+        // It's a spell, check if it's one we have a macro for
+        findRelevantSpell(slug, chatMessagePF2e, html);
+    } else if (origin.type === 'feat') {
+        // It's a feat, check if it's one we have a macro for
+        findRelevantFeat(slug, chatMessagePF2e, html);
+    }
 }
 
-function findRelevantSpell(spellSlug, chatMessagePF2e, html) {
-    
-    let $spellButtonDiv;
-    let tokenId; 
-    let newButton;
-    
+function findRelevantSpell(spellSlug: string, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    if (!message.token?.object) {
+        return;
+    }
+
     switch (spellSlug) {
-        case "wall-of-fire":
-            $spellButtonDiv = html.find('.spell-button');
-            tokenId = (chatMessagePF2e.speaker.token) 
-            newButton = createWallOfFireButton(tokenId);
+        case "wall-of-fire": {
+            const $spellButtonDiv = html.find('.spell-button');
+            const newButton = createWallOfFireButton(message.token.object);
             $spellButtonDiv.after(newButton);
             break;
-        case "dive-and-breach":
-            $spellButtonDiv = html.find('.spell-button');
-            tokenId = (chatMessagePF2e.speaker.token) 
-            newButton = createDiveAndBreach(tokenId);
+        }
+        case "dive-and-breach": {
+            const $spellButtonDiv = html.find('.spell-button');
+            const newButton = createDiveAndBreach(message.token.object);
             $spellButtonDiv.after(newButton);
             break;
-        default:
-            return;
-      }
+        }
+    }
 }
 
-function findRelevantFeat(featSlug, chatMessagePF2e, html) {
-
-    let actor = game.actors.get(chatMessagePF2e.speaker.actor);
-
-    let $featButtonDiv;
-    let tokenId; 
-    let newButton;
-
+function findRelevantFeat(featSlug: string, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     switch (featSlug) {
-        case "enjoy-the-show":
-            editSkillRoll(html, actor);
+        case "enjoy-the-show": {
+            editSkillRoll(html, message.actor);
             break;
-        case "rising-hurricane":
-            $featButtonDiv = html.find('.card-content');
-            tokenId = (chatMessagePF2e.speaker.token) 
-            newButton = createRisingHurricaneButton(tokenId);
+        }
+        case "rising-hurricane": {
+            if (!message.token?.object) {
+                return;
+            }
+            const $featButtonDiv = html.find('.card-content');
+            const newButton = createRisingHurricaneButton(message.token.object);
             $featButtonDiv.after(newButton);
             break;
+        }
         default:
             return;
       }
 }
 
-function createRisingHurricaneButton(speakerTokenId) {
+function createRisingHurricaneButton(token: TokenPF2e) {
     const button = $('<button type="button">Deploy Rising Hurricane!</button>');
-    button.click(function() {
-        playRisingHurricaneAtLastPlacedTemplate(speakerTokenId);
+    button.on("click", function() {
+        playRisingHurricaneAtLastPlacedTemplate(token);
     });
 
     return button;
 }
 
-function createWallOfFireButton(speakerTokenId) {
+function createWallOfFireButton(token: TokenPF2e) {
     const button = $('<button type="button">Deploy Wall of Fire!</button>');
-    button.click(function() {
-        startWallOfFire(speakerTokenId);
+    button.on("click", function() {
+        startWallOfFire(token);
     });
 
     return button;
 }
 
-function createDiveAndBreach(speakerTokenId) {
+function createDiveAndBreach(token: TokenPF2e) {
     const button = $('<button type="button">Start diving!</button>');
-    button.click(function() {
-        startDiveAndBreach(speakerTokenId);
+    button.on("click", function() {
+        startDiveAndBreach(token);
     });
 
     return button;
