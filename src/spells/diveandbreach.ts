@@ -11,13 +11,11 @@ let thirdLocationSequencer;
 let targets = new Set();
 let myTemplates = new Set();
 
-export async function startDiveAndBreach(tokenId) {
-  const TOKEN = canvas.tokens.placeables.find(t => t.id === tokenId);
-
+export async function startDiveAndBreach(token) {
   offset = game.canvas.scene.grid.size/2;
 
-  casterXwithOffset = TOKEN.x + offset;
-  casterYwithOffset = TOKEN.y + offset;
+  casterXwithOffset = token.x + offset;
+  casterYwithOffset = token.y + offset;
 
   await clearUserTargets();
   ui.notifications.info("Select a dive location within 10 feet!"); 
@@ -27,9 +25,8 @@ export async function startDiveAndBreach(tokenId) {
   ui.notifications.info("Select a landing location within 10 feet."); 
   await selectThirdTemplateLocation();
   await clearTemplates();
-  await doAnimation(TOKEN);
-  await addTargetsToUser(TOKEN);
-
+  await doAnimation(token);
+  await addTargetsToUser(token);
 }
 
 async function clearTemplates() {

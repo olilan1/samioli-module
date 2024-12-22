@@ -1,5 +1,5 @@
 import { registerSettings, getSetting, SETTINGS, SettingsKey } from "./settings.ts"
-import { chatMacroButton } from "./chatmacrobutton.ts";
+import { addMacroButtonIfSupported } from "./chatmacrobutton.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
 import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
 import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.ts";
@@ -13,7 +13,7 @@ Hooks.on("init", () => {
 });
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
-    chatMacroButton(message, html);
+    addMacroButtonIfSupported(message, html);
 });
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
