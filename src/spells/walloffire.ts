@@ -14,7 +14,6 @@ const FIRESPREADSOUND ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
 export async function startWallOfFire(token) {
-    console.log(token);
     offset = game.canvas.scene.grid.size/2;
 
     casterXwithOffset = token.document.x + offset;
