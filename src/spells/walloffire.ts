@@ -1,124 +1,203 @@
 //TODO: investigate removing tokens that are too central for the circle template
+let offset: number;
+let adjustedOffsetX: number;
+let adjustedOffsetY: number;
 
-import { logd } from "../utils.ts";
+interface Point { 
+  x: number, 
+  y: number 
+};
 
-let casterXwithOffset;
-let casterYwithOffset;
-let offset;
-let adjustedOffsetX;
-let adjustedOffsetY;
+interface CustomTemplateData {
+    t: MeasuredTemplateType,
+    x: number,
+    y: number
+    width: number,
+    distance: number,
+    direction: number,
+    fillColor: `#${string}`,
+    borderColor: `#${string}`,
+};
+
 
 const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
 const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
-const FIRESPREADSOUND ="sound/NWN2-Sounds/sff_firewhoosh02.WAV"
+const FIRESPREADSOUND = "sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-export async function startWallOfFire(token) {
-    offset = game.canvas.scene.grid.size/2;
-
-    casterXwithOffset = token.document.x + offset;
-    casterYwithOffset = token.document.y + offset;
-
-    await chooseWallOfFireShape(token);
+export async function startWallOfFire(token: Token) {
+  if (!canvas.scene) { 
+    return; 
+  }
+  offset = canvas.scene.grid.size / 2;
+  await chooseWallOfFireShape(token);
 }
 
-async function chooseWallOfFireShape(token) {
-    let shapeChoice;
-  
-    new Dialog({
-      title: "Wall of Fire Shape",
-      buttons: {
-        line: {
-          label: "Line up to 60 ft long",
-          callback: () => shapeChoice = "line"
-        },
-        ring: {
-          label: "5ft thick, 10ft radius ring",
-          callback: () => shapeChoice = "ring"
-        }
+async function chooseWallOfFireShape(token: Token) {
+
+  const dialog = new Dialog({
+    title: "Wall of Fire Shape",
+    buttons: {
+      line: {
+        label: "Line up to 60 ft long",
+        callback: () => wallOfFireLine(token)
       },
-      close: (html) => {
-        if (shapeChoice === "line") {
-          wallOfFireLine(token);
-        } else if (shapeChoice === "ring") {
-          wallOfFireRing(token);
-        }
+      ring: {
+        label: "5ft thick, 10ft radius ring",
+        callback: () => wallOfFireRing(token)
       }
-    }).render(true);
+    }
+  })
+  dialog.render(true);
 }
 
-async function wallOfFireLine(caster) {
-    let firstLocation = await selectStartingPoint();
-    let secondLocation = await selectEndPoint(firstLocation);
-    let myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
-    let myTemplate = await createTemplate(myTemplateDocument);
-    await delay(500);
-    await animateSpellCasting(caster);
-    await animateCastingLine(caster, firstLocation, secondLocation);
-    await animateLine(myTemplate);
-}
+async function wallOfFireLine(token: Token) {
+  const firstLocation = await selectStartingPoint(token);
 
-async function wallOfFireRing(caster) {
-    let firstLocation = await selectCentrePoint();
-    let myTemplateDocument = await createRingTemplateDocument(firstLocation);
-    let myTemplate = await createTemplate(myTemplateDocument);
-    await delay(500);
-    await animateSpellCasting(caster);
-    await animateRing(myTemplate);
-    //remove tokens that are too central
-}
-
-async function selectCentrePoint() {
-    const portal = new Portal()
-      .color("#f59042")
-      .size(22)
-      .origin({ x: casterXwithOffset, y: casterYwithOffset })
-      .range(120);
-    let centrePoint = await portal.pick();
-    return centrePoint;
+  if (firstLocation === false) {
+    ui.notifications.info("Wall of fire cancelled.");
+    return;
   }
 
-async function selectStartingPoint() {
-  const portal = new Portal()
-    .color("#f59042")
-    .size(5)
-    .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
-    .origin({ x: casterXwithOffset, y: casterYwithOffset })
-    .range(120);
-  let startingPoint = await portal.pick();
+  const secondLocation = await selectEndPoint(firstLocation);
+
+  if (secondLocation === false) {
+    ui.notifications.info("Wall of fire cancelled.");
+    return;
+  }
+
+  const myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
+  if (!myTemplateDocument) {
+    return;
+  }
+  const myTemplate = await createTemplate(myTemplateDocument);
+  await delay(500);
+  await animateSpellCasting(token);
+  await animateCastingLine(token, firstLocation, secondLocation);
+  await animateLine(myTemplate);
+}
+
+async function wallOfFireRing(token: Token) {
+  const firstLocation = await selectCentrePoint(token);
+  if (firstLocation === false) {
+    ui.notifications.info("Wall of fire cancelled.");
+    return;
+  }
+  const myTemplateDocument = await createRingTemplateDocument(firstLocation);
+  const myTemplate = await createTemplate(myTemplateDocument);
+  await delay(500);
+  await animateSpellCasting(token);
+  await animateRing(myTemplate);
+  //remove tokens that are too central
+}
+
+async function selectCentrePoint(token: Token): Promise<Point | false> {
+  const centrePoint = await Sequencer.Crosshair.show({
+    //@ts-expect-error: parameters are not all required
+    location: {
+      obj: token,
+      limitMaxRange: 120,
+      wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+    },
+    //@ts-expect-error: parameters are not all required
+    icon: {
+      texture: "icons/svg/fire.svg"
+    }
+  }, {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/cancel.svg"
+      })
+    },
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/fire.svg"
+      })
+    }
+  });
+  return centrePoint;
+}
+
+async function selectStartingPoint(token: Token): Promise<Point | false> {
+  const startingPointTemplate = await Sequencer.Crosshair.show({
+    //@ts-expect-error: parameters are not all required
+    location: {
+      obj: token,
+      limitMaxRange: 120,
+      wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+    },
+    //@ts-expect-error: parameters are not all required
+    icon: {
+      texture: "icons/svg/fire.svg"
+    }
+  }, {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/cancel.svg"
+      })
+    },
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/fire.svg"
+      })
+    }
+  });
+
+  const startingPoint = { x: startingPointTemplate.x, y: startingPointTemplate.y };
   return startingPoint;
 }
 
-async function selectEndPoint(startingPoint) {
-  const portal = new Portal()
-    .color("#f59042")
-    .size(5)
-    .texture("systems/pf2e/icons/spells/wall-of-fire.webp")
-    .origin(startingPoint)
-    .range(60);
-  let endPoint = await portal.pick();
+async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
+  const endPointTemplate = await Sequencer.Crosshair.show({
+    //@ts-expect-error: parameters are not all required
+    location: {
+      obj: startingPoint,
+      limitMaxRange: 60,
+      wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+    },
+    //@ts-expect-error: parameters are not all required
+    icon: {
+      texture: "icons/svg/fire.svg"
+    }
+  }, {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/cancel.svg"
+      })
+    },
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+      crosshair.updateCrosshair({
+        "icon.texture": "icons/svg/fire.svg"
+      })
+    }
+  });
+  const endPoint : Point = { x: endPointTemplate.x, y: endPointTemplate.y };
   return endPoint;
 }
 
-async function createRingTemplateDocument(location){
-    let templateData = {
-        t: "circle",
-        x: location.x,
-        y: location.y,
-        width: 0,
-        distance: 10,
-        direction: 0,
-        fillColor: "#f59042",
-        borderColor: "#f59042",
-      };
-    
-    return templateData;
+async function createRingTemplateDocument(location: Point) {
+  const templateData : CustomTemplateData = {
+    t: "circle",
+    x: location.x,
+    y: location.y,
+    width: 0,
+    distance: 10,
+    direction: 0,
+    fillColor: "#f59042",
+    borderColor: "#f59042",
+  };
+
+  return templateData;
 }
 
-async function createRayTemplateDocument(location1, location2) {
+async function createRayTemplateDocument(location1: Point, location2: Point): Promise<CustomTemplateData | null> {
 
-  let distanceAndAngle = calculateDistanceAndAngle(location1, location2);
+  const distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
+
+  if (!foundryDistance) {
+    return null;
+  }
 
   adjustedOffsetX = offset;
   adjustedOffsetY = offset;
@@ -133,7 +212,7 @@ async function createRayTemplateDocument(location1, location2) {
   else if (location1.x < location2.x && location1.y === location2.y) {
     adjustedOffsetX *= -1;
     adjustedOffsetY *= 0;
-  } 
+  }
   //if going right to left horizontally only
   else if (location1.x > location2.x && location1.y === location2.y) {
     adjustedOffsetX *= 1;
@@ -170,7 +249,7 @@ async function createRayTemplateDocument(location1, location2) {
     adjustedOffsetY *= 1;
   }
 
-  let templateData = {
+  const templateData : CustomTemplateData = {
     t: "ray",
     x: location1.x + adjustedOffsetX,
     y: location1.y + adjustedOffsetY,
@@ -184,37 +263,43 @@ async function createRayTemplateDocument(location1, location2) {
   return templateData;
 }
 
-async function createTemplate(templateData) {
+async function createTemplate(templateData: CustomTemplateData): Promise<MeasuredTemplateDocument> {
 
-  let myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
-
+  const myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+  if (!myCustomTemplate) {
+    throw new Error("Failed to create template");
+  }
   return myCustomTemplate;
 }
 
-function translateDistanceIntoFoundry(distance) {
-    let distanceInFeet = distance * (game.canvas.scene.grid.distance / game.canvas.scene.grid.size)
-    let foundryDistance = Math.ceil(distanceInFeet / 5) * 5;
+function translateDistanceIntoFoundry(distance: number): number | undefined {
+  if (!canvas.scene) {
+    return;
+  } else {
+    const distanceInFeet = distance * (canvas.scene.grid.distance / canvas.scene.grid.size)
+    const foundryDistance = Math.ceil(distanceInFeet / 5) * 5;
     return foundryDistance;
+  }
 }
 
-function calculateDistanceAndAngle(location1, location2) {
-    // Calculate differences in x and y coordinates
-    const dx = location2.x - location1.x;
-    const dy = location2.y - location1.y;
+function calculateDistanceAndAngle(location1: { x: number, y: number }, location2: { x: number, y: number }): { distance: number, normalizedAngleDegrees: number } {
+  // Calculate differences in x and y coordinates
+  const dx = location2.x - location1.x;
+  const dy = location2.y - location1.y;
 
-    // Calculate distance using the Pythagorean theorem
-    const distance = Math.hypot(dx, dy);
+  // Calculate distance using the Pythagorean theorem
+  const distance = Math.hypot(dx, dy);
 
-    let angleRadians = Math.atan2(dy, dx);
+  const angleRadians = Math.atan2(dy, dx);
 
-    const angleDegrees = (angleRadians * 180) / Math.PI; 
+  const angleDegrees = (angleRadians * 180) / Math.PI;
 
-    const normalizedAngleDegrees = (angleDegrees + 360) % 360;
+  const normalizedAngleDegrees = (angleDegrees + 360) % 360;
 
-    return { distance, normalizedAngleDegrees };
+  return { distance, normalizedAngleDegrees };
 }
 
-function calculateNewCoordinates(x, y, angleDegrees, hypotenuseLength) {
+function calculateNewCoordinates(x: number, y: number, angleDegrees: number, hypotenuseLength: number): Point {
   // Convert angle from degrees to radians
   const angleRadians = angleDegrees * (Math.PI / 180);
 
@@ -226,162 +311,165 @@ function calculateNewCoordinates(x, y, angleDegrees, hypotenuseLength) {
   const newX = x + deltaX;
   const newY = y + deltaY;
 
-  return { newX, newY };
+  const newPoint : Point = { x: newX, y: newY };
+
+  return newPoint;
 }
 
-function delay(ms) {
+function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fileExistsAtPath(path) {
-    
+async function fileExistsAtPath(path: string | URL | Request) {
+
   try {
     const response = await fetch(path, { method: 'HEAD' });
     return response.ok; // Returns true if status code is 200-299, false otherwise
   } catch (error) {
     console.log("File not found at: " + path)
-    return false; 
+    return false;
   }
 }
 
-async function animateSpellCasting(token) {
-    await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+async function animateSpellCasting(token: Token) {
+  
+  const soundExists = await fileExistsAtPath(CASTSOUND);
+
+  await new Sequence()
     .sound()
-        .volume(0.5)
-        .file(CASTSOUND, true, true)
-        .playIf(() => {
-            return fileExistsAtPath(CASTSOUND);})
+      .volume(0.5)
+      .file(CASTSOUND)
+      .playIf(soundExists)
     .effect()
-        .atLocation(token)
-        .file("jb2a.cast_generic.fire.01.orange.0")
-        .waitUntilFinished(-1300)
+      .atLocation(token)
+      .file("jb2a.cast_generic.fire.01.orange.0")
+      .waitUntilFinished(-1300)
     .play()
 }
 
-async function animateCastingLine(token, location1, location2) {
+async function animateCastingLine(token: Token, location1: Point, location2: Point) {
 
-    let distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
+  const distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
 
-    let boltOfFireAnim;
+  let boltOfFireAnim;
+  if (distanceMeasuredBolt === undefined){
+    return;
+  } else if (distanceMeasuredBolt < 10) {
+    boltOfFireAnim = "jb2a.fire_bolt.orange.05ft";
+  } else if (distanceMeasuredBolt < 30) {
+    boltOfFireAnim = "jb2a.fire_bolt.orange.15ft";
+  } else if (distanceMeasuredBolt < 60) {
+    boltOfFireAnim = "jb2a.fire_bolt.orange.30ft";
+  } else if (distanceMeasuredBolt < 90) {
+    boltOfFireAnim = "jb2a.fire_bolt.orange.60ft";
+  } else {
+    boltOfFireAnim = "jb2a.fire_bolt.orange.90ft";
+  }
 
-    if (distanceMeasuredBolt < 10) {
-        boltOfFireAnim = "jb2a.fire_bolt.orange.05ft";
-    } else if (distanceMeasuredBolt < 30) {
-        boltOfFireAnim = "jb2a.fire_bolt.orange.15ft";
-    } else if (distanceMeasuredBolt < 60) {
-        boltOfFireAnim = "jb2a.fire_bolt.orange.30ft";
-    } else if (distanceMeasuredBolt < 90) {
-        boltOfFireAnim = "jb2a.fire_bolt.orange.60ft";
-    } else {
-        boltOfFireAnim = "jb2a.fire_bolt.orange.90ft";
-    }
-    
-    let distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
-    logd(`distance ${calculateDistanceAndAngle(location1, location2).distance}`)
+  const distanceMeasuredJet = translateDistanceIntoFoundry(calculateDistanceAndAngle(location1, location2).distance);
 
-    let normalizedAngleDegrees = calculateDistanceAndAngle(location1,location2).normalizedAngleDegrees
+  const normalizedAngleDegrees = calculateDistanceAndAngle(location1, location2).normalizedAngleDegrees
 
-    let newLocation2 = calculateNewCoordinates(location1.x, location1.y, normalizedAngleDegrees, calculateDistanceAndAngle(location1, location2).distance + 200)
+  const newLocation2 = calculateNewCoordinates(location1.x, location1.y, normalizedAngleDegrees, calculateDistanceAndAngle(location1, location2).distance + 200)
 
-    let fireJetAnim;
+  let fireJetAnim;
 
-    if (distanceMeasuredJet < 25) {
-        fireJetAnim = "jb2a.fire_jet.orange.15ft";
-    } else {
-        fireJetAnim = "jb2a.fire_jet.orange.30ft";
-    }
+  if (distanceMeasuredJet === undefined) {
+    return;
+  } else if (distanceMeasuredJet < 25) {
+    fireJetAnim = "jb2a.fire_jet.orange.15ft";
+  } else {
+    fireJetAnim = "jb2a.fire_jet.orange.30ft";
+  }
 
-    await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+  const castSoundExists = await fileExistsAtPath(CASTSOUND);
+  const fireSpreadSoundExists = await fileExistsAtPath(FIRESPREADSOUND);
+
+  await new Sequence()
     .sound()
-        .volume(0.5)
-        .file(BOLTSOUNDS, true, true)
-        .playIf(() => {
-            return fileExistsAtPath(BOLTSOUNDS);   
-        })
+      .volume(0.5)
+      .file(BOLTSOUNDS)
+      .playIf(castSoundExists)
     .effect()
-        .atLocation(token)
-        .file(boltOfFireAnim)
-        .stretchTo({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
-        .waitUntilFinished(-1100)
+      .atLocation(token)
+      .file(boltOfFireAnim)
+      .stretchTo({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY })
+      .waitUntilFinished(-1100)
     .sound()
-        .volume(0.5)
-        .file(FIRESPREADSOUND, true, true)
-        .playIf(() => {
-          return fileExistsAtPath(FIRESPREADSOUND);
-        })
+      .volume(0.5)
+      .file(FIRESPREADSOUND)
+      .playIf(fireSpreadSoundExists)
     .effect()
-        .file(fireJetAnim)
-        .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY})
-        .stretchTo({ x: newLocation2.newX, y: newLocation2.newY})
-        .scale({ x: 1.0, y: 3 })
-        .fadeIn(100)
-        .startTime(400)
-        .fadeOut(200)
-        .endTime(2200)
-        .waitUntilFinished(-400)
+      .file(fireJetAnim)
+      .atLocation({ x: location1.x + adjustedOffsetX, y: location1.y + adjustedOffsetY })
+      .stretchTo(newLocation2)
+      .scale({ x: 1.0, y: 3 })
+      .fadeIn(100)
+      .startTime(400)
+      .fadeOut(200)
+      .endTime(2200)
+      .waitUntilFinished(-400)
     .play()
 }
 
-async function animateLine(templateToAttachTo) {
-    
-    let wallOfFireAnim;
+async function animateLine(templateToAttachTo: MeasuredTemplateDocument) {
 
-    if (templateToAttachTo.distance <= 20) {
-        wallOfFireAnim = "jb2a.wall_of_fire.100x100.yellow";
-    } else if (templateToAttachTo.distance <= 40) {
-        wallOfFireAnim = "jb2a.wall_of_fire.200x100.yellow";
-    } else {
-        wallOfFireAnim = "jb2a.wall_of_fire.300x100.yellow";
-    }
+  let wallOfFireAnim;
 
-    await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+  if (templateToAttachTo.distance !== null && templateToAttachTo.distance <= 20) {
+    wallOfFireAnim = "jb2a.wall_of_fire.100x100.yellow";
+  } else if (templateToAttachTo.distance !== null && templateToAttachTo.distance <= 40) {
+    wallOfFireAnim = "jb2a.wall_of_fire.200x100.yellow";
+  } else {
+    wallOfFireAnim = "jb2a.wall_of_fire.300x100.yellow";
+  }
+
+  const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
+
+  await new Sequence()
     .sound()
-    .volume(0.5)
-    .file(REMAININGSOUNDS, true, true)
-    .fadeOutAudio(1000)
-    .playIf(() => {
-      return fileExistsAtPath(REMAININGSOUNDS);
-    })
+      .volume(0.5)
+      .file(REMAININGSOUNDS)
+      .fadeOutAudio(1000)
+      .playIf(remainingSoundsExists)
     .effect()
-        .file(wallOfFireAnim)
-        .fadeIn(300)
-        .attachTo(templateToAttachTo, {align: "center", edge: "inner", offset: { x : adjustedOffsetX, y : 0 }})
-        .stretchTo(templateToAttachTo, {offset: { x : adjustedOffsetX * -1 , y : 0 }})
-        .persist()
-        .loopOptions({ loops: 3600 })
-
+      .file(wallOfFireAnim)
+      .fadeIn(300)
+      .attachTo(templateToAttachTo, { align: "center", edge: "inner", offset: { x: adjustedOffsetX, y: 0 } })
+      .stretchTo(templateToAttachTo, { offset: { x: adjustedOffsetX * -1, y: 0 } })
+      .persist()
+      .loopOptions({loopDelay: 0, loops: 3600, endOnLastLoop: false})
     .play()
 }
 
-async function animateRing(templateToAttachTo) {
+async function animateRing(templateToAttachTo: MeasuredTemplateDocument) {
 
-    await new Sequence({ moduleName: "PF2e Animations", softFail: true })
+const fireSpreadSoundExists = await fileExistsAtPath(FIRESPREADSOUND);
+const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
+
+  await new Sequence()
     .effect()
-        .atLocation(templateToAttachTo)
-        .scale(1.3)
-        .file("jb2a.impact.fire.01.orange.0")
+      .atLocation(templateToAttachTo)
+      .scale(1.3)
+      .file("jb2a.impact.fire.01.orange.0")
     .sound()
-        .volume(0.5)
-        .file(FIRESPREADSOUND, true, true)
-        .fadeOutAudio(500)
-        .playIf(() => {
-          return fileExistsAtPath(FIRESPREADSOUND);
-      }) 
+      .volume(0.5)
+      .file(FIRESPREADSOUND)
+      .fadeOutAudio(500)
+      .playIf(fireSpreadSoundExists)
     .effect()
-        .file("jb2a.wall_of_fire.ring.yellow")
-        .attachTo(templateToAttachTo)
-        .fadeIn(500)
-        .rotateIn(520, 2300, {ease: "easeOutQuint"})
-        .scale(1.15)
-        .scaleIn(0, 1000, {ease: "easeOutBack"})
-        .persist()
-        .loopOptions({ loops: 3600 })
+      .file("jb2a.wall_of_fire.ring.yellow")
+      .attachTo(templateToAttachTo)
+      .fadeIn(500)
+      .rotateIn(520, 2300, { ease: "easeOutQuint" })
+      .scale(1.15)
+      .scaleIn(0, 1000, { ease: "easeOutBack" })
+      .persist()
+      .loopOptions({loopDelay: 0, loops: 3600, endOnLastLoop: false})
     .sound()
-        .volume(0.5)
-        .file(REMAININGSOUNDS, true, true)
-        .fadeOutAudio(500)
-        .playIf(() => {
-           return fileExistsAtPath(REMAININGSOUNDS);
-      })  
+      .volume(0.5)
+      .file(REMAININGSOUNDS)
+      .fadeOutAudio(500)
+      .playIf(remainingSoundsExists)
     .play()
 }
