@@ -1,5 +1,6 @@
+import { delay } from "../utils.ts";
+
 //TODO: investigate removing tokens that are too central for the circle template
-let offset: number;
 let adjustedOffsetX: number;
 let adjustedOffsetY: number;
 
@@ -19,6 +20,9 @@ interface CustomTemplateData {
     borderColor: `#${string}`,
 };
 
+interface CrosshairUpdatable {
+  updateCrosshair(options: object): void;
+}
 
 const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
 const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
@@ -26,10 +30,6 @@ const FIRESPREADSOUND = "sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
 export async function startWallOfFire(token: Token) {
-  if (!canvas.scene) { 
-    return; 
-  }
-  offset = canvas.scene.grid.size / 2;
   await chooseWallOfFireShape(token);
 }
 
@@ -104,17 +104,18 @@ async function selectCentrePoint(token: Token): Promise<Point | false> {
       texture: "icons/svg/fire.svg"
     }
   }, {
-    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/cancel.svg"
       })
     },
-    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
     }
   });
+  console.log(centrePoint);
   return centrePoint;
 }
 
@@ -131,20 +132,19 @@ async function selectStartingPoint(token: Token): Promise<Point | false> {
       texture: "icons/svg/fire.svg"
     }
   }, {
-    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/cancel.svg"
       })
     },
-    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
     }
   });
 
-  const startingPoint = { x: startingPointTemplate.x, y: startingPointTemplate.y };
-  return startingPoint;
+  return startingPointTemplate;
 }
 
 async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
@@ -160,19 +160,19 @@ async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
       texture: "icons/svg/fire.svg"
     }
   }, {
-    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/cancel.svg"
       })
     },
-    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair) => {
+    [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
     }
   });
-  const endPoint : Point = { x: endPointTemplate.x, y: endPointTemplate.y };
-  return endPoint;
+
+  return endPointTemplate;
 }
 
 async function createRingTemplateDocument(location: Point) {
@@ -198,6 +198,8 @@ async function createRayTemplateDocument(location1: Point, location2: Point): Pr
   if (!foundryDistance) {
     return null;
   }
+
+  const offset = canvas.scene!.grid.size / 2;
 
   adjustedOffsetX = offset;
   adjustedOffsetY = offset;
@@ -282,7 +284,7 @@ function translateDistanceIntoFoundry(distance: number): number | undefined {
   }
 }
 
-function calculateDistanceAndAngle(location1: { x: number, y: number }, location2: { x: number, y: number }): { distance: number, normalizedAngleDegrees: number } {
+function calculateDistanceAndAngle(location1: Point, location2: Point): { distance: number, normalizedAngleDegrees: number } {
   // Calculate differences in x and y coordinates
   const dx = location2.x - location1.x;
   const dy = location2.y - location1.y;
@@ -314,10 +316,6 @@ function calculateNewCoordinates(x: number, y: number, angleDegrees: number, hyp
   const newPoint : Point = { x: newX, y: newY };
 
   return newPoint;
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function fileExistsAtPath(path: string | URL | Request) {
