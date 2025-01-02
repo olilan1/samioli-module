@@ -1,28 +1,9 @@
+import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
 import { delay } from "../utils.ts";
 
 //TODO: investigate removing tokens that are too central for the circle template
 let adjustedOffsetX: number;
 let adjustedOffsetY: number;
-
-interface Point { 
-  x: number, 
-  y: number 
-};
-
-interface CustomTemplateData {
-    t: MeasuredTemplateType,
-    x: number,
-    y: number
-    width: number,
-    distance: number,
-    direction: number,
-    fillColor: `#${string}`,
-    borderColor: `#${string}`,
-};
-
-interface CrosshairUpdatable {
-  updateCrosshair(options: object): void;
-}
 
 const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
 const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
@@ -115,7 +96,6 @@ async function selectCentrePoint(token: Token): Promise<Point | false> {
       })
     }
   });
-  console.log(centrePoint);
   return centrePoint;
 }
 
