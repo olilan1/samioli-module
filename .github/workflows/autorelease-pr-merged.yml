@@ -63,7 +63,7 @@ jobs:
       uses: release-flow/.github/actions/release/create@v1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        tag-name: '${{ steps.get-release-version.outputs.release-version }}'
+        tag-name: 'v${{ steps.get-release-version.outputs.release-version }}'
         release-name: '${{ steps.get-release-version.outputs.release-version }} Release'
         draft: true
         prerelease: ${{ steps.get-release-version.outputs.is-prerelease}}

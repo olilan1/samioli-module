@@ -54,7 +54,6 @@ jobs:
         version: ${{ github.event.inputs.release-type }}
         preid: ${{ github.event.inputs.preid }}
         keep-unreleased-section: true
-        tag-prefix: ''
 
     - name: Create Pull Request
       id: create-release-pr
