@@ -34,12 +34,6 @@ jobs:
       with:
         ref: ${{ github.head_ref }}
 
-    - uses: tibdex/github-app-token@v2
-      id: generate-token
-      with:
-        app_id: ${{ secrets.RELEASEBOT_APP_ID }}
-        private_key: ${{ secrets.RELEASEBOT_PRIVATE_KEY }}
-
     - name: 'Ensure autorelease label exists'
       run: |
         LABEL=$(gh api repos/$GITHUB_REPOSITORY/labels --jq '.[] | select(.name=="autorelease")')
@@ -81,7 +75,7 @@ jobs:
 
           ${{ steps.update-changelog.outputs.release-notes }}
         labels: autorelease
-        token: ${{ steps.generate-token.outputs.token }}
+        token: ${{ secrets.RELEASEBOT_TOKEN }}
 
     - name: Output summary
       run: |
