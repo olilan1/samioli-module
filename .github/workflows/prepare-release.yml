@@ -18,7 +18,7 @@ on:
         description: 'Pre-release identifier (only for pre-release builds)'
         required: false
 
-name: 'Prepare new release'
+name: 'Prepare new release and create PR'
 
 permissions:
   contents: read
@@ -33,6 +33,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: ${{ github.head_ref }}
+
+    - name: Configure Git user
+        run: |
+          git config --global user.name "releasebot"
+          git config --global user.email "releasebot@olilan.co.uk"
 
     - name: 'Ensure autorelease label exists'
       run: |
