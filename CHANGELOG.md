@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Test release
+
 ## [0.51.0] - 2025-01-03
 
 - Remove Portal dependency from wall of fire animation
