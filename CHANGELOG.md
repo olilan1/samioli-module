@@ -21,6 +21,6 @@
 
 [0.52.0]: https://github.com/olilan1/samioli-module/compare/v0.51.0...v0.52.0
 
-[0.51.0]: https://github.com/olilan1/samioli-module/compare/v0.50.0...v0.51.0
+[0.51.0]: https://github.com/olilan1/samioli-module/compare/0.50.0...v0.51.0
 
-[0.50.0]: https://github.com/olilan1/samioli-module/releases/tag/v0.50.0
+[0.50.0]: https://github.com/olilan1/samioli-module/releases/tag/0.50.0
