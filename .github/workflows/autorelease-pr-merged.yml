@@ -49,7 +49,7 @@ jobs:
 
     - name: Get release notes
       id: get-release-notes
-      uses: ./
+      uses: release-flow/keep-a-changelog-action@v3
       with:
         command: query
         version: ${{ steps.get-release-version.outputs.release-version}}
