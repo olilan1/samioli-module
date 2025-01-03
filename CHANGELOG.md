@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.51.0] - 2025-01-03
+
 - Remove Portal dependency from wall of fire animation
 
 ## [0.50.0] - 2024-12-21
@@ -10,5 +12,9 @@
 - Rising Hurricane animates only NPCs and characters
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
+
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.51.0...HEAD
+
+[0.51.0]: https://github.com/olilan1/samioli-module/compare/v0.50.0...v0.51.0
 
 [0.50.0]: https://github.com/olilan1/samioli-module/releases/tag/v0.50.0
