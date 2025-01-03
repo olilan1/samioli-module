@@ -64,7 +64,7 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         tag-name: 'v${{ steps.get-release-version.outputs.release-version }}'
-        release-name: 'Release ${{ steps.get-release-version.outputs.release-version }}'
+        release-name: '${{ steps.get-release-version.outputs.release-version }} Release'
         draft: true
         prerelease: ${{ steps.get-release-version.outputs.is-prerelease}}
         body: ${{ steps.get-release-notes.outputs.release-notes }}
