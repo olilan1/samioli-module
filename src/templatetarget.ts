@@ -11,6 +11,14 @@ interface TemplateDetails {
 
 let lastTemplateDetails: TemplateDetails | null;
 
+export async function replaceTargets(arrayOfTokenIds) {
+    if (game.release.generation >= 13) { 
+        canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
+    } else {
+        game.user.updateTokenTargets(arrayOfTokenIds);
+    }
+}
+
 export async function targetTokensUnderTemplate(
         template: MeasuredTemplateDocumentPF2e, creatorUserId: string) {
     if (game.user.id !== creatorUserId) {
@@ -20,7 +28,7 @@ export async function targetTokensUnderTemplate(
     const tokens = await getTemplateTokens(template);
     const tokenIds = tokens.map((token) => token.id);
 
-    game.user.updateTokenTargets(tokenIds);
+    replaceTargets(tokenIds);
     game.user.broadcastActivity({ targets: tokenIds });
 
     lastTemplateDetails = {
@@ -38,7 +46,7 @@ export function deleteTemplateTargets(template: MeasuredTemplateDocumentPF2e) {
     const currentTargets = game.user.targets.map((token) => token.id);
     const newTargets = Array.from(
         currentTargets.filter(item => !lastDetails.tokenIds.includes(item)));
-    game.user.updateTokenTargets(newTargets);
+    replaceTargets(newTargets);
     if (newTargets.length > 0) {
         game.user.broadcastActivity({ targets: newTargets });
     } else {

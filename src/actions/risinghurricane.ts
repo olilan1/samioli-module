@@ -1,3 +1,4 @@
+import { replaceTargets } from "../templatetarget.ts";
 import { logd, delay } from "../utils.ts";
 const { GRID_SNAPPING_MODES } = foundry.CONST;
 const { CONST } = foundry;
@@ -19,14 +20,14 @@ export async function playRisingHurricaneAtLastPlacedTemplate(token) {
         //add tokens back to player targets 
         await addTargetsToUser(targets, token);
     });
-
+    
     let templateData = {
         t: "circle",
         sort: 99,
         distance: 15,
         direction: 0,
-        fillColor: "#000000",
-        borderColor: "#000000",
+        fillColor: "#87CEEB",
+        borderColor: "#FFFFFF",
     };
 
     await canvas.templates.createPreview(templateData);
@@ -57,7 +58,7 @@ async function addTargetsToUser(targets, player) {
     targetIds = targetIds.filter(targetId => targetId !== player.id);
     const currentTargets = game.user.targets;
     const newTargets = new Set([...currentTargets, ...targetIds]);
-    await game.user.updateTokenTargets(Array.from(newTargets));
+    await replaceTargets(Array.from(newTargets));
 }
 
 function calculateOrbitalPath(center, token, numSteps = 12) {
