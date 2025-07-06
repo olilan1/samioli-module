@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+ - Added Storm Spiral Animation macro - no sounds yet
+
 ## [0.52.0] - 2025-01-03
 
 - Test release
