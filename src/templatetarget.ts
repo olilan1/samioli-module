@@ -11,7 +11,7 @@ interface TemplateDetails {
 
 let lastTemplateDetails: TemplateDetails | null;
 
-export async function replaceTargets(arrayOfTokenIds) {
+export async function replaceTargets(arrayOfTokenIds: string[]) {
     if (game.release.generation >= 13) { 
         canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
     } else {
@@ -55,7 +55,7 @@ export function deleteTemplateTargets(template: MeasuredTemplateDocumentPF2e) {
     lastTemplateDetails = null;
 }
 
-async function getTemplateTokens(measuredTemplateDocument: MeasuredTemplateDocumentPF2e) {
+export async function getTemplateTokens(measuredTemplateDocument: MeasuredTemplateDocumentPF2e) {
     const grid = canvas.interface.grid;
     const dimensions = canvas.dimensions;
     const template = measuredTemplateDocument.object;
