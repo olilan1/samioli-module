@@ -1,5 +1,6 @@
 import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { checkTemplateRollOptionsForString, delay, getTokenIdsFromTokens, shuffleArray } from "../utils.ts";
+import { checkTemplateRollOptionsForString, delay, getRandomNumberBetween, getTokenIdsFromTokens, 
+    shuffleArray } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
 export async function checkIfTemplatePlacedIsStormSpiral(template: MeasuredTemplateDocumentPF2e) {
@@ -25,8 +26,10 @@ async function initiateStormSpiral(template: MeasuredTemplateDocumentPF2e) {
 async function animateStormSpiral(template: MeasuredTemplateDocumentPF2e, targetTokens: Token[]) {
     const locationOfTemplateX = template.x;
     const locationOfTemplateY = template.y;
+    const lightningSounds = ["sound/NWN2-Sounds/as_wt_thundercl1.WAV", 
+        "sound/NWN2-Sounds/as_wt_thundercl2.WAV"]
         
-        let sequence = new Sequence({moduleName: "PF2e Animations", softFail: true})
+        const sequence = new Sequence()
         .effect()
             .file("jb2a.call_lightning.high_res.blue")
             .atLocation({ x: locationOfTemplateX, y: locationOfTemplateY })
@@ -35,14 +38,26 @@ async function animateStormSpiral(template: MeasuredTemplateDocumentPF2e, target
             .duration(10000)
             .opacity(0.5)
             .scale(0.5)
+        .sound()
+            .file("sound/NWN2-Sounds/al_en_thunder_dist_03.WAV")
+            .duration(10000)
+            .fadeInAudio(500)
+            .fadeOutAudio(1500)
         for (let i = 0; i < targetTokens.length; i++) {
+            const randomDelay = getRandomNumberBetween(3000, 7000);
             sequence
                 .effect()
-                    .delay(3000, 8000)
+                    .delay(randomDelay)
                     .file("jb2a.lightning_strike.blue")
                     .atLocation(targetTokens[i])
                     .randomizeMirrorY()
                     .opacity(1)
+                .sound()
+                    .file(lightningSounds)
+                    .fadeInAudio(100)
+                    .fadeOutAudio(1000)
+                    .delay(randomDelay)
+                    .duration(3000)
         }
         sequence.play()
 }
