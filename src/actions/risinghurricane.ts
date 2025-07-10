@@ -76,6 +76,10 @@ async function playAnimation(targets: Set<TokenPF2e>, centreLocation: { x: numbe
 
     const duration = 5000;
     const whirlwind = "jb2a.whirlwind.bluegrey"
+    const whirlwindSound = "sound/NWN2-Sounds/al_en_wind_lp_6.WAV"
+    const landingSounds = ["sound/NWN2-Sounds/cb_ht_fleshston1.WAV", 
+        "sound/NWN2-Sounds/cb_ht_fleshston2.WAV","sound/NWN2-Sounds/cb_ht_fleshwood1.WAV", 
+        "sound/NWN2-Sounds/cb_ht_fleshwood2.WAV",]
 
     const sequenceWhirlwind = new Sequence()
         .effect()
@@ -87,6 +91,11 @@ async function playAnimation(targets: Set<TokenPF2e>, centreLocation: { x: numbe
             .fadeOut(1000)
             .zIndex(500)
             .size(6, {gridUnits: true})
+        .sound()
+            .file(whirlwindSound)
+            .duration(duration)
+            .fadeInAudio(100)
+            .fadeOutAudio(1000)
     sequenceWhirlwind.play();
 
     for (const target of targets) {
@@ -95,7 +104,7 @@ async function playAnimation(targets: Set<TokenPF2e>, centreLocation: { x: numbe
         const rotationSpeed = Sequencer.Helpers.random_int_between(100, 200);
         const height = Sequencer.Helpers.random_float_between(1.3, 1.8);
         const opacityVariance = Sequencer.Helpers.random_float_between(0.7, 0.9);
-        const landingVariance = Sequencer.Helpers.random_int_between(0, 200);
+        const landingVariance = Sequencer.Helpers.random_int_between(0, 500);
         const { x, y } = calculateOrbitalPath(centreLocation, target);
         const sequenceSpin = new Sequence()
             .animation()
@@ -174,6 +183,10 @@ async function playAnimation(targets: Set<TokenPF2e>, centreLocation: { x: numbe
                 .opacity(0.2)
                 .scale(0.7)
                 .delay(duration - landingVariance)
+            .sound()
+                .file(landingSounds)
+                .delay(duration - landingVariance)
+                .volume(0.2)
             .effect()
                 .fadeIn(200)
                 .opacity(1)
