@@ -1,27 +1,26 @@
-import { replaceTargets } from "../templatetarget.ts";
-import { logd, delay } from "../utils.ts";
-const { GRID_SNAPPING_MODES } = foundry.CONST;
-const { CONST } = foundry;
+import { TokenPF2e, UserPF2e } from "foundry-pf2e";
+import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { delay, getTokenIdsFromTokens } from "../utils.ts";
 
-export async function playRisingHurricaneAtLastPlacedTemplate(token) {
+export async function playRisingHurricaneAtLastPlacedTemplate() {
     
     Hooks.once('createMeasuredTemplate', async (measuredTemplateDocumentPF2e) => {
         const player = game.user;
-        
-        await delay(200);
-        let targets = new Set();
-        targets = await captureTargets(player);
+        //get target tokens and store
+        const targets: Set<TokenPF2e> = 
+            new Set<TokenPF2e>(await getTemplateTokens(measuredTemplateDocumentPF2e));
+        //clear targets for the animation
         await clearTargets(player);
         //remove template
         const location = { x: measuredTemplateDocumentPF2e.x, y: measuredTemplateDocumentPF2e.y };
         await measuredTemplateDocumentPF2e.delete();
-        //animate on target tokens
-        await playAnimation(targets, token, location);
+        //animate on target tokens        
+        await playAnimation(targets, location);
         //add tokens back to player targets 
-        await addTargetsToUser(targets, token);
+        await replaceTargets(getTokenIdsFromTokens(Array.from(targets)))
     });
     
-    let templateData = {
+    const templateData = {
         t: "circle",
         sort: 99,
         distance: 15,
@@ -34,34 +33,12 @@ export async function playRisingHurricaneAtLastPlacedTemplate(token) {
 
 }
 
-async function captureTargets(player) {
-    let targets = new Set();
-    if (player.targets.size > 0) {
-        player.targets.forEach(token => {
-            const actor = game.actors.get(token.document.actorId);
-            if (actor.type === "character" || actor.type === "npc") {
-                targets.add(token);
-            }            
-        });
-    }
-    await delay(200);
-    return targets
-}
-
-async function clearTargets(player) {
-    await player.clearTargets();
+async function clearTargets(player: UserPF2e) {
+    player.clearTargets();
     await delay(200);
 }
 
-async function addTargetsToUser(targets, player) {
-    let targetIds = Array.from(targets).map(token => token.id);
-    targetIds = targetIds.filter(targetId => targetId !== player.id);
-    const currentTargets = game.user.targets;
-    const newTargets = new Set([...currentTargets, ...targetIds]);
-    await replaceTargets(Array.from(newTargets));
-}
-
-function calculateOrbitalPath(center, token, numSteps = 12) {
+function calculateOrbitalPath(center: { x: number, y: number }, token: TokenPF2e, numSteps = 12) {
 
     const angle = Math.atan2(token.center.y - center.y, token.center.x - center.x);
     const radius = Math.hypot(token.center.x - center.x, token.center.y - center.y);
@@ -84,7 +61,7 @@ function calculateOrbitalPath(center, token, numSteps = 12) {
     return { x: xInterpolation, y: yInterpolation };
 }
 
-function calculateTokenOffset(token) {
+function calculateTokenOffset(token: TokenPF2e) {
 
     const tokenCenter = token.center;
     const tokenCoords = { x: token.x, y: token.y };
@@ -95,12 +72,12 @@ function calculateTokenOffset(token) {
     return { x: offsetX, y: offsetY };
 }
 
-async function playAnimation(targets, playerToken, centreLocation) {
+async function playAnimation(targets: Set<TokenPF2e>, centreLocation: { x: number, y: number }) {
 
     const duration = 5000;
     const whirlwind = "jb2a.whirlwind.bluegrey"
 
-    let sequenceWhirlwind = new Sequence({ moduleName: "PF2e Animations", softFail: true })
+    const sequenceWhirlwind = new Sequence()
         .effect()
             .atLocation({ x: centreLocation.x, y: centreLocation.y })
             .file(whirlwind)
@@ -120,7 +97,7 @@ async function playAnimation(targets, playerToken, centreLocation) {
         const opacityVariance = Sequencer.Helpers.random_float_between(0.7, 0.9);
         const landingVariance = Sequencer.Helpers.random_int_between(0, 200);
         const { x, y } = calculateOrbitalPath(centreLocation, target);
-        let sequenceSpin = new Sequence({ moduleName: "PF2e Animations", softFail: true })
+        const sequenceSpin = new Sequence()
             .animation()
                 .on(target)
                 .opacity(0)
@@ -173,6 +150,7 @@ async function playAnimation(targets, playerToken, centreLocation) {
                         to: 0.5,
                         duration: (duration/8)*1,
                         delay: (duration/8)*6,
+                        // @ts-expect-error - absolute is ok
                         absolute: false
                     }
                 )
@@ -182,6 +160,7 @@ async function playAnimation(targets, playerToken, centreLocation) {
                         to: 0.5,
                         duration: (duration/8)*1,
                         delay: (duration/8)*6,
+                        // @ts-expect-error - absolute is ok
                         absolute: false
                     }
                 )
@@ -208,7 +187,6 @@ async function playAnimation(targets, playerToken, centreLocation) {
                 .on(target)
                 .opacity(1)
                 .fadeIn(500)
-                //.delay(duration + 500)
         sequenceSpin.play();
     }
 

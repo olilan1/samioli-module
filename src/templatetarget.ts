@@ -12,7 +12,8 @@ interface TemplateDetails {
 let lastTemplateDetails: TemplateDetails | null;
 
 export async function replaceTargets(arrayOfTokenIds: string[]) {
-    if (game.release.generation >= 13) { 
+    if (game.release.generation >= 13) {
+        // @ts-expect-error - setTargets does exist 
         canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
     } else {
         game.user.updateTokenTargets(arrayOfTokenIds);
@@ -87,6 +88,11 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
 
     const containedTokens = [];
     for (const token of tokens) {
+        const actorType = token.actor?.type;
+        if (actorType !== "character" && actorType !== "npc") {
+            continue;
+        }
+
         const tokenDoc = token.document;
         const tokenPositions = [];
 
