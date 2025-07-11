@@ -8,6 +8,7 @@
  - Cleaned up Rising Hurricane to use some of the targeting utils and removed errors
  - Added sound to Rising Hurricane
  - Added generic template triggering code
+ - Change Lightning Dash to use trigger and remove macro
 
 ## [0.52.0] - 2025-01-03
 

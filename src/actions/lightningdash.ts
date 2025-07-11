@@ -1,22 +1,28 @@
-/* {"name":"Lightning Dash","img":"icons/magic/lightning/bolt-blue.webp","_id":"UetbJZLBcLzzZp8h"} */
+import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { getTemplateTokens } from "../templatetarget.ts";
+import { logd, postUINotification } from "../utils.ts";
 
-let seq = new Sequence({moduleName: "PF2e Animations", softFail: true})
-const [tokenD, tokenScale] = await pf2eAnimations.macroHelpers(args)
-const template = args[1]?.templateData ?? canvas.templates.placeables[canvas.templates.placeables.length - 1];
+export async function animateLightningDash(template: MeasuredTemplateDocumentPF2e) {
+    logd(template);
+    const seq = new Sequence();
+    const tokenD = template.actor?.getActiveTokens()[0];
+    if (!tokenD) {
+        postUINotification("No caster token", "warn");
+        return;
+    }
 
-if (template !== undefined) {
-
-    let targetTokens = Array.from(game.user.targets)
-    
-    tokenD.actor.sheet.minimize();
+    const targetTokens = await getTemplateTokens(template);
     
     const feetToCoords = canvas.grid.size / canvas.grid.distance;
     const radianAngle = template.direction * (Math.PI / 180);
     const halfSquare = 2.5 * feetToCoords;
-    const minX = canvas.scene.width * canvas.scene.padding + halfSquare;
-    const minY = canvas.scene.height * canvas.scene.padding + halfSquare;
-    const maxX = canvas.scene.width + minX - 2 * halfSquare;
-    const maxY = canvas.scene.height + minY - 2 * halfSquare;
+    const width = canvas.scene?.width ?? 0;
+    const height = canvas.scene?.height ?? 0;
+    const padding = canvas.scene?.padding ?? 0;
+    const minX = width * padding + halfSquare;
+    const minY = height * padding + halfSquare;
+    const maxX = width + minX - 2 * halfSquare;
+    const maxY = height + minY - 2 * halfSquare;
     
     const cos = Math.cos(radianAngle);
     const sin = Math.sin(radianAngle);
@@ -43,9 +49,9 @@ if (template !== undefined) {
             seq
             .sound()
                 .volume(0.3)
-                .file("sound/NWN2-Sounds/sfx_conj_Electricity.WAV", true, true)
+                .file("sound/NWN2-Sounds/sfx_conj_Electricity.WAV")
             .effect()
-                .file("jb2a.static_electricity.02.blue", true)
+                .file("jb2a.static_electricity.02.blue")
                 .atLocation(tokenD)
                 .attachTo(tokenD)
                 .fadeIn(500)
@@ -57,16 +63,16 @@ if (template !== undefined) {
                 .fadeOut(400, {ease: "easeInCubic"})
                 .opacity(0)
             .effect()
-                .file("jb2a.chain_lightning.primary.blue", true)
+                .file("jb2a.chain_lightning.primary.blue")
                 .atLocation(tokenD)
                 .stretchTo(targetLocation)
                 .wait(300)
                 
     for (let i = 0; i < targetTokens.length; i++) {
-         seq
-             .effect()
+        seq
+            .effect()
                 .attachTo(targetTokens[i])
-                .file("jb2a.static_electricity.03.blue", true)
+                .file("jb2a.static_electricity.03.blue")
                 .scaleToObject(1.2)
                 .randomRotation()
                 .repeats(1, 2500)
@@ -75,11 +81,11 @@ if (template !== undefined) {
         seq
             .sound()
                 .volume(0.3)
-                .file("sound/NWN2-Sounds/sfx_hit_Electricity.WAV", true, true)
+                .file("sound/NWN2-Sounds/sfx_hit_Electricity.WAV")
                 .delay(200)
                 .wait(1)
             .effect()
-                .file("jb2a.static_electricity.02.blue", true)
+                .file("jb2a.static_electricity.02.blue")
                 .attachTo(tokenD)
                 .scaleToObject(1.2)
                 .repeats(3)

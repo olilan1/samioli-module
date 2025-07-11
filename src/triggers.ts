@@ -1,8 +1,10 @@
 import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { initiateStormSpiral } from "./actions/stormspiral.ts";
+import { animateLightningDash } from "./actions/lightningdash.ts";
 
 const TEMPLATE_MAPPINGS = {
-  "origin:item:storm-spiral": initiateStormSpiral
+  "origin:item:storm-spiral": initiateStormSpiral,
+  "origin:item:lightning-dash": animateLightningDash
 };
 
 export function runMatchingTemplateFunction(template: MeasuredTemplateDocumentPF2e): boolean {

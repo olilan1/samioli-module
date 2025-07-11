@@ -47,3 +47,17 @@ export function logd(message: unknown) {
         console.log(message);
     }
 }
+
+export function postUINotification(message: string, type: "info" | "warn" | "error") {
+    switch (type) {
+        case "info": 
+            ui.notifications.info(message); 
+            break;
+        case "warn": 
+            ui.notifications.warn(message);
+            break;
+        case "error": 
+            ui.notifications.error(message); 
+            break;
+    }
+}
