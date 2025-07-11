@@ -1,14 +1,4 @@
-import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
-
-export function checkTemplateRollOptionsForString(template: MeasuredTemplateDocumentPF2e, rollOptionToValidate: string) {
-    const rollOptions = template.flags.pf2e?.origin?.rollOptions;
-    console.log(rollOptions);
-    if (!rollOptions || !rollOptions.includes(rollOptionToValidate)) {
-        return false;
-    }
-    return true;
-}
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));

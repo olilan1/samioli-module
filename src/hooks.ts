@@ -7,7 +7,7 @@ import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.t
 import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { checkIfTemplatePlacedIsStormSpiral } from "./actions/stormspiral.ts";
+import { runMatchingTemplateFunction } from "./triggers.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -18,11 +18,13 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
 });
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
-    hook(targetTokensUnderTemplate, template, userId)
+    // Check for matching origin and run matching function if found (see triggers.ts)
+    if (!runMatchingTemplateFunction(template)) {
+        // If no matching origin, target tokens if that feature is enabled
+        hook(targetTokensUnderTemplate, template, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
-    hook(checkIfTemplatePlacedIsStormSpiral, template)
-            .run();
+    }
 });
 
 Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {

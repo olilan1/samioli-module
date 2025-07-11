@@ -7,6 +7,7 @@
  - Added sound to Storm Spiral
  - Cleaned up Rising Hurricane to use some of the targeting utils and removed errors
  - Added sound to Rising Hurricane
+ - Added generic template triggering code
 
 ## [0.52.0] - 2025-01-03
 

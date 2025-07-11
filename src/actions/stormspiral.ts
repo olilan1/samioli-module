@@ -1,17 +1,8 @@
 import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { checkTemplateRollOptionsForString, delay, getRandomNumberBetween, getTokenIdsFromTokens, 
-    shuffleArray } from "../utils.ts";
+import { delay, getRandomNumberBetween, getTokenIdsFromTokens, shuffleArray } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
-export async function checkIfTemplatePlacedIsStormSpiral(template: MeasuredTemplateDocumentPF2e) {
-    if (!checkTemplateRollOptionsForString(template, "origin:item:storm-spiral")) {
-        return;
-    }
-    initiateStormSpiral(template);
-}
-
-async function initiateStormSpiral(template: MeasuredTemplateDocumentPF2e) {
-
+export async function initiateStormSpiral(template: MeasuredTemplateDocumentPF2e) {
     let targetTokens = await getTemplateTokens(template);
 
     if (targetTokens.length != 0) {
