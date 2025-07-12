@@ -9,6 +9,7 @@
  - Added sound to Rising Hurricane
  - Added generic template triggering code
  - Change Lightning Dash to use trigger and remove macro
+ - Make Lightning Dash stop at walls
 
 ## [0.52.0] - 2025-01-03
 
