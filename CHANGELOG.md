@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.54.0] - 2025-07-21
+
 - Added Pernicious Poltergeist
 - Added Sustain Spell Logic Automation
 - Added ability to change template colours to black on creation
@@ -33,7 +35,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.53.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.54.0...HEAD
+
+[0.54.0]: https://github.com/olilan1/samioli-module/compare/v0.53.0...v0.54.0
 
 [0.53.0]: https://github.com/olilan1/samioli-module/compare/v0.52.0...v0.53.0
 
