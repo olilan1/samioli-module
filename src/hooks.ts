@@ -4,10 +4,11 @@ import { startTumbleThrough } from "./actions/tumblethrough.ts";
 import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
 import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.ts";
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
-import { targetTokensUnderTemplate, deleteTemplateTargets } from "./templatetarget.ts";
+import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EffectPF2e, EncounterPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { runMatchingTemplateFunction } from "./triggers.ts";
+import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -15,16 +16,27 @@ Hooks.on("init", () => {
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
     addMacroButtonIfSupported(message, html);
+    checkIfChatMessageIsSustainButton(message, html);
 });
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
     // Check for matching origin and run matching function if found (see triggers.ts)
-    if (!runMatchingTemplateFunction(template)) {
+    if (!runMatchingTemplateFunction(template, userId)) {
         // If no matching origin, target tokens if that feature is enabled
         hook(targetTokensUnderTemplate, template, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
     }
+    hook(checkIfTemplatePlacedHasSustainEffect, template)
+            .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+            .ifGM()
+            .run();
+});
+
+Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _data, _context, _userId) => {
+    hook(setTemplateColorToBlack, template)
+            .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
+            .run();
 });
 
 Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
@@ -48,6 +60,25 @@ Hooks.on('diceSoNiceRollComplete', (id: string) => {
     if (message) {
       handleChatMessagePostRoll(message);
     };
+});
+
+//pf2e.startTurn only runs for the GM
+Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, encounter: EncounterPF2e, _id) => {
+    if (!combatant.actor) {
+        return;
+    }
+    hook(ifActorHasSustainEffectCreateMessage, combatant.actor)
+                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .run();
+});
+
+Hooks.on('preDeleteItem', async (effect: EffectPF2e, _action, _id) => {
+    hook(createSpellNotSustainedChatMessage, effect)
+                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .run();
+    hook(deleteTemplateLinkedToSustainedEffect, effect)
+                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .run();
 });
 
 function handleChatMessagePostRoll(message: ChatMessagePF2e) {
@@ -100,6 +131,13 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifMessagePoster()
                     .run();
             break;
+        case "spell": 
+        case "spell-cast":
+            hook(checkIfSpellInChatIsSustain, message)
+                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .ifMessagePosterAndActorOwner()
+                    .run();
+            break;
     }
 }
 
@@ -141,6 +179,14 @@ class HookRunner<T extends unknown[]> {
     ifMessagePoster(): this {
         const message = this.args[0] as ChatMessagePF2e;
         if (game.user.id != message.author?.id) {
+            this.shouldRun = false;
+        }
+        return this;
+    }
+
+    ifMessagePosterAndActorOwner(): this {
+        const message = this.args[0] as ChatMessagePF2e;
+        if (game.user.id != message.author?.id || !message.actor?.isOwner) {
             this.shouldRun = false;
         }
         return this;

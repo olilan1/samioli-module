@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Added Pernicious Poltergeist
+- Added Sustain Spell Logic Automation
+- Added ability to change template colours to black on creation
+- Added some helper functions in utils to get tokens from actors
+
 ## [0.53.0] - 2025-07-13
 
 - Added Storm Spiral Animation macro - no sounds yet

@@ -141,3 +141,10 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
 
     return containedTokens;
 }
+
+ export function setTemplateColorToBlack(template: any): void {
+    template.updateSource({
+        fillColor: "#000000",
+        borderColor: "#000000"
+    });
+ }
