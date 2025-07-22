@@ -1,3 +1,5 @@
+import { ChatMessagePF2e } from "foundry-pf2e";
+
 export function checkForBravado(chatMessage) {
 
 //don't run if tumble through or enjoy the show - those hooks will call this function after the animation
@@ -86,6 +88,8 @@ export async function checkForFinisherAttack(chatMessage) {
   if (context?.outcome === "failure" || context?.outcome === "criticalFailure") {
     clearPanache(chatMessage);
   }
+  removeDemoralizeImmunity(chatMessage);
+
 }
 
 export async function checkForFinisherDamage(chatMessage) {
@@ -141,4 +145,29 @@ async function hasElegantBucklerFeat(actor) {
     item.system.category === "class" && 
     item.system.slug === "elegant-buckler"
   );
+}
+
+async function removeDemoralizeImmunity(chatMessage: ChatMessagePF2e) {
+    const { context } = chatMessage.flags.pf2e ?? {};
+    const attacker = game.actors.get(chatMessage.speaker.actor);
+    const target = chatMessage.target?.actor;
+    const contextOptions = new Set(context?.options ?? []);
+
+    if (
+        !attacker ||
+        !target ||
+        !contextOptions.has("feature:braggart") ||
+        !contextOptions.has("feature:exemplary-finisher") ||
+        !contextOptions.has("target:effect:demoralize-immunity")
+    ) {
+        return;
+    }
+
+    const immunityEffect = target.itemTypes.effect.find(
+        (effect) =>
+            effect.slug === "demoralize-immunity" &&
+            effect.flags?.demoralize?.source === attacker.id
+    );
+
+    await immunityEffect?.delete();
 }
