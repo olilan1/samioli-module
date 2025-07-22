@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+ - Automation to remove Demoralize Immunity when a Braggart with Exemplary Finisher hits with a finisher
+
 ## [0.54.0] - 2025-07-21
 
 - Added Pernicious Poltergeist
