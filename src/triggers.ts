@@ -2,15 +2,22 @@ import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { initiateStormSpiral } from "./actions/stormspiral.ts";
 import { animateLightningDash } from "./actions/lightningdash.ts";
 import { chooseEffectOfPerniciousPoltergeist, initiatePerniciousPoltergeist } from "./spells/perniciouspoltergeist.ts";
+import { initiateFloatingFlame, sustainFloatingFlame, removeFloatingFlame } from "./spells/floatingflame.ts";
 
 const TEMPLATE_MAPPINGS = {
     "origin:item:storm-spiral": initiateStormSpiral,
     "origin:item:lightning-dash": animateLightningDash,
     "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
+    "origin:item:floating-flame": initiateFloatingFlame
 };
 
 const SUSTAIN_MAPPINGS = {
     "origin:item:pernicious-poltergeist": chooseEffectOfPerniciousPoltergeist,
+    "origin:item:floating-flame": sustainFloatingFlame
+};
+
+const TEMPLATE_DELTITON_MAPPINGS = {
+    "origin:item:floating-flame": removeFloatingFlame
 };
 
 export function runMatchingTemplateFunction(template: MeasuredTemplateDocumentPF2e, creatorUserId: string): boolean {
@@ -28,6 +35,16 @@ export function runMatchingTemplateFunction(template: MeasuredTemplateDocumentPF
 
 export function runMatchingSustainFunction(template: MeasuredTemplateDocumentPF2e): boolean {
     for (const [originString, func] of Object.entries(SUSTAIN_MAPPINGS)) {
+        if (templateRollOptionsContains(template, originString)) {
+            func(template);
+            return true;
+        }
+    }
+    return false;
+}
+
+export function runMatchingTemplateDeletionFunction(template: MeasuredTemplateDocumentPF2e): boolean {
+    for (const [originString, func] of Object.entries(TEMPLATE_DELTITON_MAPPINGS)) {
         if (templateRollOptionsContains(template, originString)) {
             func(template);
             return true;
