@@ -1,7 +1,5 @@
-import { ActorPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
-
-export const MODULE_ID = "samioli-module";
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -283,61 +281,4 @@ export function getOwnersFromActor(actor: ActorPF2e) {
   }
   
   return controllingUsers;
-}
-
-/**
- * Smoothly moves an AmbientLightDocument from a start point to an end point over a specified duration.
- * @param {AmbientLightDocument} light - The light document to animate.
- * @param {Point} startPoint - The starting {x, y} coordinates.
- * @param {object} endPoint - The ending {x, y} coordinates.
- * @param {number} duration - The time in milliseconds for the animation.
- */
-export function animateLight(light: AmbientLightDocument<Scene | null>, startPoint: Point, endPoint: Point, duration: number) {
-    const startTime = performance.now();
-
-    function animate(currentTime: number) {
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-
-        const newX = startPoint.x + (endPoint.x - startPoint.x) * progress;
-        const newY = startPoint.y + (endPoint.y - startPoint.y) * progress;
-
-        light.update({ x: newX, y: newY });
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
-    }
-
-    requestAnimationFrame(animate);
-}
-
-/**
- * Checks if a template has a flag with a lightId, and if so, deletes the associated light.
- * @param {MeasuredTemplateDocumentPF2e} template - The template document to check.
- */
-export async function deleteLightFromTemplate(template: MeasuredTemplateDocumentPF2e) {
-    // Get the lightId from the template's flag.
-    const lightId = template.getFlag(MODULE_ID, "lightId");
-
-    // Check if the flag exists and has a value.
-    if (!lightId) {
-        return;
-    }
-
-    // Find the light document in the current scene's lights collection.
-    const light = canvas.scene?.lights.find(l => l.id === lightId);
-
-    // If the light is found, delete it.
-    if (light) {
-        try {
-            await light.delete();
-            logd(`Successfully deleted light with ID: ${lightId}`);
-        } catch (error) {
-            logd(`Error deleting light with ID: ${lightId}`);
-            logd(error);
-        }
-    } else {
-        logd(`Light with ID: ${lightId} not found on the canvas.`);
-    }
 }

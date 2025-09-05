@@ -7,7 +7,7 @@ import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.t
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EffectPF2e, EncounterPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunction } from "./triggers.ts";
+import { runMatchingTemplateFunction } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
 
 Hooks.on("init", () => {
@@ -40,9 +40,6 @@ Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _
 });
 
 Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
-    hook(runMatchingTemplateDeletionFunction, template)
-            .ifGM()
-            .run();
     hook(deleteTemplateTargets, template)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
