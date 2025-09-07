@@ -2,11 +2,13 @@ import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { initiateStormSpiral } from "./actions/stormspiral.ts";
 import { animateLightningDash } from "./actions/lightningdash.ts";
 import { chooseEffectOfPerniciousPoltergeist, initiatePerniciousPoltergeist } from "./spells/perniciouspoltergeist.ts";
+import { initiateBlazingDive } from "./spells/blazingdive.ts";
 
 const TEMPLATE_MAPPINGS = {
     "origin:item:storm-spiral": initiateStormSpiral,
     "origin:item:lightning-dash": animateLightningDash,
     "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
+    "origin:item:blazing-dive": initiateBlazingDive,
 };
 
 const SUSTAIN_MAPPINGS = {
