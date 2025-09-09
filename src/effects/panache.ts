@@ -54,7 +54,7 @@ async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "
 }
 
 async function hasPanache(actor: ActorPF2e) {
-  const items = await actor.items.contents;
+  const items = actor.items.contents;
   const panacheEffect = items.find(item =>
     item.type === "effect" && item.system.slug === "effect-panache"
   );
@@ -83,7 +83,7 @@ async function editPanacheEffect(actor: ActorPF2e, outcome: "success" | "failure
       name: "Effect: Panache (1 round)",
       "system.duration.value": 1,
       "system.duration.unit": "rounds",
-      "system.duration.expiry": "turnEnd"
+      "system.duration.expiry": "turn-end"
     };
 
     if (outcome === "success" || outcome === "criticalSuccess") {
@@ -205,7 +205,7 @@ export async function checkForExtravagantParryOrElegantBuckler(chatMessage: Chat
   const isFailure = context.outcome === "failure";
   const isCriticalFailure = context.outcome === "criticalFailure";
 
-  const hasElegantBuckler = await hasElegantBucklerFeat(target); 
+  const hasElegantBuckler = hasElegantBucklerFeat(target); 
 
   if (
     (hasDuelingParry && (isFailure || isCriticalFailure)) ||
