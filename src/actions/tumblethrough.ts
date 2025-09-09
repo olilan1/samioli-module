@@ -1,6 +1,6 @@
 import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
-import { delay } from "../utils.ts";
+import { delay, logd } from "../utils.ts";
 
 const wooshSound1 = "sound/NWN2-Sounds/cb_sw_unarmed04.WAV";
 const wooshSound2 = "sound/NWN2-Sounds/cb_sw_unarmed01.WAV";
@@ -15,68 +15,63 @@ const puffRingAnimation1 = "jb2a.smoke.puff.ring.01.white.0";
 const puffRingAnimation2 = "jb2a.smoke.puff.ring.01.white.1";
 const impactAnimation = "jb2a.impact.008.orange";
 
-export async function startTumbleThrough(ChatMessagePF2e: ChatMessagePF2e) {
+export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
 
     //check if the skill check was for a tumblethrough
-    const messagOptions = ChatMessagePF2e?.flags?.pf2e?.context?.options;
-    if (!messagOptions?.includes("action:tumble-through")) {
+    const messageOptions = chatMessage.flags.pf2e.context?.options;
+    if (!messageOptions?.includes("action:tumble-through")) {
         return;
     }
 
     //set up for the animations
-    const tokenId = ChatMessagePF2e.speaker.token;
-    const token = canvas.tokens.placeables.find(t => t.id === tokenId);
+    const token = chatMessage.token?.object;
 
     const targetTokens = Array.from(game.user.targets)
     if (targetTokens.length === 0 || !token) return;
     const target = targetTokens[0];
 
-    const originalTokenPositionX = token.document.x;
-    const OriginalTokenPositionY = token.document.y;
+    const originalTokenPositionX = token.x;
+    const originalTokenPositionY = token.y;
     const targetPositionX = target.document.x;
     const targetPositionY = target.document.y;
     const targetHeight = target.document.height;
     if (!canvas.scene){
         return;
     }
-    const TargetLocationBuffer = canvas.scene.grid.size/2;
+    const targetLocationBuffer = canvas.scene.grid.size/2;
 
     let x = targetPositionX - originalTokenPositionX
-    let y = targetPositionY - OriginalTokenPositionY
+    let y = targetPositionY - originalTokenPositionY
 
     for (let i = 1; i < targetHeight; i++) {
-        x = x + TargetLocationBuffer;
-        y = y + TargetLocationBuffer;
+        x = x + targetLocationBuffer;
+        y = y + targetLocationBuffer;
     }
 
-    let rotationValue =  720
-    
-    if (x < 0) {
-        rotationValue = rotationValue * -1
-    }
+    const rotationValue = (x < 0) ? -720 : 720
+    const context = chatMessage.flags.pf2e.context;
 
     //check if the skillroll was successful
-    if (ChatMessagePF2e?.flags?.pf2e?.context?.outcome === "criticalSuccess"
-    || ChatMessagePF2e?.flags?.pf2e?.context?.outcome === "success") {
+    if (context?.outcome === "criticalSuccess"|| context?.outcome === "success") {
 
         await animateSuccessfulTumble(token, target, rotationValue, x, y);
 
-        checkIfProvidesPanache(ChatMessagePF2e);
+        checkIfProvidesPanache(chatMessage);
 
-    } else if (ChatMessagePF2e?.flags?.pf2e?.context?.outcome === "criticalFailure" 
-    || ChatMessagePF2e?.flags?.pf2e?.context?.outcome === "failure") {
+    } else if (chatMessage.flags.pf2e.context?.outcome === "criticalFailure" 
+    || chatMessage.flags.pf2e.context?.outcome === "failure") {
 
-        await animateFailureTumble(x, y, token, target, rotationValue, originalTokenPositionX, OriginalTokenPositionY);
+        await animateFailureTumble(x, y, token, target, rotationValue, originalTokenPositionX, originalTokenPositionY);
 
-        checkIfProvidesPanache(ChatMessagePF2e);
+        checkIfProvidesPanache(chatMessage);
 
     } else {
-        console.log(`did you target anyone? ${ChatMessagePF2e?.flags?.pf2e?.context?.outcome}`)
+        logd(`did you target anyone? ${chatMessage.flags.pf2e.context?.outcome}`)
     }
 }
 
 async function animateFailureTumble(x: number, y: number, token: TokenPF2e, target: TokenPF2e, 
-    rotationValue: number, originalTokenPositionX: number, OriginalTokenPositionY: number) {
+    rotationValue: number, originalTokenPositionX: number, originalTokenPositionY: number) {
     
     const fallDownX = (x / 2);
     const fallDownY = (y / 2);
@@ -84,13 +79,9 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
     const rollOutAnimTime = 2000;
     const knockedBackAnimTime = 1000;
     const flatOnFloorTime = 2000;
-
-    let fallFlatAngle = -90;
-
-    if (x < 0) {
-        fallFlatAngle = fallFlatAngle * -1;
-    }
-
+    
+    const fallFlatAngle = (x < 0) ? 90 : -90;
+    
     const sequence = new Sequence()
         .animation()
             .on(token)
@@ -168,7 +159,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .fadeOut(500)
         .effect()
             .file(puffRingAnimation2)
-            .atLocation({ x: originalTokenPositionX + (canvas.grid.size / 2) + fallDownX, y: OriginalTokenPositionY + (canvas.grid.size / 2) + fallDownY })
+            .atLocation({ x: originalTokenPositionX + (canvas.grid.size / 2) + fallDownX, y: originalTokenPositionY + (canvas.grid.size / 2) + fallDownY })
             .scale(0.8)
             .fadeIn(100)
             .opacity(0.5)
