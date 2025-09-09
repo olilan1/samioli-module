@@ -153,7 +153,7 @@ async function createRemovePanacheChatMessage(actor: ActorPF2e) {
 
 export function checkIfChatMessageIsRemovePanacheButton(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
-    const actor = getActorFromChatMessage(chatMessagePF2e);
+    const actor = chatMessagePF2e.actor;
     if (!actor) return;
     if (!buttonSlug) return;
 
