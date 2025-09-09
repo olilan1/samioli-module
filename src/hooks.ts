@@ -2,7 +2,7 @@ import { registerSettings, getSetting, SETTINGS, SettingsKey } from "./settings.
 import { addMacroButtonIfSupported } from "./chatmacrobutton.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
 import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
-import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.ts";
+import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage, checkIfChatMessageIsRemovePanacheButton } from "./effects/panache.ts";
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
@@ -17,6 +17,7 @@ Hooks.on("init", () => {
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
     addMacroButtonIfSupported(message, html);
     checkIfChatMessageIsSustainButton(message, html);
+    checkIfChatMessageIsRemovePanacheButton(message, html);
 });
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {

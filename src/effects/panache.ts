@@ -1,28 +1,23 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
-import { logd } from "../utils.ts";
+import { getOwnersFromActor, logd } from "../utils.ts";
 
 export function checkForBravado(chatMessage: ChatMessagePF2e) {
-  
-//don't run if tumble through or enjoy the show - those hooks will call this function after the animation
-if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
-  && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
-  && !chatMessage.flags?.pf2e?.context?.options?.includes("item:slug:enjoy-the-show")) {
-    checkIfProvidesPanache(chatMessage);
-  }
+  //don't run if tumble through or enjoy the show
+  // those hooks will call this function after the animation
+  if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
+    && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
+    && !chatMessage.flags?.pf2e?.context?.options?.includes("item:slug:enjoy-the-show")) {
+      checkIfProvidesPanache(chatMessage);
+    }
 }
   
 export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
   const outcome = chatMessage.flags?.pf2e?.context?.outcome;
   if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado") 
     && (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure")) {
-    const actorId = chatMessage.speaker.actor;
-    if (!actorId) {
-      logd("Actor ID not found in chat message.");
-      return;
-    }
-    const actor = game.actors.get(actorId);
+    const actor = chatMessage.actor;
     if (!actor) {
-      logd("Cannot find actor with ID: " + actorId + ".");
+      logd("Cannot find actor: " + actor + ".");
       return;
     }
   await applyPanache(actor, outcome);
@@ -105,12 +100,16 @@ async function editPanacheEffect(actor: ActorPF2e, outcome: "success" | "failure
 
 export async function checkForFinisherAttack(chatMessage: ChatMessagePF2e) {
   const context = chatMessage.flags?.pf2e?.context;
-  if (context === undefined || !context.options?.includes("finisher")) {
+  if (!context?.options?.includes("finisher")) {
     return;
   }
+  const actor = chatMessage.actor;
+  if (!actor) {
+    return;
+  }
+  
   if (context?.outcome === "failure" || context?.outcome === "criticalFailure") {
-    //add logic for button to remove panache
-    clearPanache(chatMessage);
+    await createRemovePanacheChatMessage(actor);
   } else {
     removeDemoralizeImmunity(chatMessage);
   }
@@ -120,19 +119,58 @@ export async function checkForFinisherDamage(chatMessage: ChatMessagePF2e) {
   if (!chatMessage.flags?.pf2e?.context?.options?.includes("finisher")) {
     return;
   }
-  clearPanache(chatMessage);
-}
 
-function clearPanache(chatMessage: ChatMessagePF2e) {
-  const actorId = chatMessage.speaker.actor;
-  if (!actorId) {
-    return;
-  }
-  const actor = game.actors.get(actorId);
+  const actor = chatMessage.actor;
   if (!actor) {
     return;
   }
-  const panacheItems = returnPanacheItems(actor);
+
+  clearPanache(actor);
+}
+
+async function createRemovePanacheChatMessage(actor: ActorPF2e) {
+    const recipients = getOwnersFromActor(actor);
+    const content = `
+        <p>Do you want to remove <strong>Panache</strong>?</p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+            <button type="button" data-action="remove-panache" data-actor-id="${actor.id}">
+                Remove Panache
+            </button>
+        </div>
+    `;
+
+    await ChatMessage.create({
+        content: content,
+        whisper: recipients,
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        flags: {
+            samioli: {
+                buttonSlug: `remove-panache-button`
+            }
+        }
+    });
+}
+
+export function checkIfChatMessageIsRemovePanacheButton(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
+    const actor = getActorFromChatMessage(chatMessagePF2e);
+    if (!actor) return;
+    if (!buttonSlug) return;
+
+    if (buttonSlug === 'remove-panache-button') {
+        const removePanacheButton = html.find('button[data-action="remove-panache"]');
+        if (removePanacheButton.length > 0) {
+            removePanacheButton.on('click', (event) => {
+                event.preventDefault();
+                clearPanache(actor);
+            });
+        }
+    }
+}
+
+function clearPanache(actor: ActorPF2e) {
+
+  const panacheItems = getPanacheItems(actor);
   if (panacheItems.length > 0) {
     for (const panacheItem of panacheItems) {
       panacheItem.delete();
@@ -140,32 +178,32 @@ function clearPanache(chatMessage: ChatMessagePF2e) {
   }
 }
 
-function returnPanacheItems(actor: ActorPF2e) {
+function getPanacheItems(actor: ActorPF2e) {
   const items = actor.items.contents;
   return items.filter(item => item.type === "effect" && item.system.slug === "effect-panache");
 }
 
 export async function checkForExtravagantParryOrElegantBuckler(chatMessage: ChatMessagePF2e) {
-  const { flags } = chatMessage;
+  const context = chatMessage.flags.pf2e.context;
 
-  if (!flags?.pf2e?.context || flags.pf2e.context.type !== "attack-roll" || !flags.pf2e.context.target?.actor) {
+  if (!context || context.type !== "attack-roll" || !context.target?.actor) {
     return;
   }
 
-  const targetActorId = flags.pf2e.context.target.actor.split('.').pop();
+  const targetActorId = context.target.actor.split('.').pop();
   if (!targetActorId) {
     return;
   }
-  const target = game.actors.get(targetActorId);
+  const target = chatMessage.target?.actor;
 
   if (!target) {
     return;
   }
 
-  const hasDuelingParry = flags.pf2e.context.options.includes("target:effect:dueling-parry");
-  const hasShieldRaised = flags.pf2e.context.options.includes("target:effect:raise-a-shield");
-  const isFailure = flags.pf2e.context.outcome === "failure";
-  const isCriticalFailure = flags.pf2e.context.outcome === "criticalFailure";
+  const hasDuelingParry = context.options.includes("target:effect:dueling-parry");
+  const hasShieldRaised = context.options.includes("target:effect:raise-a-shield");
+  const isFailure = context.outcome === "failure";
+  const isCriticalFailure = context.outcome === "criticalFailure";
 
   const hasElegantBuckler = await hasElegantBucklerFeat(target); 
 
@@ -177,8 +215,8 @@ export async function checkForExtravagantParryOrElegantBuckler(chatMessage: Chat
   }
 }
 
-async function hasElegantBucklerFeat(actor: ActorPF2e) {
-  const items = await actor.items.contents;
+function hasElegantBucklerFeat(actor: ActorPF2e) {
+  const items = actor.items.contents;
   return items.some(item => 
     item.type === "feat" &&
     // @ts-expect-error - category does exist on item type "feat" 
@@ -188,27 +226,26 @@ async function hasElegantBucklerFeat(actor: ActorPF2e) {
 }
 
 async function removeDemoralizeImmunity(chatMessage: ChatMessagePF2e) {
-  const { context } = chatMessage.flags.pf2e ?? {};
-    const attackerActorId = chatMessage.speaker.actor;
-    const attacker = game.actors.get(attackerActorId as string);
-    const target = chatMessage.target?.actor;
-    const contextOptions = new Set(context?.options ?? []);
 
-    if (
-        !attacker ||
-        !target ||
-        !contextOptions.has("feature:braggart") ||
-        !contextOptions.has("feature:exemplary-finisher") ||
-        !contextOptions.has("target:effect:demoralize-immunity")
-    ) {
-        return;
-    }
+  const context = chatMessage.flags.pf2e.context;
+  const attacker = chatMessage.actor;
+  const target = chatMessage.target?.actor;
 
-    const immunityEffect = target.itemTypes.effect.find(
-        (effect) =>
-            effect.slug === "demoralize-immunity" &&
-            effect.flags?.demoralize?.source === attacker.id
-    );
+  if (
+      !attacker ||
+      !target ||
+      !context?.options?.includes("feature:braggart") ||
+      !context?.options?.includes("feature:exemplary-finisher") ||
+      !context?.options?.includes("target:effect:demoralize-immunity")
+  ) {
+      return;
+  }
 
-    await immunityEffect?.delete();
+  const immunityEffect = target.itemTypes.effect.find(
+      (effect) =>
+          effect.slug === "demoralize-immunity" &&
+          effect.flags?.demoralize?.source === attacker.id
+  );
+
+  await immunityEffect?.delete();
 }
