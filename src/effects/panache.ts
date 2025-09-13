@@ -17,7 +17,6 @@ export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
     && (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure")) {
     const actor = chatMessage.actor;
     if (!actor) {
-      logd("Cannot find actor: " + actor + ".");
       return;
     }
   await applyPanache(actor, outcome);
@@ -133,7 +132,7 @@ async function createRemovePanacheChatMessage(actor: ActorPF2e) {
     const content = `
         <p>Do you want to remove <strong>Panache</strong>?</p>
         <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
-            <button type="button" data-action="remove-panache" data-actor-id="${actor.id}">
+            <button type="button" data-action="remove-panache">
                 Remove Panache
             </button>
         </div>
