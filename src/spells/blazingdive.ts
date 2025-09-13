@@ -20,13 +20,13 @@ export async function initiateBlazingDive(template: MeasuredTemplateDocumentPF2e
     await template.delete();
 
     // run animation sequence
-    await animateBlazingDive(casterToken, locationOfTemplate, targetTokens);
+    await animateBlazingDive(casterToken, locationOfTemplate);
     // add stored tokens as targets to caster
     replaceTargets(getTokenIdsFromTokens(targetTokens));
 }
 
 async function animateBlazingDive(caster: TokenPF2e, 
-    locationOfTemplate: Point, _targetTokens: TokenPF2e[]) {
+    locationOfTemplate: Point) {
     const halfGrid = canvas.grid.size / 2;
     const initialDelay = 1000;
     const setupJumpAnimationTime = 1000;
