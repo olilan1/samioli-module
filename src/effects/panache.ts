@@ -1,24 +1,29 @@
-import { ChatMessagePF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
+import { getOwnersFromActor, logd } from "../utils.ts";
 
-export function checkForBravado(chatMessage) {
-
-//don't run if tumble through or enjoy the show - those hooks will call this function after the animation
-if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado")
-  && !chatMessage.flags?.pf2e?.context?.options.includes("action:tumble-through")
-  && !chatMessage.flags?.pf2e?.context?.options.includes("item:slug:enjoy-the-show")) {
-    checkIfProvidesPanache(chatMessage);
-  }
+export function checkForBravado(chatMessage: ChatMessagePF2e) {
+  //don't run if tumble through or enjoy the show
+  // those hooks will call this function after the animation
+  if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
+    && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
+    && !chatMessage.flags?.pf2e?.context?.options?.includes("item:slug:enjoy-the-show")) {
+      checkIfProvidesPanache(chatMessage);
+    }
 }
   
-export async function checkIfProvidesPanache(chatMessage) {
-  const outcome = chatMessage.flags.pf2e.context.outcome;
-  if (chatMessage.flags?.pf2e?.context?.options.includes("item:trait:bravado") 
+export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
+  const outcome = chatMessage.flags?.pf2e?.context?.outcome;
+  if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado") 
     && (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure")) {
-    await applyPanache(game.actors.get(chatMessage.speaker.actor), outcome);
+    const actor = chatMessage.actor;
+    if (!actor) {
+      return;
+    }
+  await applyPanache(actor, outcome);
   }
 }
 
-async function applyPanache(actor, outcome) {
+async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
   const existingPanacheStatus = await hasPanache(actor);
 
   if (existingPanacheStatus === "success") {
@@ -29,8 +34,16 @@ async function applyPanache(actor, outcome) {
     }
   } else {
     const panacheItemId = "uBJsxCzNhje8m8jj";
-    const compendiumPack = game.packs.get("pf2e.feat-effects");
+    const compendiumPack = game?.packs?.get("pf2e.feat-effects");
+    if (!compendiumPack) {
+      logd("Compendium not found in Game.");
+      return;
+    }
     const panacheEffect = await compendiumPack.getDocument(panacheItemId);
+    if (!panacheEffect){
+      logd("Panache effect not found in Compendium pack.");
+      return;
+    }
     await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
 
     if (outcome === "failure") {
@@ -39,8 +52,8 @@ async function applyPanache(actor, outcome) {
   }
 }
 
-async function hasPanache(actor) {
-  const items = await actor.items.contents;
+async function hasPanache(actor: ActorPF2e) {
+  const items = actor.items.contents;
   const panacheEffect = items.find(item =>
     item.type === "effect" && item.system.slug === "effect-panache"
   );
@@ -50,11 +63,15 @@ async function hasPanache(actor) {
     : false;
 }
 
-async function editPanacheEffect(actor, outcome) {
+async function editPanacheEffect(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
   try {
     const panacheEffect = actor.items.find(item =>
       item.type === "effect" && item.system.slug === "effect-panache"
     );
+
+    if (!panacheEffect) {
+      throw new Error("Panache effect not found.");
+    }
 
     const updatedSuccessEffectData = {
       name: "Effect: Panache",
@@ -65,7 +82,7 @@ async function editPanacheEffect(actor, outcome) {
       name: "Effect: Panache (1 round)",
       "system.duration.value": 1,
       "system.duration.unit": "rounds",
-      "system.duration.expiry": "turnEnd"
+      "system.duration.expiry": "turn-end"
     };
 
     if (outcome === "success" || outcome === "criticalSuccess") {
@@ -75,32 +92,84 @@ async function editPanacheEffect(actor, outcome) {
     }
 
   } catch (error) {
-    ui.notifications.error(`Error updating Panache effect: ${error.message}`);
+    ui.notifications.error(`Error updating Panache effect: ${(error as Error).message}`);
     console.error(error);
   }
 }
 
-export async function checkForFinisherAttack(chatMessage) {
+export async function checkForFinisherAttack(chatMessage: ChatMessagePF2e) {
   const context = chatMessage.flags?.pf2e?.context;
-  if (!context?.options.includes("finisher")) {
+  if (!context?.options?.includes("finisher")) {
     return;
   }
+  const actor = chatMessage.actor;
+  if (!actor) {
+    return;
+  }
+  
   if (context?.outcome === "failure" || context?.outcome === "criticalFailure") {
-    clearPanache(chatMessage);
+    await createRemovePanacheChatMessage(actor);
+  } else {
+    removeDemoralizeImmunity(chatMessage);
   }
-  removeDemoralizeImmunity(chatMessage);
-
 }
 
-export async function checkForFinisherDamage(chatMessage) {
-  if (!chatMessage.flags?.pf2e?.context?.options.includes("finisher")) {
+export async function checkForFinisherDamage(chatMessage: ChatMessagePF2e) {
+  if (!chatMessage.flags?.pf2e?.context?.options?.includes("finisher")) {
     return;
   }
-  clearPanache(chatMessage);
+
+  const actor = chatMessage.actor;
+  if (!actor) {
+    return;
+  }
+
+  clearPanache(actor);
 }
 
-function clearPanache(chatMessage) {
-  const panacheItems = returnPanacheItems(game.actors.get(chatMessage.speaker.actor));
+async function createRemovePanacheChatMessage(actor: ActorPF2e) {
+    const recipients = getOwnersFromActor(actor);
+    const content = `
+        <p>Do you want to remove <strong>Panache</strong>?</p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+            <button type="button" data-action="remove-panache">
+                Remove Panache
+            </button>
+        </div>
+    `;
+
+    await ChatMessage.create({
+        content: content,
+        whisper: recipients,
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        flags: {
+            samioli: {
+                buttonSlug: `remove-panache-button`
+            }
+        }
+    });
+}
+
+export function checkIfChatMessageIsRemovePanacheButton(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
+    const actor = chatMessagePF2e.actor;
+    if (!actor) return;
+    if (!buttonSlug) return;
+
+    if (buttonSlug === 'remove-panache-button') {
+        const removePanacheButton = html.find('button[data-action="remove-panache"]');
+        if (removePanacheButton.length > 0) {
+            removePanacheButton.on('click', (event) => {
+                event.preventDefault();
+                clearPanache(actor);
+            });
+        }
+    }
+}
+
+function clearPanache(actor: ActorPF2e) {
+
+  const panacheItems = getPanacheItems(actor);
   if (panacheItems.length > 0) {
     for (const panacheItem of panacheItems) {
       panacheItem.delete();
@@ -108,27 +177,34 @@ function clearPanache(chatMessage) {
   }
 }
 
-function returnPanacheItems(actor) {
+function getPanacheItems(actor: ActorPF2e) {
   const items = actor.items.contents;
   return items.filter(item => item.type === "effect" && item.system.slug === "effect-panache");
 }
 
-export async function checkForExtravagantParryOrElegantBuckler(chatMessage) {
-  const { flags } = chatMessage;
+export async function checkForExtravagantParryOrElegantBuckler(chatMessage: ChatMessagePF2e) {
+  const context = chatMessage.flags.pf2e.context;
 
-  if (!flags?.pf2e?.context || flags.pf2e.context.type !== "attack-roll" || !flags.pf2e.context.target?.actor) {
+  if (!context || context.type !== "attack-roll" || !context.target?.actor) {
     return;
   }
 
-  const targetActorId = flags.pf2e.context.target.actor.split('.').pop();
-  const target = game.actors.get(targetActorId);
+  const targetActorId = context.target.actor.split('.').pop();
+  if (!targetActorId) {
+    return;
+  }
+  const target = chatMessage.target?.actor;
 
-  const hasDuelingParry = flags.pf2e.context.options.includes("target:effect:dueling-parry");
-  const hasShieldRaised = flags.pf2e.context.options.includes("target:effect:raise-a-shield");
-  const isFailure = flags.pf2e.context.outcome === "failure";
-  const isCriticalFailure = flags.pf2e.context.outcome === "criticalFailure";
+  if (!target) {
+    return;
+  }
 
-  const hasElegantBuckler = await hasElegantBucklerFeat(target); 
+  const hasDuelingParry = context.options.includes("target:effect:dueling-parry");
+  const hasShieldRaised = context.options.includes("target:effect:raise-a-shield");
+  const isFailure = context.outcome === "failure";
+  const isCriticalFailure = context.outcome === "criticalFailure";
+
+  const hasElegantBuckler = hasElegantBucklerFeat(target); 
 
   if (
     (hasDuelingParry && (isFailure || isCriticalFailure)) ||
@@ -138,36 +214,37 @@ export async function checkForExtravagantParryOrElegantBuckler(chatMessage) {
   }
 }
 
-async function hasElegantBucklerFeat(actor) {
-  const items = await actor.items.contents;
+function hasElegantBucklerFeat(actor: ActorPF2e) {
+  const items = actor.items.contents;
   return items.some(item => 
-    item.type === "feat" && 
+    item.type === "feat" &&
+    // @ts-expect-error - category does exist on item type "feat" 
     item.system.category === "class" && 
     item.system.slug === "elegant-buckler"
   );
 }
 
 async function removeDemoralizeImmunity(chatMessage: ChatMessagePF2e) {
-    const { context } = chatMessage.flags.pf2e ?? {};
-    const attacker = game.actors.get(chatMessage.speaker.actor);
-    const target = chatMessage.target?.actor;
-    const contextOptions = new Set(context?.options ?? []);
 
-    if (
-        !attacker ||
-        !target ||
-        !contextOptions.has("feature:braggart") ||
-        !contextOptions.has("feature:exemplary-finisher") ||
-        !contextOptions.has("target:effect:demoralize-immunity")
-    ) {
-        return;
-    }
+  const context = chatMessage.flags.pf2e.context;
+  const attacker = chatMessage.actor;
+  const target = chatMessage.target?.actor;
 
-    const immunityEffect = target.itemTypes.effect.find(
-        (effect) =>
-            effect.slug === "demoralize-immunity" &&
-            effect.flags?.demoralize?.source === attacker.id
-    );
+  if (
+      !attacker ||
+      !target ||
+      !context?.options?.includes("feature:braggart") ||
+      !context?.options?.includes("feature:exemplary-finisher") ||
+      !context?.options?.includes("target:effect:demoralize-immunity")
+  ) {
+      return;
+  }
 
-    await immunityEffect?.delete();
+  const immunityEffect = target.itemTypes.effect.find(
+      (effect) =>
+          effect.slug === "demoralize-immunity" &&
+          effect.flags?.demoralize?.source === attacker.id
+  );
+
+  await immunityEffect?.delete();
 }
