@@ -35,6 +35,7 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     const targetPositionX = target.document.x;
     const targetPositionY = target.document.y;
     const targetHeight = target.document.height;
+    const targetWidth = target.document.width;
     if (!canvas.scene){
         return;
     }
@@ -43,10 +44,8 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     let x = targetPositionX - originalTokenPositionX
     let y = targetPositionY - originalTokenPositionY
 
-    for (let i = 1; i < targetHeight; i++) {
-        x = x + targetLocationBuffer;
-        y = y + targetLocationBuffer;
-    }
+    x += (targetHeight - 1) * targetLocationBuffer;  
+    y += (targetWidth - 1) * targetLocationBuffer;  
 
     const rotationValue = (x < 0) ? -720 : 720
     const context = chatMessage.flags.pf2e.context;
