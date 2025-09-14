@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
- - Automation to remove Demoralize Immunity when a Braggart with Exemplary Finisher hits with a finisher
+## [0.55.0] - 2025-09-14
+
+- Automation to remove Demoralize Immunity when a Braggart with Exemplary Finisher hits with a finisher
 
 ## [0.54.0] - 2025-07-21
 
@@ -37,7 +39,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.54.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.55.0...HEAD
+
+[0.55.0]: https://github.com/olilan1/samioli-module/compare/v0.54.0...v0.55.0
 
 [0.54.0]: https://github.com/olilan1/samioli-module/compare/v0.53.0...v0.54.0
 
