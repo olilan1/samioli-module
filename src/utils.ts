@@ -1,4 +1,4 @@
-import { ActorPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 
 export const MODULE_ID = "samioli-module";
@@ -93,6 +93,10 @@ export async function deleteTemplateById(templateId: string) {
     }
 }
 
+export function getTokenFromActor(actor: ActorPF2e | null) : TokenPF2e | null {
+    return actor?.getActiveTokens()[0] ?? null;
+}
+
 /**
  * Finds the most relevant Token on the canvas based on a combination of criteria.
  * Criteria are checked in a prioritized order.
@@ -158,7 +162,9 @@ export function findRelevantToken(options: {
     // 3. Filter by Actor ID or Actor Name
     let targetActor: Actor | null = null;
     if (actorId) {
+        console.log(`Filtering by actor ID: ${actorId}`);
         targetActor = game.actors.get(actorId) || null;
+        console.log(`Found actor by ID: ${targetActor?.name}`);
     } else if (actorName) {
         targetActor = game.actors.getName(actorName) || null;
     }
@@ -168,9 +174,10 @@ export function findRelevantToken(options: {
         if (actorFromUser && actorFromUser === targetActor) {
         // Candidates are already filtered based on this actor
         } else {
+        console.log(`Filtering candidates by actor: ${targetActor.name}`);
         candidates = candidates.filter(t => t.actor === targetActor);
         }
-
+        console.log(`Candidates after actor filter: ${candidates.map(t => t.name).join(", ")}`);
         if (candidates.length === 1) {
         console.log(`Found single candidate token for actor: ${candidates[0].name}`);
         return candidates[0];
