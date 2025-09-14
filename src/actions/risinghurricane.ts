@@ -27,10 +27,9 @@ export async function playRisingHurricaneAtLastPlacedTemplate() {
         direction: 0,
         fillColor: "#87CEEB",
         borderColor: "#FFFFFF",
-    };
+    } as const;
 
     await canvas.templates.createPreview(templateData);
-
 }
 
 async function clearTargets(player: UserPF2e) {

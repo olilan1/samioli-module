@@ -1,6 +1,6 @@
 import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { getTemplateTokens, replaceTargets, targetTokensUnderTemplate } from "../templatetarget.ts";
-import { delay, findRelevantToken } from "../utils.ts";
+import { delay, getTokenFromActor } from "../utils.ts";
 
 export async function initiatePerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e) {
     animateTemplate(template);
@@ -149,7 +149,7 @@ function animateFrighten(template: MeasuredTemplateDocumentPF2e) {
 
     const skullAnimation = "jb2a.toll_the_dead.purple.skull_smoke";
     const castingAnimation = "jb2a.soundwave.01.purple"
-    const caster = findRelevantToken({ actorId: template.actor?._id })
+    const caster = getTokenFromActor(template.actor);
 
     const sequence = new Sequence()
         .effect()
@@ -170,7 +170,7 @@ function animateDeathlyAssault(template: MeasuredTemplateDocumentPF2e, target: T
     const { start, end } = calculateAnimationPath(template, target);
     const impactAnimation = "jb2a.impact.004.pinkpurple";
     const castingAnimation = "jb2a.soundwave.01.purple"
-    const caster = findRelevantToken({ actorId: template.actor?._id })
+    const caster = getTokenFromActor(template.actor);
 
     const sequence = new Sequence()
         .effect()
@@ -250,7 +250,7 @@ async function animateTelekineticStorm(template: MeasuredTemplateDocumentPF2e) {
     const vortexAnimation = "jb2a.aura_themed.01.orbit.loop.metal.01.red"
     const castingAnimation = "jb2a.soundwave.01.purple"
     const debrisAnimation1 = "jb2a.explosion.side_fracture.flask.02.1"
-    const caster = findRelevantToken({ actorId: template.actor?._id })
+    const caster = getTokenFromActor(template.actor);
     const hitAnimation = "jb2a.impact.007.red"
     const targets = await getTemplateTokens(template);
     const gridSize = canvas.scene!.grid.size;

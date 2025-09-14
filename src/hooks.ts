@@ -31,6 +31,7 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
     }
+
     hook(checkIfTemplatePlacedHasSustainEffect, template)
             .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
             .ifGM()
@@ -70,7 +71,7 @@ Hooks.on('diceSoNiceRollComplete', (id: string) => {
 });
 
 //pf2e.startTurn only runs for the GM
-Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, encounter: EncounterPF2e, _id) => {
+Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
     if (!combatant.actor) {
         return;
     }

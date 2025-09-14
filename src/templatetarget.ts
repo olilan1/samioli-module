@@ -13,10 +13,12 @@ let lastTemplateDetails: TemplateDetails | null;
 
 export async function replaceTargets(arrayOfTokenIds: string[]) {
     if (game.release.generation >= 13) {
-        // @ts-expect-error - setTargets does exist 
         canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
     } else {
+        // @ts-expect-error updateTokenTargets is correct for v12
         game.user.updateTokenTargets(arrayOfTokenIds);
+        // @ts-expect-error "targets" is correct
+        game.user.broadcastActivity({ targets: arrayOfTokenIds });
     }
 }
 
@@ -30,7 +32,6 @@ export async function targetTokensUnderTemplate(
     const tokenIds = tokens.map((token) => token.id);
 
     replaceTargets(tokenIds);
-    game.user.broadcastActivity({ targets: tokenIds });
 
     lastTemplateDetails = {
         templateId: template.id,
@@ -48,11 +49,6 @@ export function deleteTemplateTargets(template: MeasuredTemplateDocumentPF2e) {
     const newTargets = Array.from(
         currentTargets.filter(item => !lastDetails.tokenIds.includes(item)));
     replaceTargets(newTargets);
-    if (newTargets.length > 0) {
-        game.user.broadcastActivity({ targets: newTargets });
-    } else {
-        game.user.broadcastActivity({ targets: [] });
-    }
     lastTemplateDetails = null;
 }
 
@@ -142,7 +138,7 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
     return containedTokens;
 }
 
- export function setTemplateColorToBlack(template: any): void {
+ export function setTemplateColorToBlack(template: MeasuredTemplateDocumentPF2e): void {
     template.updateSource({
         fillColor: "#000000",
         borderColor: "#000000"
