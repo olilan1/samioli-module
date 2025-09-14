@@ -286,33 +286,6 @@ export function getOwnersFromActor(actor: ActorPF2e) {
 }
 
 /**
- * Smoothly moves an AmbientLightDocument from a start point to an end point over a specified duration.
- * @param {AmbientLightDocument} light - The light document to animate.
- * @param {Point} startPoint - The starting {x, y} coordinates.
- * @param {object} endPoint - The ending {x, y} coordinates.
- * @param {number} duration - The time in milliseconds for the animation.
- */
-export function animateLight(light: AmbientLightDocument<Scene | null>, startPoint: Point, endPoint: Point, duration: number) {
-    const startTime = performance.now();
-
-    function animate(currentTime: number) {
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-
-        const newX = startPoint.x + (endPoint.x - startPoint.x) * progress;
-        const newY = startPoint.y + (endPoint.y - startPoint.y) * progress;
-
-        light.update({ x: newX, y: newY });
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
-    }
-
-    requestAnimationFrame(animate);
-}
-
-/**
  * Checks if a template has a flag with a lightId, and if so, deletes the associated light.
  * @param {MeasuredTemplateDocumentPF2e} template - The template document to check.
  */
