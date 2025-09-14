@@ -26,6 +26,7 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
     const floatingFlameLight = await AmbientLightDocument.create({
         x: template.x + canvas.grid.size / 2,
         y: template.y + canvas.grid.size / 2,
+        permission: 1,
     
         flags: {
             [MODULE_ID]: {
@@ -64,7 +65,7 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
         await template.setFlag(MODULE_ID, "lightId", floatingFlameLight.id);
     }
 
-    await new Sequence()
+    const seq = new Sequence()
         .sound()
             .volume(0.5)
             .file(fireLoopSound)
@@ -78,7 +79,9 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
             .persist()
             .loopOptions({ loopDelay: 0, loops: 3600, endOnLastLoop: false })
             .name(`floating-flame-${template.id}`)
-        .play()
+            // Attaching to template allows the template owner to modify/delete it
+            .attachTo(template);
+    await seq.play()
 }
 
 export async function sustainFloatingFlame(template: MeasuredTemplateDocumentPF2e) {
@@ -259,12 +262,10 @@ export async function removeFloatingFlame(template: MeasuredTemplateDocumentPF2e
         .atLocation({ x: template.x + canvas.grid.size / 2, y: template.y + canvas.grid.size / 2 })
         .file("jb2a.impact.fire.01.orange.0")
         .scale(0.7)
-        .waitUntilFinished(-2100)
+        .waitUntilFinished(-1300)
     .thenDo(async function() {
         deleteLightFromTemplate(template);
-
         const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${template.id}` })[0];
-
         if (floatingFlameEffect) {
             Sequencer.EffectManager.endEffects({ name: `floating-flame-${template.id}` });
         }

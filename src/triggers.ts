@@ -4,12 +4,15 @@ import { animateLightningDash } from "./actions/lightningdash.ts";
 import { chooseEffectOfPerniciousPoltergeist, initiatePerniciousPoltergeist } from "./spells/perniciouspoltergeist.ts";
 import { initiateFloatingFlame, sustainFloatingFlame, removeFloatingFlame } from "./spells/floatingflame.ts";
 
-const TEMPLATE_MAPPINGS = {
+const TEMPLATE_MAPPINGS_RUN_AS_CREATOR = {
     "origin:item:storm-spiral": initiateStormSpiral,
     "origin:item:lightning-dash": animateLightningDash,
-    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
-    "origin:item:floating-flame": initiateFloatingFlame
+    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist
 };
+
+const TEMPLATE_MAPPINGS_RUN_AS_GM = {
+    "origin:item:floating-flame": initiateFloatingFlame
+}
 
 const SUSTAIN_MAPPINGS = {
     "origin:item:pernicious-poltergeist": chooseEffectOfPerniciousPoltergeist,
@@ -20,11 +23,12 @@ const TEMPLATE_DELETION_MAPPINGS = {
     "origin:item:floating-flame": removeFloatingFlame
 };
 
-export function runMatchingTemplateFunction(template: MeasuredTemplateDocumentPF2e, creatorUserId: string): boolean {
-    if (game.user.id !== creatorUserId) {
-        return false;
-    }
-    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS);
+export function runMatchingTemplateFunctionAsCreator(template: MeasuredTemplateDocumentPF2e): boolean {
+    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_CREATOR);
+}
+
+export function runMatchingTemplateFunctionAsGm(template: MeasuredTemplateDocumentPF2e): boolean {
+    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_GM);
 }
 
 export function runMatchingSustainFunction(template: MeasuredTemplateDocumentPF2e): boolean {
