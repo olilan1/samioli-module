@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.55.1] - 2025-09-14
+
 - Add Floating Flame animation
 - Add Blazing Dive animation
 - Clean up Tumble Through
@@ -44,7 +46,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.55.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.55.1...HEAD
+
+[0.55.1]: https://github.com/olilan1/samioli-module/compare/v0.55.0...v0.55.1
 
 [0.55.0]: https://github.com/olilan1/samioli-module/compare/v0.54.0...v0.55.0
 
