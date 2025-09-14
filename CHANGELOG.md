@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Add Floating Flame animation
+- Add Blazing Dive animation
+- Clean up Tumble Through
+- Change Panache automation to add button to chat
+
 ## [0.55.0] - 2025-09-14
 
 - Automation to remove Demoralize Immunity when a Braggart with Exemplary Finisher hits with a finisher
