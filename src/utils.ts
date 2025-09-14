@@ -1,5 +1,7 @@
-import { ActorPF2e, TokenPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
+
+export const MODULE_ID = "samioli-module";
 
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -288,4 +290,34 @@ export function getOwnersFromActor(actor: ActorPF2e) {
   }
   
   return controllingUsers;
+}
+
+/**
+ * Checks if a template has a flag with a lightId, and if so, deletes the associated light.
+ * @param {MeasuredTemplateDocumentPF2e} template - The template document to check.
+ */
+export async function deleteLightFromTemplate(template: MeasuredTemplateDocumentPF2e) {
+    // Get the lightId from the template's flag.
+    const lightId = template.getFlag(MODULE_ID, "lightId");
+
+    // Check if the flag exists and has a value.
+    if (!lightId) {
+        return;
+    }
+
+    // Find the light document in the current scene's lights collection.
+    const light = canvas.scene?.lights.find(l => l.id === lightId);
+
+    // If the light is found, delete it.
+    if (light) {
+        try {
+            await light.delete();
+            logd(`Successfully deleted light with ID: ${lightId}`);
+        } catch (error) {
+            logd(`Error deleting light with ID: ${lightId}`);
+            logd(error);
+        }
+    } else {
+        logd(`Light with ID: ${lightId} not found on the canvas.`);
+    }
 }

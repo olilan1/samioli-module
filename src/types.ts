@@ -1,3 +1,5 @@
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+
 /**
  * Type suitable for passing to MeasuredTemplateDocument.create
  */
@@ -17,4 +19,7 @@ export interface CustomTemplateData {
  */
 export interface CrosshairUpdatable {
   updateCrosshair(options: object): void;
+  x: number;  
+  y: number;  
+  source: Point;  
 }

@@ -3,33 +3,47 @@ import { initiateStormSpiral } from "./actions/stormspiral.ts";
 import { animateLightningDash } from "./actions/lightningdash.ts";
 import { chooseEffectOfPerniciousPoltergeist, initiatePerniciousPoltergeist } from "./spells/perniciouspoltergeist.ts";
 import { initiateBlazingDive } from "./spells/blazingdive.ts";
+import { initiateFloatingFlame, sustainFloatingFlame, removeFloatingFlame } from "./spells/floatingflame.ts";
 
-const TEMPLATE_MAPPINGS = {
+const TEMPLATE_MAPPINGS_RUN_AS_CREATOR = {
     "origin:item:storm-spiral": initiateStormSpiral,
     "origin:item:lightning-dash": animateLightningDash,
     "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
-    "origin:item:blazing-dive": initiateBlazingDive,
+    "origin:item:blazing-dive": initiateBlazingDive
 };
+
+const TEMPLATE_MAPPINGS_RUN_AS_GM = {
+    "origin:item:floating-flame": initiateFloatingFlame
+}
 
 const SUSTAIN_MAPPINGS = {
     "origin:item:pernicious-poltergeist": chooseEffectOfPerniciousPoltergeist,
+    "origin:item:floating-flame": sustainFloatingFlame
 };
 
-export function runMatchingTemplateFunction(template: MeasuredTemplateDocumentPF2e, creatorUserId: string): boolean {
-    if (game.user.id !== creatorUserId) {
-        return false;
-    }
-    for (const [originString, func] of Object.entries(TEMPLATE_MAPPINGS)) {
-        if (templateRollOptionsContains(template, originString)) {
-            func(template);
-            return true;
-        }
-    }
-    return false;
+const TEMPLATE_DELETION_MAPPINGS = {
+    "origin:item:floating-flame": removeFloatingFlame
+};
+
+export function runMatchingTemplateFunctionAsCreator(template: MeasuredTemplateDocumentPF2e): boolean {
+    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_CREATOR);
+}
+
+export function runMatchingTemplateFunctionAsGm(template: MeasuredTemplateDocumentPF2e): boolean {
+    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_GM);
 }
 
 export function runMatchingSustainFunction(template: MeasuredTemplateDocumentPF2e): boolean {
-    for (const [originString, func] of Object.entries(SUSTAIN_MAPPINGS)) {
+    return runMatchingFunctionsFromMappings(template, SUSTAIN_MAPPINGS);
+}
+
+export function runMatchingTemplateDeletionFunction(template: MeasuredTemplateDocumentPF2e): boolean {
+   return runMatchingFunctionsFromMappings(template, TEMPLATE_DELETION_MAPPINGS);
+}
+
+function runMatchingFunctionsFromMappings(template: MeasuredTemplateDocumentPF2e,
+    mappings: Record<string, (template: MeasuredTemplateDocumentPF2e) => void>) {
+    for (const [originString, func] of Object.entries(mappings)) {
         if (templateRollOptionsContains(template, originString)) {
             func(template);
             return true;

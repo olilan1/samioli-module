@@ -7,7 +7,7 @@ import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.t
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EffectPF2e, EncounterPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { runMatchingTemplateFunction } from "./triggers.ts";
+import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
 
 Hooks.on("init", () => {
@@ -22,7 +22,10 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
     // Check for matching origin and run matching function if found (see triggers.ts)
-    if (!runMatchingTemplateFunction(template, userId)) {
+    let ranTemplateTrigger = hook(runMatchingTemplateFunctionAsGm, template).ifGM().run();
+    ranTemplateTrigger ||= hook(runMatchingTemplateFunctionAsCreator, template).ifUser(userId).run();
+            
+    if (!ranTemplateTrigger) {
         // If no matching origin, target tokens if that feature is enabled
         hook(targetTokensUnderTemplate, template, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
@@ -41,6 +44,9 @@ Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _
 });
 
 Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
+    hook(runMatchingTemplateDeletionFunction, template)
+            .ifGM()
+            .run();
     hook(deleteTemplateTargets, template)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
@@ -151,7 +157,7 @@ function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): Hook
 }
 
 class HookRunner<T extends unknown[]> {
-    func: (...args: T) => void;
+    func: (...args: T) => boolean | void;
     args: T;
     shouldRun: boolean;
 
@@ -193,9 +199,17 @@ class HookRunner<T extends unknown[]> {
         return this;
     }
 
-    run(): void {
-        if (this.shouldRun) {
-            this.func(...this.args);
+    ifUser(userId: string): this {
+        if (game.user.id != userId) {
+            this.shouldRun = false;
         }
+        return this;
+    }
+
+    run() {
+        if (this.shouldRun) {
+            return this.func(...this.args);
+        }
+        return false;
     }
 }
