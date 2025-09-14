@@ -1,6 +1,7 @@
 import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay, getTokenFromActor, getTokenIdsFromTokens } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export async function initiateBlazingDive(template: MeasuredTemplateDocumentPF2e) {
 

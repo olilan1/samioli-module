@@ -59,7 +59,7 @@ function findRelevantFeat(featSlug: string, message: ChatMessagePF2e, html: JQue
                 return;
             }
             const $featButtonDiv = html.find('.card-content');
-            const newButton = createRisingHurricaneButton(message.token.object);
+            const newButton = createRisingHurricaneButton();
             $featButtonDiv.after(newButton);
             break;
         }
@@ -68,10 +68,10 @@ function findRelevantFeat(featSlug: string, message: ChatMessagePF2e, html: JQue
       }
 }
 
-function createRisingHurricaneButton(token: TokenPF2e) {
+function createRisingHurricaneButton() {
     const button = $('<button type="button">Deploy Rising Hurricane!</button>');
     button.on("click", function() {
-        playRisingHurricaneAtLastPlacedTemplate(token);
+        playRisingHurricaneAtLastPlacedTemplate();
     });
 
     return button;
