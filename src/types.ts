@@ -1,4 +1,5 @@
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 
 /**
  * Type suitable for passing to MeasuredTemplateDocument.create

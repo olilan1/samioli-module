@@ -1,4 +1,4 @@
-import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay, getRandomNumberBetween, getTokenIdsFromTokens, shuffleArray } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
@@ -14,7 +14,7 @@ export async function initiateStormSpiral(template: MeasuredTemplateDocumentPF2e
     }
 }
 
-async function animateStormSpiral(template: MeasuredTemplateDocumentPF2e, targetTokens: Token[]) {
+async function animateStormSpiral(template: MeasuredTemplateDocumentPF2e, targetTokens: TokenPF2e[]) {
     const locationOfTemplateX = template.x;
     const locationOfTemplateY = template.y;
     const lightningSounds = ["sound/NWN2-Sounds/as_wt_thundercl1.WAV", 
