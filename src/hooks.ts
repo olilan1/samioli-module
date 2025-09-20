@@ -94,7 +94,7 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
 });
 
 //pf2e.endTurn only runs for the GM
-Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, encounter: EncounterPF2e, _id) => {
+Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
     if (!combatant.actor) {
         return;
     }

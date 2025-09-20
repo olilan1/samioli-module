@@ -35,31 +35,37 @@ export async function checkForAntagonizeFeat(chatMessage: ChatMessagePF2e) {
 }
 
 async function applyAntagonizedEffect(target: ActorPF2e, antagonizer: ActorPF2e) {
-    const icon = "icons/skills/social/intimidation-impressing.webp";
+    const image = "icons/skills/social/intimidation-impressing.webp";
     const antagonizerName = antagonizer.prototypeToken?.name ?? antagonizer.name;
-        const antagonizedEffectData = {
-            name: `Antagonized by ${antagonizerName}`,
-            type: "effect",
-            img: icon,
-            system: {
-                description: {
-                    value: `<p>This creature has been antagonized by ${antagonizerName}.</p>
-                    <p>Its frightened condition can't decrease to less than 1 at the end of its turn until it either uses a hostile action against ${antagonizerName} or can no longer observe or sense them for at least 1 round.</p>`
-                },
-                slug: `antagonize`,
-                duration: { value: 1, unit: "days" },
-                level: { value: 0 },
-                tokenIcon: { show: true }
+    const antagonizedEffectData = {
+        name: `Antagonized by ${antagonizerName}`,
+        type: "effect",
+        img: image as ImageFilePath,
+        system: {
+            slug: "antagonize",
+            description: {
+                value: `<p>This creature has been antagonized by ${antagonizerName}.</p>
+                <p>Its frightened condition can't decrease to less than 1 at the end of its turn until it either uses a hostile action against ${antagonizerName} or can no longer observe or sense them for at least 1 round.</p>`
             },
-            flags: {
-                samioli: {
-                    antagonizer: antagonizer.id
-                }
+            duration: {
+                value: null,
+                unit: "unlimited",
+                sustained: false,
+                expiry: null
+            },
+            tokenIcon: {
+                show: true
             }
-        };
+        },
+        flags: {
+            samioli: {
+                antagonizer: antagonizer.id
+            }
+        }
+    };
 
-        await target.createEmbeddedDocuments("Item", [antagonizedEffectData]);
-        
+    await target.createEmbeddedDocuments("Item", [antagonizedEffectData]);
+    
 }
 
 export async function automatedAntagonize(actor: ActorPF2e) {
@@ -98,7 +104,7 @@ async function createAntagonizedChatMessage(actor: ActorPF2e, antagonizer: Actor
     const recipients = getOwnersFromActor(actor);
     const antagonizerName = antagonizer.prototypeToken?.name ?? antagonizer.name;
     const content = 
-        `<p><strong>${antagonizerName}</strong> is antangonizing <strong>${actor.name}</strong>.</p>`;
+        `<p><strong>${actor.name}</strong> is antangonized by <strong>${antagonizerName}</strong>.</p>`;
 
     await ChatMessage.create({
         content: content,

@@ -3,14 +3,14 @@ import { getOwnersFromActor, logd } from "../utils.ts";
 import { checkIfActorIsAntagonized } from "../actions/antagonize.ts";
 
 export async function checkIfTokenIsFrightened(actor: ActorPF2e) {
+    
     const frightenedCondition = actor.items.find(item =>
-        item.type === "condition" && item.slug === "frightened"
-    ) as ConditionPF2e | undefined;
+        item.type === "condition" && item.slug === "frightened") as ConditionPF2e | undefined;
 
     if (frightenedCondition) {
         const antagonizedEffects = checkIfActorIsAntagonized(actor);
         if ((frightenedCondition.value && frightenedCondition.value > 1) || !antagonizedEffects) {
-            await decrementFrightenedCondition(frightenedCondition);
+            await decrementFrightenedCondition(frightenedCondition as ConditionPF2e<ActorPF2e>);
             return;
         }
         else {
@@ -24,7 +24,8 @@ export async function checkIfTokenIsFrightened(actor: ActorPF2e) {
     }
 }
 
-async function decrementFrightenedCondition(condition: ConditionPF2e) {
+async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>) {
+    
     const currentValue = condition.value;
     if (currentValue === null) {
         return;
@@ -41,7 +42,9 @@ async function decrementFrightenedCondition(condition: ConditionPF2e) {
 
 async function createFrightenedRemovalConfirmationChatMessage(actor: ActorPF2e, antagonizeEffect: EffectPF2e, frightenedCondition: ConditionPF2e) {
 
-    const antagonizerName = game.actors.get(antagonizeEffect?.flags?.samioli?.antagonizer).prototypeToken.name;
+    const antagonizerId = antagonizeEffect?.flags?.samioli?.antagonizer as string | undefined;
+    const antagonizer = antagonizerId ? game.actors.get(antagonizerId) : undefined;
+    const antagonizerName = antagonizer?.prototypeToken?.name ?? "Unknown";
 
     const content = `
     <p>${actor.name} is currently Antagonized by ${antagonizerName}.</p>
