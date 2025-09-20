@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+ - Sonic Dash Automation and Animation
+
 ## [0.55.1] - 2025-09-14
 
 - Add Floating Flame animation

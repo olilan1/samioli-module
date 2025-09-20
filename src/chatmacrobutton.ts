@@ -3,6 +3,7 @@ import { startDiveAndBreach } from "./spells/diveandbreach.ts";
 import { editSkillRoll } from "./actions/enjoytheshow.ts";
 import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.ts";
 import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
+import { startSonicDash } from "./actions/sonicdash.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 
@@ -63,6 +64,15 @@ function findRelevantFeat(featSlug: string, message: ChatMessagePF2e, html: JQue
             $featButtonDiv.after(newButton);
             break;
         }
+        case "sonic-dash": {
+            if (!message.token?.object) {
+                return;
+            }
+            const $featButtonDiv = html.find('.card-content');
+            const newButton = createSonicDashButton(message.token.object);
+            $featButtonDiv.after(newButton);
+            break;
+        }
         default:
             return;
       }
@@ -90,6 +100,15 @@ function createDiveAndBreach(token: TokenPF2e) {
     const button = $('<button type="button">Start diving!</button>');
     button.on("click", function() {
         startDiveAndBreach(token);
+    });
+
+    return button;
+}
+
+function createSonicDashButton(token: TokenPF2e) {
+    const button = $('<button type="button">Start dashing!</button>');
+    button.on("click", function() {
+        startSonicDash(token);
     });
 
     return button;
