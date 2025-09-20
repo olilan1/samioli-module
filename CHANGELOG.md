@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+ 
+ - First draft of Frightened and Antagonize automations
+ - TS Error Resolution and small tweaks to text
 
 ## [0.55.1] - 2025-09-14
 
