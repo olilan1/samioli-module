@@ -1,5 +1,7 @@
 import { TokenPF2e } from "foundry-pf2e";
 import { CrosshairUpdatable } from "../types.ts";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
 export async function startSonicDash(token: TokenPF2e) {
 
@@ -14,7 +16,7 @@ export async function startSonicDash(token: TokenPF2e) {
 async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
 
     // @ts-expect-error speed does exist on actor attributes
-    const landSpeed = token?.actor?.system.attributes.speed.total;
+    const landSpeed = token.actor?.system.attributes.speed.total;
 
     const moveLocation = await Sequencer.Crosshair.show({
         location: {
@@ -60,12 +62,11 @@ async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
             ui.notifications.info("Sonic Dash Cancelled");
             return false;
         },
-        // @ts-expect-error show can accepted undefined
         show: undefined,
-        // @ts-expect-error move can accepted undefined
         move: undefined,
-        // @ts-expect-error invalidPlacement can accepted undefined
-        invalidPlacement: undefined
+        invalidPlacement: undefined,
+        mouseMove: undefined,
+        placed: undefined
     });
 
     return moveLocation;
