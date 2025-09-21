@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 
 export const MODULE_ID = "samioli-module";
@@ -140,4 +140,16 @@ export async function deleteLightFromTemplate(template: MeasuredTemplateDocument
     } else {
         logd(`Light with ID: ${lightId} not found on the canvas.`);
     }
+}
+
+export function getDisplayNameFromActor(actor: ActorPF2e) : string {
+    return actor.prototypeToken?.name ?? actor.name;
+}
+
+export function isCondition(item: ItemPF2e) : item is ConditionPF2e {  
+    return item.type === "condition";  
+}
+
+export function isEffect(item: ItemPF2e) : item is EffectPF2e {  
+    return item.type === "effect";  
 }

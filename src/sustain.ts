@@ -1,5 +1,5 @@
-import { ActorPF2e, ChatMessagePF2e, EffectPF2e, SpellPF2e } from "foundry-pf2e";
-import { deleteTemplateById, getOwnersFromActor } from "./utils.ts";
+import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e } from "foundry-pf2e";
+import { deleteTemplateById, getOwnersFromActor, isEffect } from "./utils.ts";
 import { runMatchingSustainFunction } from "./triggers.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
@@ -158,14 +158,17 @@ async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
     });
 }
 
-export async function createSpellNotSustainedChatMessage(effect: EffectPF2e) {
-    if (!effect.slug?.startsWith('sustaining-effect-')) return;
+export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
+    
+    if (!isEffect(item)) return;
 
-    const spellName = effect.name.replace('Sustaining: ', '');
+    if (!item.slug?.startsWith('sustaining-effect-')) return;
+
+    const spellName = item.name.replace('Sustaining: ', '');
     const content = `<p><strong>${spellName}</strong> was not sustained.</p>`;
     await ChatMessage.create({
         content: content,
-        speaker: ChatMessage.getSpeaker({ actor: effect.actor })
+        speaker: ChatMessage.getSpeaker({ actor: item.actor })
     });
 }
 
@@ -196,9 +199,10 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
     }
 }
 
-export async function deleteTemplateLinkedToSustainedEffect(effect: EffectPF2e) {
+export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
+    if (!isEffect(item)) return;
 
-    const templateId = effect.flags.samioli?.templateId;
+    const templateId = item.flags.samioli?.templateId;
     if (!templateId) return;
 
     await deleteTemplateById(templateId);

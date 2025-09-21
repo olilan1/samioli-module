@@ -1,50 +1,42 @@
-import { ActorPF2e, ChatMessagePF2e, CheckContextChatFlag, ConditionPF2e, EffectPF2e } from "foundry-pf2e"
-import { getOwnersFromActor } from "../utils.ts";
+import { ActorPF2e, ChatMessagePF2e, CheckContextChatFlag, EffectPF2e, ItemPF2e } from "foundry-pf2e"
+import { getDisplayNameFromActor, getOwnersFromActor, isCondition } from "../utils.ts";
+import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
-export async function checkForAntagonizeFeat(chatMessage: ChatMessagePF2e) {
-    const context = chatMessage?.flags?.pf2e?.context as CheckContextChatFlag;
-    if (!context) {
-        return;
-    }
-    if (!context.options?.includes("action:demoralize")){
-        return;
-    }
+export async function applyAntagonizeIfValid(chatMessage: ChatMessagePF2e) {
+    const context = chatMessage.flags.pf2e.context as CheckContextChatFlag;
 
-    const antagonizer = game.actors.get(context.actor as string);
-    if (!antagonizer) {
-        return;
-    }
-
-    if (!antagonizer.items.contents.some(item => item.type === "feat" && item.system.slug === "antagonize")) {
-        return;
-    }
+    if (!context?.options?.includes("action:demoralize")) return;
 
     if (!(context.outcome === "success" || context.outcome === "criticalSuccess")) {
+        return;
+    }
+
+    const demoralizer = chatMessage.actor;
+
+    if (!demoralizer?.items.some(item => item.type === "feat" && item.system.slug === "antagonize")) {
         return;
     }
 
     const targetActorId = context?.target?.actor?.split('.').pop();
     if (!targetActorId) return;
 
-    const target = game.actors.get(targetActorId);
-    if (!target) {
-        return;
-    }
+    const target = chatMessage.target?.actor;
+    if (!target) return;
 
-    await applyAntagonizedEffect(target, antagonizer);
+    await applyAntagonizedEffect(target, demoralizer);
 }
 
 async function applyAntagonizedEffect(target: ActorPF2e, antagonizer: ActorPF2e) {
     const image = "icons/skills/social/intimidation-impressing.webp";
-    const antagonizerName = antagonizer.prototypeToken?.name ?? antagonizer.name;
+    const antagonizerName = getDisplayNameFromActor(antagonizer);
     const antagonizedEffectData = {
         name: `Antagonized by ${antagonizerName}`,
         type: "effect",
         img: image as ImageFilePath,
         system: {
-            slug: "antagonize",
+            slug: "samioli-antagonized",
             description: {
-                value: `<p>This creature has been antagonized by ${antagonizerName}.</p>
+                value: `<p>Antagonized by ${antagonizerName}.</p>
                 <p>Its frightened condition can't decrease to less than 1 at the end of its turn until it either uses a hostile action against ${antagonizerName} or can no longer observe or sense them for at least 1 round.</p>`
             },
             duration: {
@@ -68,74 +60,62 @@ async function applyAntagonizedEffect(target: ActorPF2e, antagonizer: ActorPF2e)
     
 }
 
-export async function automatedAntagonize(actor: ActorPF2e) {
+export async function createChatMessageIfActorIsAntagonized(actor: ActorPF2e) {
 
-    const antagonizedEffects = checkIfActorIsAntagonized(actor);
-    if (!antagonizedEffects) {
-        return;
-    }
+    const antagonizedEffects = getActorAntagonizedEffects(actor);
 
     for (const effect of antagonizedEffects) {
-        const antagonizerId = effect.flags.samioli?.antagonizer;
-        if (typeof antagonizerId !== 'string' || !antagonizerId) {
-            continue;
-        }
-
+        const antagonizerId = effect.flags.samioli?.antagonizer as string;
         const antagonizer = game.actors.get(antagonizerId);
-        if (!antagonizer) {
-            return;
-        }    
+        if (!antagonizer) return;
+
         await createAntagonizedChatMessage(actor, antagonizer);
     }
 }
 
-export function checkIfActorIsAntagonized(actor: ActorPF2e) {
-    const antagonizedEffects = actor.items.filter(item => item.type === 'effect' &&
-        item.slug === 'antagonize');
-    
-        if (antagonizedEffects.length === 0) {
-        return;
-    }
-    return antagonizedEffects as EffectPF2e[];
+export function getActorAntagonizedEffects(actor: ActorPF2e) {
+    return actor.items.filter(item => item.type === 'effect' && 
+        item.slug === 'samioli-antagonized') as EffectPF2e[];
 }
 
 async function createAntagonizedChatMessage(actor: ActorPF2e, antagonizer: ActorPF2e) {
 
     const recipients = getOwnersFromActor(actor);
-    const antagonizerName = antagonizer.prototypeToken?.name ?? antagonizer.name;
+    const antagonizerName = getDisplayNameFromActor(antagonizer)
+    const actorName = getDisplayNameFromActor(actor);
     const content = 
-        `<p><strong>${actor.name}</strong> is antangonized by <strong>${antagonizerName}</strong>.</p>`;
+        `<p><strong>${actorName}</strong> is antangonized by <strong>${antagonizerName}</strong>.</p>`;
 
     await ChatMessage.create({
         content: content,
-        whisper: recipients,
+        whisper: recipients.map(user => user.id),
         speaker: ChatMessage.getSpeaker({ actor: actor }),
     });
 }
 
-export function checkIfDeletedItemIsFrightenedWhileAntagonized(condition: ConditionPF2e) {
+export function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF2e) {
     
-    if (condition.type !== "condition" || condition.rollOptionSlug !== "frightened") {
+    if (!isCondition(item)) return;
+
+    if (item.rollOptionSlug !== "frightened") {
         return;
     }
 
-    if (condition.system.value.value !== 1){
+    if (item.system.value.value !== 1) {
         return;
     }
 
-    const actor = condition.actor;
-    if (!actor) {
-        return; 
-    }
+    const actor = item.actor;
+    if (!actor) return;
 
     const hasAntagonizeEffect = actor.items.some(item => 
-        item.type === "effect" && item.system.slug === "antagonize"
+        item.type === "effect" && item.system.slug === "samioli-antagonized"
     );
 
-    if (!hasAntagonizeEffect) {
-        return;
-    }
+    if (!hasAntagonizeEffect) return;
 
-    ui.notifications.warn("Actor is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.");
+    const actorName = getDisplayNameFromActor(actor);
+
+    ui.notifications.warn(actorName + " is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.");
 
 }

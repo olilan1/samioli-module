@@ -6,11 +6,11 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, EncounterPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
-import { checkForAntagonizeFeat, automatedAntagonize, checkIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
-import { checkIfTokenIsFrightened, checkIfFrightenedAndAntagonizeButtonMessage } from "./effects/frightened.ts";
+import { applyAntagonizeIfValid, createChatMessageIfActorIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
+import { handleFrightenedAtTurnEnd, addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded } from "./effects/frightened.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -25,7 +25,7 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
     hook(checkIfChatMessageIsRemovePanacheButton, message, html)
         .ifEnabled(SETTINGS.AUTO_PANACHE)
         .run();
-    hook(checkIfFrightenedAndAntagonizeButtonMessage, message, html)
+    hook(addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded, message, html)
         .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
         .run();
 });
@@ -88,7 +88,7 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(ifActorHasSustainEffectCreateMessage, combatant.actor)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
-    hook(automatedAntagonize, combatant.actor)
+    hook(createChatMessageIfActorIsAntagonized, combatant.actor)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });
@@ -98,19 +98,19 @@ Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _
     if (!combatant.actor) {
         return;
     }
-    hook(checkIfTokenIsFrightened, combatant.actor)
+    hook(handleFrightenedAtTurnEnd, combatant.actor)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });
 
-Hooks.on('preDeleteItem', async (item: Item, _action, _id) => {
-    hook(createSpellNotSustainedChatMessage, item as EffectPF2e)
+Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
+    hook(createSpellNotSustainedChatMessage, item)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
-    hook(deleteTemplateLinkedToSustainedEffect, item as EffectPF2e)
+    hook(deleteTemplateLinkedToSustainedEffect, item)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
-    hook(checkIfDeletedItemIsFrightenedWhileAntagonized, item as ConditionPF2e)
+    hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });
@@ -148,7 +148,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifEnabled(SETTINGS.AUTO_PANACHE)
                     .ifGM()
                     .run();
-            hook(checkForAntagonizeFeat, message)
+            hook(applyAntagonizeIfValid, message)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .ifGM()
                     .run();
