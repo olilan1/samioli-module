@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, CheckContextChatFlag, CombatantPF2e, EffectPF2e, ItemPF2e, TokenPF2e } from "foundry-pf2e"
-import { getDisplayNameFromActor, getOwnersFromActor, isCondition, logd } from "../utils.ts";
+import { getOwnersFromActor, isCondition, sendBasicChatMessage, logd, returnStringOfNamesFromArray } from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
 export async function applyAntagonizeIfValid(chatMessage: ChatMessagePF2e) {
@@ -29,16 +29,15 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
     const target = targetToken.actor;
     const antagonizer = antagonizerToken.actor;
     if (!target || !antagonizer) return;
-    const antagonizerName = getDisplayNameFromActor(antagonizer);
     const antagonizedEffectData = {
-        name: `Antagonized by ${antagonizerName}`,
+        name: `Antagonized by ${antagonizerToken.name}`,
         type: "effect",
         img: image as ImageFilePath,
         system: {
             slug: "samioli-antagonized",
             description: {
-                value: `<p>Antagonized by ${antagonizerName}.</p>
-                <p>Its frightened condition can't decrease to less than 1 at the end of its turn until it either uses a hostile action against ${antagonizerName} or can no longer observe or sense them for at least 1 round.</p>`
+                value: `<p>Antagonized by ${antagonizerToken.name}.</p>
+                <p>Its frightened condition can't decrease to less than 1 at the end of its turn until it either uses a hostile action against ${antagonizerToken.name} or can no longer observe or sense them for at least 1 round.</p>`
             },
             duration: {
                 value: null,
@@ -65,19 +64,13 @@ export async function createChatMessageOnTurnStartIfTokenIsAntagonized(combatant
 
     const token = combatant.token?.object;
     if (!token) return;
-
     const actor = token.actor;
     if (!actor) return;
-
+    
     const antagonizedEffects = getActorAntagonizedEffects(actor);
-
-    for (const effect of antagonizedEffects) {
-        const antagonizerTokenId = effect.flags.samioli?.antagonizerTokenId as string;
-        const antagonizerToken = canvas?.scene?.tokens.get(antagonizerTokenId)?.object;
-        if (!antagonizerToken) return;
-
-        await createAntagonizedChatMessage(token, antagonizerToken);
-    }
+    if (antagonizedEffects.length === 0) return;
+    await createAntagonizedChatMessage(token, antagonizedEffects);
+    
 }
 
 export function getActorAntagonizedEffects(actor: ActorPF2e) {
@@ -85,24 +78,29 @@ export function getActorAntagonizedEffects(actor: ActorPF2e) {
         item.slug === 'samioli-antagonized') as EffectPF2e[];
 }
 
-async function createAntagonizedChatMessage(token: TokenPF2e, antagonizerToken: TokenPF2e) {
+async function createAntagonizedChatMessage(token: TokenPF2e, antagonizedEffects: EffectPF2e[]) {
 
-    if (!token.actor || !antagonizerToken.actor) return;
+    if (!token.actor) return;
 
-    const recipients = getOwnersFromActor(token.actor);
-    const antagonizerName = getDisplayNameFromActor(antagonizerToken.actor)
-    const actorName = getDisplayNameFromActor(token.actor);
+    const antagonizerNames = [];
+
+    for (const effect of antagonizedEffects) {
+        const antagonizerTokenId = effect.flags.samioli?.antagonizerTokenId as string;
+        const antagonizerName = canvas.scene?.tokens.get(antagonizerTokenId)?.name;
+        if (!antagonizerName) return;
+        antagonizerNames.push(antagonizerName);
+    }
+
+    const antagonizerNamesAsString = returnStringOfNamesFromArray(antagonizerNames);
+
+    const recipients = getOwnersFromActor(token.actor).map(user => user.id);
     const content = 
-        `<p><strong>${actorName}</strong> is antangonized by <strong>${antagonizerName}</strong>.</p>`;
+        `<p><strong>${token.name}</strong> is antangonized by <strong>${antagonizerNamesAsString}</strong>.</p>`;
 
-    await ChatMessage.create({
-        content: content,
-        whisper: recipients.map(user => user.id),
-        speaker: ChatMessage.getSpeaker({ actor: token.actor }),
-    });
+    await sendBasicChatMessage(content, recipients, token.actor);
 }
 
-export function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF2e) {
+export async function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF2e) {
     
     if (!isCondition(item)) return;
 
@@ -123,9 +121,11 @@ export function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF2e) {
 
     if (!hasAntagonizeEffect) return;
 
-    const actorName = getDisplayNameFromActor(actor);
+    const actorName = actor.prototypeToken.name;
 
-    ui.notifications.warn(actorName + " is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.");
+    const content = `${actorName} is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.`;
+    const recipients = getOwnersFromActor(actor).map(user => user.id);
+    await sendBasicChatMessage(content, recipients, actor);
 
 }
 

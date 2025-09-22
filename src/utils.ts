@@ -142,14 +142,33 @@ export async function deleteLightFromTemplate(template: MeasuredTemplateDocument
     }
 }
 
-export function getDisplayNameFromActor(actor: ActorPF2e) : string {
-    return actor.prototypeToken?.name ?? actor.name;
-}
-
 export function isCondition(item: ItemPF2e) : item is ConditionPF2e {  
     return item.type === "condition";  
 }
 
 export function isEffect(item: ItemPF2e) : item is EffectPF2e {  
     return item.type === "effect";  
+}
+
+export async function sendBasicChatMessage(content: string, recipients: string[], speaker: ActorPF2e) {
+    await ChatMessage.create({
+        content: content,
+        whisper: recipients,
+        speaker: ChatMessage.getSpeaker({ actor: speaker }),
+    });
+}
+
+export function returnStringOfNamesFromArray(names: string[]): string {
+  if (names.length === 0) {
+    return "";
+  }
+
+  if (names.length === 1) {
+    return `${names[0]}`;
+  }
+
+  const allButLast = names.slice(0, -1).join(", ");
+  const last = names[names.length - 1];
+
+  return `${allButLast} and ${last}`;
 }

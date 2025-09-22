@@ -2,8 +2,7 @@
 
 ## [Unreleased]
  
- - First draft of Frightened and Antagonize automations
- - TS Error Resolution and small tweaks to text
+ - Frightened & Antagonized Automations
 
 ## [0.55.1] - 2025-09-14
 

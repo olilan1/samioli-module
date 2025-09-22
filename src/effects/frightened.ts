@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
-import { getDisplayNameFromActor, getOwnersFromActor, logd } from "../utils.ts";
+import { getOwnersFromActor, logd, sendBasicChatMessage } from "../utils.ts";
 import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
 
 export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
@@ -18,21 +18,20 @@ export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
     const antagonizedEffects = getActorAntagonizedEffects(actor);
     const hasAntagonizedEffects = antagonizedEffects.length > 0;
 
-    if (frightenedValue > 1 || !hasAntagonizedEffects) {
-        await decrementFrightenedCondition(frightenedCondition);
-        if (hasAntagonizedEffects) {
-            for (const effect of antagonizedEffects) {
-                await createAntagonizeRemovalConfirmationChatMessage(token, effect);
-            }
-        }
-        return;
-    }
-
-    if (frightenedValue === 1 && hasAntagonizedEffects) {
-        for (const effect of antagonizedEffects) {
-            await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);
-        }
-    }
+    if (hasAntagonizedEffects) {  
+        if (frightenedValue > 1) {  
+            await decrementFrightenedCondition(frightenedCondition);  
+            for (const effect of antagonizedEffects) {  
+                await createAntagonizeRemovalConfirmationChatMessage(token, effect);  
+            }  
+        } else {  
+            for (const effect of antagonizedEffects) {  
+                await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);  
+            }  
+        }  
+    } else {  
+        await decrementFrightenedCondition(frightenedCondition);  
+    }  
 }
 
 async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>) {
@@ -52,14 +51,12 @@ async function createFrightenedAndAntagonizeRemovalConfirmationChatMessage
     if (!actor) return;
 
     const antagonizerTokenId = antagonizeEffect.flags.samioli?.antagonizerTokenId as string;
-    const antagonizer = canvas?.scene?.tokens.get(antagonizerTokenId)?.object;
-    if (!antagonizer || !antagonizer.actor) return;
-    const antagonizerName = getDisplayNameFromActor(antagonizer.actor);
-    const actorName = getDisplayNameFromActor(actor);
+    const antagonizerToken = canvas.scene?.tokens.get(antagonizerTokenId)?.object;
+    if (!antagonizerToken) return;
     
     const content = `
-    <p><strong>${actorName}</strong> is Antagonized by <strong>${antagonizerName}</strong>.</p>
-    <p>Has ${actorName} taken a hostile action against them, or have they been unable to observe or sense ${antagonizerName} for at least one round?</p>
+    <p><strong>${token.name}</strong> is Antagonized by <strong>${antagonizerToken.name}</strong>.</p>
+    <p>Has ${token.name} taken a hostile action against them, or have they been unable to observe or sense ${antagonizerToken.name} for at least one round?</p>
     <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
         <button type="button" data-action="remove-frightened-and-antagonize" 
         data-frightened-condition-id="${frightenedCondition.id}" 
@@ -104,20 +101,17 @@ export function addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded(chatMessa
 
 async function removeFrightenedAndAntagonize(frightenedConditionId: string, tokenId: string, antagonizedEffectId: string) {
     
-    const token = canvas?.scene?.tokens.get(tokenId)?.object
+    const token = canvas.scene?.tokens.get(tokenId)?.object
     const actor = token?.actor;
-    if (!actor || !actor.isOwner) {
-        ui.notifications.warn("You do not have permission to remove this effect.");
-        return;
-    }
-    
+    if (!actor) return;
     await removeAntagonizeEffect(tokenId, antagonizedEffectId);  
     
     const antagonizedEffects = getActorAntagonizedEffects(actor);
 
     if (antagonizedEffects.length !== 0) {
-        const actorName = getDisplayNameFromActor(actor);
-        ui.notifications.warn(actorName + " is still antagonized from a different source. Keeping Frightened value at 1.");
+        const content = `<strong>${token.name}</strong> is still antagonized from a different source. Keeping Frightened value at 1.`;
+        const recipients = getOwnersFromActor(actor).map(user => user.id);
+        await sendBasicChatMessage(content, recipients, actor);
         return;
     }
     
@@ -132,8 +126,8 @@ async function removeFrightenedAndAntagonize(frightenedConditionId: string, toke
 
 async function sendFrightenedReducedMessage(actor: ActorPF2e, frightenedValue: number) {
     const recipients = getOwnersFromActor(actor).map(user => user.id);
-    const actorName = getDisplayNameFromActor(actor);
-    let content = ``;
+    const actorName = actor.prototypeToken.name;
+    let content;
     const newFrightenedValue = frightenedValue - 1;
 
     if (newFrightenedValue === 0) {
@@ -141,11 +135,8 @@ async function sendFrightenedReducedMessage(actor: ActorPF2e, frightenedValue: n
     } else {
         content = `<strong>${actorName}'s</strong> Frightened is reduced to ${newFrightenedValue}.`
     }
-    await ChatMessage.create({
-        content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-    });
+
+    await sendBasicChatMessage(content, recipients, actor);
 }
 
 async function createAntagonizeRemovalConfirmationChatMessage(token: TokenPF2e, antagonizeEffect: EffectPF2e) {
@@ -154,14 +145,12 @@ async function createAntagonizeRemovalConfirmationChatMessage(token: TokenPF2e, 
     if (!actor) return;
 
     const antagonizerTokenId = antagonizeEffect.flags.samioli?.antagonizerTokenId as string;
-    const antagonizer = canvas?.scene?.tokens.get(antagonizerTokenId)?.object;
-    if (!antagonizer || !antagonizer.actor) return;
-    const antagonizerName = getDisplayNameFromActor(antagonizer.actor);
-    const actorName = getDisplayNameFromActor(actor);
+    const antagonizerToken = canvas.scene?.tokens.get(antagonizerTokenId)?.object;
+    if (!antagonizerToken) return;
 
     const content = `
-    <p><strong>${actorName}</strong> is Antagonized by <strong>${antagonizerName}</strong>.</p>
-    <p>Has ${actorName} taken a hostile action against them, or have they been unable to observe or sense <strong>${antagonizerName}</strong> for at least one round?</p>
+    <p><strong>${token.name}</strong> is Antagonized by <strong>${antagonizerToken.name}</strong>.</p>
+    <p>Has ${token.name} taken a hostile action against them, or have they been unable to observe or sense <strong>${antagonizerToken.name}</strong> for at least one round?</p>
     <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
         <button type="button" data-action="remove-antagonize" 
         data-token-id="${token.id}" 
