@@ -164,7 +164,7 @@ export function returnStringOfNamesFromArray(names: string[]): string {
   }
 
   if (names.length === 1) {
-    return `${names[0]}`;
+    return names[0];
   }
 
   const allButLast = names.slice(0, -1).join(", ");

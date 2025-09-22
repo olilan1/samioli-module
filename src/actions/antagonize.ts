@@ -121,7 +121,7 @@ export async function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF
 
     if (!hasAntagonizeEffect) return;
 
-    const actorName = actor.prototypeToken.name;
+    const actorName = (actor.token ?? actor.prototypeToken).name
 
     const content = `${actorName} is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.`;
     const recipients = getOwnersFromActor(actor).map(user => user.id);

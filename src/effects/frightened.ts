@@ -126,7 +126,7 @@ async function removeFrightenedAndAntagonize(frightenedConditionId: string, toke
 
 async function sendFrightenedReducedMessage(actor: ActorPF2e, frightenedValue: number) {
     const recipients = getOwnersFromActor(actor).map(user => user.id);
-    const actorName = actor.prototypeToken.name;
+    const actorName = (actor.token ?? actor.prototypeToken).name;
     let content;
     const newFrightenedValue = frightenedValue - 1;
 
