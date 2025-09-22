@@ -1,10 +1,11 @@
 # Changelog
 
 ## [Unreleased]
- 
- - Frightened & Antagonized Automations
 
- - Sonic Dash Automation and Animation
+## [0.56.0] - 2025-09-22
+
+- Frightened & Antagonized Automations
+- Sonic Dash Automation and Animation
 
 ## [0.55.1] - 2025-09-14
 
@@ -50,7 +51,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.55.1...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.56.0...HEAD
+
+[0.56.0]: https://github.com/olilan1/samioli-module/compare/v0.55.1...v0.56.0
 
 [0.55.1]: https://github.com/olilan1/samioli-module/compare/v0.55.0...v0.55.1
 
