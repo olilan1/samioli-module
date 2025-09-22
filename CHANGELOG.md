@@ -5,7 +5,6 @@
 ## [0.56.0] - 2025-09-22
 
 - Frightened & Antagonized Automations
-
 - Sonic Dash Automation and Animation
 
 ## [0.55.1] - 2025-09-14
