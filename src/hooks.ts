@@ -9,8 +9,8 @@ import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
-import { applyAntagonizeIfValid, createChatMessageIfActorIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
-import { handleFrightenedAtTurnEnd, addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded } from "./effects/frightened.ts";
+import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
+import { handleFrightenedAtTurnEnd, addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded, addClickHandlerToRemoveAntagonizeButtonIfNeeded } from "./effects/frightened.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -26,6 +26,9 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
         .ifEnabled(SETTINGS.AUTO_PANACHE)
         .run();
     hook(addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded, message, html)
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
+    hook(addClickHandlerToRemoveAntagonizeButtonIfNeeded, message, html)
         .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
         .run();
 });
@@ -88,17 +91,14 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(ifActorHasSustainEffectCreateMessage, combatant.actor)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
-    hook(createChatMessageIfActorIsAntagonized, combatant.actor)
+    hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });
 
 //pf2e.endTurn only runs for the GM
 Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
-    if (!combatant.actor) {
-        return;
-    }
-    hook(handleFrightenedAtTurnEnd, combatant.actor)
+    hook(handleFrightenedAtTurnEnd, combatant)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });

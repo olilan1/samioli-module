@@ -1,38 +1,43 @@
-import { ActorPF2e, ChatMessagePF2e, ConditionPF2e, EffectPF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
 import { getDisplayNameFromActor, getOwnersFromActor, logd } from "../utils.ts";
-import { getActorAntagonizedEffects } from "../actions/antagonize.ts";
+import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
 
-export async function handleFrightenedAtTurnEnd(actor: ActorPF2e) {
+export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
+    const token = combatant.token?.object;
+    if (!token) return;
+    const actor = token.actor;
+    if (!actor) return;
 
     const frightenedCondition = actor.items.find(item =>
-        item.type === "condition" && item.slug === "frightened") as ConditionPF2e<ActorPF2e> | undefined;
-
+         item.type === "condition" && item.slug === "frightened") as ConditionPF2e<ActorPF2e> | undefined;
     if (!frightenedCondition) return;
+    
+    const frightenedValue = frightenedCondition.value;
+    if (frightenedValue === null) return;
 
     const antagonizedEffects = getActorAntagonizedEffects(actor);
+    const hasAntagonizedEffects = antagonizedEffects.length > 0;
 
-    if ((frightenedCondition.value && frightenedCondition.value > 1) || !antagonizedEffects.length) {
+    if (frightenedValue > 1 || !hasAntagonizedEffects) {
         await decrementFrightenedCondition(frightenedCondition);
+        if (hasAntagonizedEffects) {
+            for (const effect of antagonizedEffects) {
+                await createAntagonizeRemovalConfirmationChatMessage(token, effect);
+            }
+        }
         return;
     }
-    else {
-        for (const antagonizeEffect of antagonizedEffects) {
-            createFrightenedRemovalConfirmationChatMessage(actor, antagonizeEffect, frightenedCondition);
+
+    if (frightenedValue === 1 && hasAntagonizedEffects) {
+        for (const effect of antagonizedEffects) {
+            await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);
         }
     }
 }
 
 async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>) {
-    
     const currentValue = condition.value ?? 0;
-    if (currentValue === null) {
-        return;
-    }
-
-    if (currentValue === 1) {
-        await condition.delete();
-        sendFrightenedReducedMessage(condition.actor, currentValue);
-    } else if (currentValue > 1) {
+    if (currentValue > 0) {
         await condition.decrease();
         sendFrightenedReducedMessage(condition.actor, currentValue);
     } else {
@@ -40,29 +45,33 @@ async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>)
     }
 }
 
-async function createFrightenedRemovalConfirmationChatMessage(actor: ActorPF2e, antagonizeEffect: EffectPF2e, frightenedCondition: ConditionPF2e) {
+async function createFrightenedAndAntagonizeRemovalConfirmationChatMessage
+    (token: TokenPF2e, antagonizeEffect: EffectPF2e, frightenedCondition: ConditionPF2e) {
+    
+    const actor = token.actor;
+    if (!actor) return;
 
-    const antagonizerId = antagonizeEffect.flags.samioli?.antagonizer as string;
-    const antagonizer = game.actors.get(antagonizerId);
-    if (!antagonizer) return;
-    const antagonizerName = getDisplayNameFromActor(antagonizer);
+    const antagonizerTokenId = antagonizeEffect.flags.samioli?.antagonizerTokenId as string;
+    const antagonizer = canvas?.scene?.tokens.get(antagonizerTokenId)?.object;
+    if (!antagonizer || !antagonizer.actor) return;
+    const antagonizerName = getDisplayNameFromActor(antagonizer.actor);
     const actorName = getDisplayNameFromActor(actor);
-
+    
     const content = `
-    <p>${actorName} is Antagonized by ${antagonizerName}.</p>
+    <p><strong>${actorName}</strong> is Antagonized by <strong>${antagonizerName}</strong>.</p>
     <p>Has ${actorName} taken a hostile action against them, or have they been unable to observe or sense ${antagonizerName} for at least one round?</p>
     <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
         <button type="button" data-action="remove-frightened-and-antagonize" 
         data-frightened-condition-id="${frightenedCondition.id}" 
-        data-actor-id="${actor.id}" 
+        data-token-id="${token.id}" 
         data-antagonized-effect-id="${antagonizeEffect.id}">
-            Yes, Remove Frightened and Antagonize
+            Yes, Remove Frightened and Antagonized
         </button>
     </div>
     `
-
+    
     const recipients = getOwnersFromActor(actor).map(user => user.id);
-
+    
     await ChatMessage.create({
         content: content,
         whisper: recipients,
@@ -80,36 +89,30 @@ export function addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded(chatMessa
     if (!buttonSlug) return;
     
     if (buttonSlug === 'remove-frightened-and-antagonize-button') {
-        const sustainButton = html.find('button[data-action="remove-frightened-and-antagonize"]');
-        if (sustainButton.length > 0) {
-            sustainButton.on('click', (event) => {
+        const removeButton = html.find('button[data-action="remove-frightened-and-antagonize"]');
+        if (removeButton.length > 0) {
+            removeButton.on('click', (event) => {
                 const button = event.currentTarget;
-                const { frightenedConditionId, actorId, antagonizedEffectId } = button.dataset;
-                if (frightenedConditionId && actorId && antagonizedEffectId){
-                    removeFrightenedAndAntagonize(frightenedConditionId, actorId, antagonizedEffectId);
+                const { frightenedConditionId, tokenId, antagonizedEffectId } = button.dataset;
+                if (frightenedConditionId && tokenId && antagonizedEffectId){
+                    removeFrightenedAndAntagonize(frightenedConditionId, tokenId, antagonizedEffectId);
                 }
             });
         }
     }
 }
 
-async function removeFrightenedAndAntagonize(frightenedConditionId: string, actorId: string, antagonizedEffectId: string) {
-       
-    const token = canvas.tokens.placeables.find(t => t.actor?.id === actorId);
+async function removeFrightenedAndAntagonize(frightenedConditionId: string, tokenId: string, antagonizedEffectId: string) {
+    
+    const token = canvas?.scene?.tokens.get(tokenId)?.object
     const actor = token?.actor;
-
     if (!actor || !actor.isOwner) {
         ui.notifications.warn("You do not have permission to remove this effect.");
         return;
     }
-
-    const effect = actor.items.find(item => item.id === antagonizedEffectId) as EffectPF2e;
-    if (effect) {
-        await effect.delete();  
-    } else {  
-        logd(`Could not find the antagonized effect on the actor.`);  
-    }  
-
+    
+    await removeAntagonizeEffect(tokenId, antagonizedEffectId);  
+    
     const antagonizedEffects = getActorAntagonizedEffects(actor);
 
     if (antagonizedEffects.length !== 0) {
@@ -117,9 +120,9 @@ async function removeFrightenedAndAntagonize(frightenedConditionId: string, acto
         ui.notifications.warn(actorName + " is still antagonized from a different source. Keeping Frightened value at 1.");
         return;
     }
-
+    
     const condition = actor.items.find(item => item.id === frightenedConditionId) as ConditionPF2e;
-
+    
     if (condition) {  
         await condition.delete();  
     } else {  
@@ -131,16 +134,71 @@ async function sendFrightenedReducedMessage(actor: ActorPF2e, frightenedValue: n
     const recipients = getOwnersFromActor(actor).map(user => user.id);
     const actorName = getDisplayNameFromActor(actor);
     let content = ``;
-    if (frightenedValue === 1) {
-        content = `${actorName} is no longer Frightened.`;
-    } else {
-        frightenedValue--;
-        content = `${actorName} is now Frightened ${frightenedValue}`
-    }
+    const newFrightenedValue = frightenedValue - 1;
 
+    if (newFrightenedValue === 0) {
+        content = `<strong>${actorName}</strong> is no longer Frightened.`;
+    } else {
+        content = `<strong>${actorName}'s</strong> Frightened is reduced to ${newFrightenedValue}.`
+    }
     await ChatMessage.create({
         content: content,
         whisper: recipients,
         speaker: ChatMessage.getSpeaker({ actor: actor }),
     });
+}
+
+async function createAntagonizeRemovalConfirmationChatMessage(token: TokenPF2e, antagonizeEffect: EffectPF2e) {
+
+    const actor = token.actor;
+    if (!actor) return;
+
+    const antagonizerTokenId = antagonizeEffect.flags.samioli?.antagonizerTokenId as string;
+    const antagonizer = canvas?.scene?.tokens.get(antagonizerTokenId)?.object;
+    if (!antagonizer || !antagonizer.actor) return;
+    const antagonizerName = getDisplayNameFromActor(antagonizer.actor);
+    const actorName = getDisplayNameFromActor(actor);
+
+    const content = `
+    <p><strong>${actorName}</strong> is Antagonized by <strong>${antagonizerName}</strong>.</p>
+    <p>Has ${actorName} taken a hostile action against them, or have they been unable to observe or sense <strong>${antagonizerName}</strong> for at least one round?</p>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+        <button type="button" data-action="remove-antagonize" 
+        data-token-id="${token.id}" 
+        data-antagonized-effect-id="${antagonizeEffect.id}">
+            Yes, Remove Antagonized
+        </button>
+    </div>
+    `
+
+    const recipients = getOwnersFromActor(actor).map(user => user.id);
+
+    await ChatMessage.create({
+        content: content,
+        whisper: recipients,
+        speaker: ChatMessage.getSpeaker({ actor: actor }),
+        flags: {
+            samioli: {
+                buttonSlug: `remove-antagonize-button`
+            }
+        }
+    });
+}
+
+export function addClickHandlerToRemoveAntagonizeButtonIfNeeded(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
+    if (!buttonSlug) return;
+    
+    if (buttonSlug === 'remove-antagonize-button') {
+        const removeButton = html.find('button[data-action="remove-antagonize"]');
+        if (removeButton.length > 0) {
+            removeButton.on('click', (event) => {
+                const button = event.currentTarget;
+                const { tokenId, antagonizedEffectId } = button.dataset;
+                if (tokenId && antagonizedEffectId){
+                    removeAntagonizeEffect(tokenId, antagonizedEffectId);
+                }
+            });
+        }
+    }
 }
