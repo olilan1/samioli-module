@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+ 
+ - Frightened & Antagonized Automations
 
  - Sonic Dash Automation and Animation
 

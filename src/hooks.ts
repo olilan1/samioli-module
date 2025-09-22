@@ -6,18 +6,31 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, CombatantPF2e, EffectPF2e, EncounterPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage, checkIfChatMessageIsSustainButton } from "./sustain.ts";
+import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
+import { handleFrightenedAtTurnEnd, addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded, addClickHandlerToRemoveAntagonizeButtonIfNeeded } from "./effects/frightened.ts";
 
 Hooks.on("init", () => {
     registerSettings();
 });
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
-    addMacroButtonIfSupported(message, html);
-    checkIfChatMessageIsSustainButton(message, html);
-    checkIfChatMessageIsRemovePanacheButton(message, html);
+    hook(addMacroButtonIfSupported, message, html)
+        .run();
+    hook(checkIfChatMessageIsSustainButton, message, html)
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .run();
+    hook(checkIfChatMessageIsRemovePanacheButton, message, html)
+        .ifEnabled(SETTINGS.AUTO_PANACHE)
+        .run();
+    hook(addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded, message, html)
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
+    hook(addClickHandlerToRemoveAntagonizeButtonIfNeeded, message, html)
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
 });
 
 Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e, _context, userId) => {
@@ -78,14 +91,27 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(ifActorHasSustainEffectCreateMessage, combatant.actor)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
+    hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
+                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+                    .run();
 });
 
-Hooks.on('preDeleteItem', async (effect: EffectPF2e, _action, _id) => {
-    hook(createSpellNotSustainedChatMessage, effect)
+//pf2e.endTurn only runs for the GM
+Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+    hook(handleFrightenedAtTurnEnd, combatant)
+                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+                    .run();
+});
+
+Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
+    hook(createSpellNotSustainedChatMessage, item)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .run();
-    hook(deleteTemplateLinkedToSustainedEffect, effect)
+    hook(deleteTemplateLinkedToSustainedEffect, item)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .run();
+    hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
+                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
 });
 
@@ -120,6 +146,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .run();
             hook(checkForBravado, message)
                     .ifEnabled(SETTINGS.AUTO_PANACHE)
+                    .ifGM()
+                    .run();
+            hook(applyAntagonizeIfValid, message)
+                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .ifGM()
                     .run();
             break;
