@@ -1,7 +1,7 @@
 import { registerSettings, getSetting, SETTINGS, SettingsKey } from "./settings.ts"
-import { addMacroButtonIfSupported } from "./chatmacrobutton.ts";
+import { addButtonIfSupported } from "./chatmacrobutton.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
-import { startEnjoyTheShow } from "./actions/enjoytheshow.ts";
+import { editEnjoyTheShowSkillRollIfPresent, startEnjoyTheShow } from "./actions/enjoytheshow.ts";
 import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage, checkIfChatMessageIsRemovePanacheButton } from "./effects/panache.ts";
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
@@ -17,7 +17,9 @@ Hooks.on("init", () => {
 });
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
-    hook(addMacroButtonIfSupported, message, html)
+    hook(addButtonIfSupported, message, html)
+        .run();
+    hook(editEnjoyTheShowSkillRollIfPresent, message, html)
         .run();
     hook(checkIfChatMessageIsSustainButton, message, html)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
