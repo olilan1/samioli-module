@@ -1,7 +1,17 @@
+import { ChatMessagePF2e } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
 import { delay } from "../utils.ts";
 
-export function editSkillRoll(html, actor) {
+export function editEnjoyTheShowSkillRollIfPresent(
+    chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const rollOptions = chatMessagePF2e.flags.pf2e.origin?.rollOptions;
+    if (!rollOptions) return;
+    if (!rollOptions.includes("origin:item:slug:enjoy-the-show")) return;
+
+    editSkillRoll(html, chatMessagePF2e.actor);
+}
+
+function editSkillRoll(html, actor) {
     html.find('.inline-check.with-repost').attr('data-against', 'will');
     
     if (actor.items.find(entry => (entry.system.slug === "acrobatic-performer" && entry.type === "feat"))){
