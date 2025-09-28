@@ -1,6 +1,7 @@
 import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
 import { getOwnersFromActor, logd, sendBasicChatMessage } from "../utils.ts";
 import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
+import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
     const token = combatant.token?.object;
@@ -56,51 +57,18 @@ async function createFrightenedAndAntagonizeRemovalConfirmationChatMessage
     
     const content = `
     <p><strong>${token.name}</strong> is Antagonized by <strong>${antagonizerToken.name}</strong>.</p>
-    <p>Has ${token.name} taken a hostile action against them, or have they been unable to observe or sense ${antagonizerToken.name} for at least one round?</p>
-    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
-        <button type="button" data-action="remove-frightened-and-antagonize" 
-        data-frightened-condition-id="${frightenedCondition.id}" 
-        data-token-id="${token.id}" 
-        data-antagonized-effect-id="${antagonizeEffect.id}">
-            Yes, Remove Frightened and Antagonized
-        </button>
-    </div>
-    `
-    
-    const recipients = getOwnersFromActor(actor).map(user => user.id);
-    
-    await ChatMessage.create({
+    <p>Has ${token.name} taken a hostile action against them, or have they been unable to observe or sense ${antagonizerToken.name} for at least one round?</p>`;
+
+    await createChatMessageWithButton({
+        slug: "remove-frightened-and-antagonize",
+        actor: actor,
         content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-        flags: {
-            samioli: {
-                buttonSlug: `remove-frightened-and-antagonize-button`
-            }
-        }
+        button_label: "Yes, Remove Frightened and Antagonized",
+        params: [frightenedCondition.id, token.id, antagonizeEffect.id]
     });
 }
 
-export function addClickHandlerToFrightenedAndAntagonizeButtonIfNeeded(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
-    if (!buttonSlug) return;
-    
-    if (buttonSlug === 'remove-frightened-and-antagonize-button') {
-        const removeButton = html.find('button[data-action="remove-frightened-and-antagonize"]');
-        if (removeButton.length > 0) {
-            removeButton.on('click', (event) => {
-                const button = event.currentTarget;
-                const { frightenedConditionId, tokenId, antagonizedEffectId } = button.dataset;
-                if (frightenedConditionId && tokenId && antagonizedEffectId){
-                    removeFrightenedAndAntagonize(frightenedConditionId, tokenId, antagonizedEffectId);
-                }
-            });
-        }
-    }
-}
-
-async function removeFrightenedAndAntagonize(frightenedConditionId: string, tokenId: string, antagonizedEffectId: string) {
-    
+export async function removeFrightenedAndAntagonize(frightenedConditionId: string, tokenId: string, antagonizedEffectId: string) {
     const token = canvas.scene?.tokens.get(tokenId)?.object
     const actor = token?.actor;
     if (!actor) return;
@@ -151,43 +119,13 @@ async function createAntagonizeRemovalConfirmationChatMessage(token: TokenPF2e, 
     const content = `
     <p><strong>${token.name}</strong> is Antagonized by <strong>${antagonizerToken.name}</strong>.</p>
     <p>Has ${token.name} taken a hostile action against them, or have they been unable to observe or sense <strong>${antagonizerToken.name}</strong> for at least one round?</p>
-    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
-        <button type="button" data-action="remove-antagonize" 
-        data-token-id="${token.id}" 
-        data-antagonized-effect-id="${antagonizeEffect.id}">
-            Yes, Remove Antagonized
-        </button>
-    </div>
     `
 
-    const recipients = getOwnersFromActor(actor).map(user => user.id);
-
-    await ChatMessage.create({
+    await createChatMessageWithButton({
+        slug: "remove-antagonize",
+        actor: actor,
         content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-        flags: {
-            samioli: {
-                buttonSlug: `remove-antagonize-button`
-            }
-        }
+        button_label: "Yes, remove Antagonized",
+        params: [token.id, antagonizeEffect.id]
     });
-}
-
-export function addClickHandlerToRemoveAntagonizeButtonIfNeeded(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
-    if (!buttonSlug) return;
-    
-    if (buttonSlug === 'remove-antagonize-button') {
-        const removeButton = html.find('button[data-action="remove-antagonize"]');
-        if (removeButton.length > 0) {
-            removeButton.on('click', (event) => {
-                const button = event.currentTarget;
-                const { tokenId, antagonizedEffectId } = button.dataset;
-                if (tokenId && antagonizedEffectId){
-                    removeAntagonizeEffect(tokenId, antagonizedEffectId);
-                }
-            });
-        }
-    }
 }
