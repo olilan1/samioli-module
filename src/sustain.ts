@@ -1,6 +1,7 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e } from "foundry-pf2e";
-import { deleteTemplateById, getOwnersFromActor, isEffect } from "./utils.ts";
+import { deleteTemplateById, isEffect } from "./utils.ts";
 import { runMatchingSustainFunction } from "./triggers.ts";
+import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
     const spell = message.item;
@@ -135,26 +136,16 @@ async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2
 
 async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
     const effectSlug = `sustaining-effect-${spell.slug}`;
-    const recipients = getOwnersFromActor(actor);
     const content = `
         <p>Do you want to sustain <strong>${spell.name}</strong>?</p>
-        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
-            <button type="button" data-action="sustain-spell" data-actor-id="${actor.id}" 
-            data-effect-slug="${effectSlug}">
-                Sustain
-            </button>
-        </div>
     `;
 
-    await ChatMessage.create({
+    await createChatMessageWithButton({
+        slug: "sustain-spell",
+        actor: actor,
         content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-        flags: {
-            samioli: {
-                buttonSlug: `sustain-button`
-            }
-        }
+        button_label: "Sustain",
+        params: [actor.id, effectSlug]
     });
 }
 
@@ -207,22 +198,4 @@ export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
 
     await deleteTemplateById(templateId);
 
-}
-
-export function checkIfChatMessageIsSustainButton(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
-    if (!buttonSlug) return;
-
-    if (buttonSlug === 'sustain-button') {
-        const sustainButton = html.find('button[data-action="sustain-spell"]');
-        if (sustainButton.length > 0) {
-            sustainButton.on('click', (event) => {
-                const button = event.currentTarget;
-                const { actorId, effectSlug } = button.dataset;
-                if (actorId && effectSlug) {
-                    handleSustainSpell(actorId, effectSlug);
-                }
-            });
-        }
-    }
 }

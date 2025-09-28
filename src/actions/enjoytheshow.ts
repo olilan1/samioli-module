@@ -2,7 +2,7 @@ import { ChatMessagePF2e } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
 import { delay } from "../utils.ts";
 
-export function editEnjoyTheShowSkillRollIfPresent(
+export function editEnjoyTheShowSkillRollIfNeeded(
     chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const rollOptions = chatMessagePF2e.flags.pf2e.origin?.rollOptions;
     if (!rollOptions) return;

@@ -11,7 +11,7 @@ type ButtonSpec = {
     function: (token: TokenPF2e) => void;
 }
 
-const BUTTON_MAPPINGS_SPELLS: Record<string, ButtonSpec> = {
+const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
     "wall-of-fire": {
         label: "Deploy Wall of Fire!",
         function: startWallOfFire
@@ -22,7 +22,7 @@ const BUTTON_MAPPINGS_SPELLS: Record<string, ButtonSpec> = {
     },
 };
 
-const BUTTON_MAPPINGS_ACTIONS: Record<string, ButtonSpec> = {
+const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "rising-hurricane": {
         label: "Deploy Rising Hurricane!",
         function: playRisingHurricaneAtLastPlacedTemplate
@@ -33,7 +33,7 @@ const BUTTON_MAPPINGS_ACTIONS: Record<string, ButtonSpec> = {
     }
 }
 
-export function addButtonIfSupported(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const origin = message.flags.pf2e.origin;
     const rollOptions = origin?.rollOptions;
     if (!rollOptions) return;
@@ -44,13 +44,11 @@ export function addButtonIfSupported(message: ChatMessagePF2e, html: JQuery<HTML
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
     if (!slug) return;
 
-    addMatchingButtonsFromMappings(
-        slug, BUTTON_MAPPINGS_SPELLS, '.spell-button', token, html);
-    addMatchingButtonsFromMappings(
-        slug, BUTTON_MAPPINGS_ACTIONS, '.card-content', token, html);
+    addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, html);
+    addMatchingButtons(slug, AUTO_BUTTONS_ACTIONS, '.card-content', token, html);
 }
 
-function addMatchingButtonsFromMappings(slug: string, mappings: Record<string, ButtonSpec>,
+function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
         divLookup: string, token: TokenPF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         if (slug === key) {

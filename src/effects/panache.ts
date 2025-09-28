@@ -1,5 +1,6 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
-import { getOwnersFromActor, logd } from "../utils.ts";
+import { logd } from "../utils.ts";
+import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 export function checkForBravado(chatMessage: ChatMessagePF2e) {
   //don't run if tumble through or enjoy the show
@@ -128,47 +129,25 @@ export async function checkForFinisherDamage(chatMessage: ChatMessagePF2e) {
 }
 
 async function createRemovePanacheChatMessage(actor: ActorPF2e) {
-    const recipients = getOwnersFromActor(actor);
     const content = `
         <p>Do you want to remove <strong>Panache</strong>?</p>
-        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
-            <button type="button" data-action="remove-panache">
-                Remove Panache
-            </button>
-        </div>
     `;
 
-    await ChatMessage.create({
+    await createChatMessageWithButton({
+        slug: "remove-panache",
+        actor: actor,
         content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: actor }),
-        flags: {
-            samioli: {
-                buttonSlug: `remove-panache-button`
-            }
-        }
+        button_label: "Remove Panache"
     });
 }
 
-export function checkIfChatMessageIsRemovePanacheButton(chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const buttonSlug = chatMessagePF2e.flags?.samioli?.buttonSlug;
-    const actor = chatMessagePF2e.actor;
-    if (!actor) return;
-    if (!buttonSlug) return;
-
-    if (buttonSlug === 'remove-panache-button') {
-        const removePanacheButton = html.find('button[data-action="remove-panache"]');
-        if (removePanacheButton.length > 0) {
-            removePanacheButton.on('click', (event) => {
-                event.preventDefault();
-                clearPanache(actor);
-            });
-        }
-    }
+export function onClearPanacheButtonClick(chatMessagePF2e: ChatMessagePF2e) {
+  const actor = chatMessagePF2e.actor;
+  if (!actor) return;
+  clearPanache(actor);
 }
 
 function clearPanache(actor: ActorPF2e) {
-
   const panacheItems = getPanacheItems(actor);
   if (panacheItems.length > 0) {
     for (const panacheItem of panacheItems) {
