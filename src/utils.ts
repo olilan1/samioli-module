@@ -172,3 +172,10 @@ export function returnStringOfNamesFromArray(names: string[]): string {
 
   return `${allButLast} and ${last}`;
 }
+
+export function returnEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
+    const allies = self.document.disposition;
+    if (!allies) return [];
+    const enemies = allies * -1;
+    return tokens.filter(token => token.document.disposition === enemies);
+}
