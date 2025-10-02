@@ -87,20 +87,20 @@ function showDamageHelperDialog() {
     const dialogContent = `
         <form class="damage-helper-form">
             <div class="dialog-content">
-                <div class="form-group">
-                    <label>Damage Amount:</label>
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label>Amount:</label>
                     <input type="number" name="damageAmount" min="1" step="1" required>
                 </div>
                 
-                <div class="form-group">
-                    <label>Damage Type:</label>
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label>Type:</label>
                     <select name="damageType">
                         ${damageTypesOptions}
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label>Precious Material:</label>
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label>Material:</label>
                     <select name="preciousMaterial">
                         <option value="">(None)</option>
                         ${materialOptions}
@@ -109,7 +109,7 @@ function showDamageHelperDialog() {
                 
                 <hr/>
                 
-                <h3 class="form-header">Damage Modifiers</h3>
+                <h4 class="form-header">Damage Modifiers</h4>
                 ${checkboxHTML}
 
             </div>
@@ -120,7 +120,10 @@ function showDamageHelperDialog() {
         window: {
             title: "Create Damage Roll"
         },
-
+        position: {
+            width: 300,
+            height: "auto"
+        },
         content: dialogContent,
         buttons: [
             {
