@@ -172,3 +172,11 @@ export function returnStringOfNamesFromArray(names: string[]): string {
 
   return `${allButLast} and ${last}`;
 }
+
+export function getHtmlElement(htmlOrJquery: JQuery | HTMLElement) {
+  if (htmlOrJquery instanceof jQuery) {
+    return (htmlOrJquery as JQuery)[0] as HTMLElement;
+  }
+  // Otherwise, it's HTML, just return it
+  return htmlOrJquery as HTMLElement;
+}

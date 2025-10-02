@@ -12,6 +12,8 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
+import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
+import { addDamageHelperButtonToChatUI } from "./damagehelper.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -106,6 +108,14 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
+});
+
+Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>, 
+        _data, _options) => {
+    hook(addDamageHelperButtonToChatUI, cssMappings)
+                .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
+                .ifGM()
+                .run();
 });
 
 function handleChatMessagePostRoll(message: ChatMessagePF2e) {
