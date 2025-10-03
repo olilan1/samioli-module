@@ -75,6 +75,8 @@ function showDamageHelperDialog() {
         persistent: "Persistent",
         magical: "Magical",
         ghostTouch: "Ghost Touch",
+        holy: "Holy",
+        unholy: "Unholy"
     };
 
     const checkboxHTML = Object.entries(damageTags).map(([key, label]) => `
@@ -148,6 +150,8 @@ function showDamageHelperDialog() {
                     const isPersistentCheck = dialogElement.querySelector('input[name="persistent"]') as HTMLInputElement;
                     const isMagicalCheck = dialogElement.querySelector('input[name="magical"]') as HTMLInputElement;
                     const isGhostTouchCheck = dialogElement.querySelector('input[name="ghostTouch"]') as HTMLInputElement;
+                    const isHolyCheck = dialogElement.querySelector('input[name="holy"]') as HTMLInputElement;
+                    const isUnholyCheck = dialogElement.querySelector('input[name="unholy"]') as HTMLInputElement;
                     
                     const isPrecision = isPrecisionCheck.checked;
                     const isSplash = isSplashCheck.checked;
@@ -155,11 +159,15 @@ function showDamageHelperDialog() {
                     const isPersistent = isPersistentCheck.checked;
                     const isMagical = isMagicalCheck.checked;
                     const isGhostTouch = isGhostTouchCheck.checked;
+                    const isHoly = isHolyCheck.checked;
+                    const isUnholy = isUnholyCheck.checked;
 
                     // Define trait constants
                     const areaDamageTrait = 'area-damage';
                     const magicalTrait = 'item:magical';
                     const ghostTouchTrait = 'item:rune:property:ghost-touch';
+                    const holyTrait = 'item:trait:holy';
+                    const unholyTrait = 'item:trait:unholy';
 
                     const damageTraits = [];
                     const damageTraitsText = [];
@@ -198,6 +206,14 @@ function showDamageHelperDialog() {
                             damageTraits.push(ghostTouchTrait);
                             damageTraitsText.push(damageTags.ghostTouch);
                         }
+                        if (isHoly) {
+                            damageTraits.push(holyTrait);
+                            damageTraitsText.push(damageTags.holy);
+                        }
+                        if (isUnholy) {
+                            damageTraits.push(unholyTrait);
+                            damageTraitsText.push(damageTags.unholy);
+                        }
 
                         const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll");
                         if (!DamageRoll) return;
@@ -216,6 +232,8 @@ function showDamageHelperDialog() {
                         const modifiersFlavor = damageModifiersText.length > 0 ? `; <b>Modifiers: </b>${damageModifiersText.join(", ")}` : ``;
                         const traitsFlavor = damageTraitsText.length > 0 ? `; <b>Traits: </b>${damageTraitsText.join(", ")}` : ``;
                         const fullFlavor = `${damageTypeFlavor}${materialFlavor}${modifiersFlavor}${traitsFlavor}`;
+
+                        
 
                         myRoll.toMessage({
                             flavor: `${fullFlavor}`,
