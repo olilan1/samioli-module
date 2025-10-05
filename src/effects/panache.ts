@@ -1,5 +1,6 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
+import { logd } from "../utils.ts";
 
 export function checkForBravado(chatMessage: ChatMessagePF2e) {
   // don't run if tumble through or enjoy the show
