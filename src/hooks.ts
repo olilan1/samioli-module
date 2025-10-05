@@ -12,7 +12,6 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
-import { animateDazzlingDisplayIfNeeded } from "./actions/dazzlingdisplay.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -24,8 +23,6 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
     hook(editEnjoyTheShowSkillRollIfNeeded, message, html)
         .run();
     hook(addButtonClickHandlersIfNeeded, message, html)
-        .run();
-    hook(animateDazzlingDisplayIfNeeded, message)
         .run();
 });
 

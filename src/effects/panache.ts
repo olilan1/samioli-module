@@ -1,9 +1,8 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
-import { delay, logd } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 export function checkForBravado(chatMessage: ChatMessagePF2e) {
-  //don't run if tumble through or enjoy the show
+  // don't run if tumble through or enjoy the show
   // those hooks will call this function after the animation
   if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
     && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
@@ -24,57 +23,48 @@ export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
   }
 }
 
+let isApplyingPanache = false;
+
 async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
-    
-    const existingPanacheStatus = await hasPanache(actor);
+  
+  if (isApplyingPanache) {
+    return;
+  }
+
+  isApplyingPanache = true;
+  try {
+    const existingPanacheStatus = hasPanache(actor);
 
     if (existingPanacheStatus === "success") {
-        logd("Actor already has Panache effect with unlimited duration.");
-        return;
+      return;
     } else if (existingPanacheStatus === "failure") {
-        if (outcome === "success" || outcome === "criticalSuccess") {
-            logd("Upgrading Panache effect to unlimited duration.");
-            await editPanacheEffect(actor, outcome);
-        }
-    } else { 
-        logd("No Panache effect found. Introducing delay for concurrency check.");
-        await delay(50); // Pause for 50ms to allow simultaneous calls to save data
-        
-        const currentStatus = await hasPanache(actor); 
-        
-        if (currentStatus !== false) {
-            logd("Concurrency detected: Another instance applied Panache during the delay. Skipping creation.");
+      if (outcome === "success" || outcome === "criticalSuccess") {
+        editPanacheEffect(actor, outcome);
+      }
+    } else {
+      const panacheItemId = "uBJsxCzNhje8m8jj";
+      const compendiumPack = game?.packs?.get("pf2e.feat-effects");
+      if (!compendiumPack) {
+        logd("Compendium not found in Game.");
+        return;
+      }
+      const panacheEffect = await compendiumPack.getDocument(panacheItemId);
+      if (!panacheEffect){
+        logd("Panache effect not found in Compendium pack.");
+        return;
+      }
+      await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
 
-            if (currentStatus === "failure" && outcome === "failure") {
-                 logd("Amending newly created Panache effect to turn expiry.");
-                 await editPanacheEffect(actor, outcome);
-            }
-            return;
-        }
-
-        const panacheItemId = "uBJsxCzNhje8m8jj";
-        const compendiumPack = game?.packs?.get("pf2e.feat-effects");
-        if (!compendiumPack) {
-            logd("Compendium not found in Game.");
-            return;
-        }
-        const panacheEffect = await compendiumPack.getDocument(panacheItemId);
-        if (!panacheEffect){
-            logd("Panache effect not found in Compendium pack.");
-            return;
-        }
-        
-        logd("Applying new Panache effect to actor.");
-        await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
-
-        if (outcome === "failure") {
-            logd("Amending created Panache effect to expire at the end of the turn.");
-            await editPanacheEffect(actor, outcome);
-        }
+      if (outcome === "failure") {
+        await editPanacheEffect(actor, outcome);
+      }
     }
+  } finally {
+    isApplyingPanache = false;
+  }
 }
 
-async function hasPanache(actor: ActorPF2e) {
+function hasPanache(actor: ActorPF2e) {
   const items = actor.items.contents;
   const panacheEffect = items.find(item =>
     item.type === "effect" && item.system.slug === "effect-panache"
