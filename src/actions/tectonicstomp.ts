@@ -2,7 +2,6 @@ import { createTemplateAtPoint, delay, getTokenIdsFromTokens } from "../utils.ts
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenPF2e } from "foundry-pf2e";
-
 export async function startTectonicStomp(token: TokenPF2e) {
 
     // create the template at tokens's locations
