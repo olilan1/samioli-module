@@ -46,6 +46,13 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
         const hittingFloorAnimation = "jb2a.smoke.puff.ring.01.white.1";
         const tokenScaleX = stomper.document.texture.scaleX;
         const tokenScaleY = stomper.document.texture.scaleY;
+        const impactSound = "sound/NWN2-Sounds/metor_impact_05.WAV"
+        const fallingSounds = [
+            "sound/NWN2-Sounds/cb_ht_fleshston1.WAV", 
+            "sound/NWN2-Sounds/cb_ht_fleshston2.WAV",
+            "sound/NWN2-Sounds/cb_ht_fleshwood1.WAV", 
+            "sound/NWN2-Sounds/cb_ht_fleshwood2.WAV"
+        ]
     
         const sequence = new Sequence()
             // hide stomper token
@@ -89,6 +96,11 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
                 .scale(1.5)
                 .delay(combinedAnimationTime)
                 .opacity(0.3)
+            // impact sound effect
+            .sound()
+                .file(impactSound)
+                .delay(combinedAnimationTime - 100)
+                .volume(1)
             // add ground cracks
             .effect()
                 .file(groundCracksAnimation)
@@ -141,6 +153,10 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
                 .file(hittingFloorAnimation)
                 .opacity(0.3)
                 .delay(combinedAnimationTime + landingVariance - 200)
+            .sound()
+                .file(fallingSounds)
+                .delay(combinedAnimationTime + landingVariance - 200)
+                .volume(0.5)
             .animation()
                 .on(target)
                 .rotateIn(0, rotateBackUpTime)
