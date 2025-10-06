@@ -1,14 +1,13 @@
-import { createTemplateAtPoint, delay, getTokenIdsFromTokens } from "../utils.ts";
+import { createTemplateAtPoint, getTokenIdsFromTokens } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenPF2e } from "foundry-pf2e";
+
 export async function startTectonicStomp(token: TokenPF2e) {
 
     // create the template at tokens's locations
     const creatorUserId = game?.user.id;
     const template = await createTemplateAtPoint(token.center, creatorUserId, 30, "circle");
-    if (!template) return;
-    const locationOfTemplate: Point = {x: template.x, y: template.y};
     
     // capture all targets in the area of effect
     const allTargets = await getTemplateTokens(template);
@@ -20,7 +19,7 @@ export async function startTectonicStomp(token: TokenPF2e) {
     template.delete();
 
     // run animation
-    await animateTectonicStomp(token, remainingTargets, locationOfTemplate);
+    await animateTectonicStomp(token, remainingTargets, token.center);
 
     const tokenIdsToTarget = getTokenIdsFromTokens(remainingTargets);
 
@@ -162,8 +161,5 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
                 .delay(combinedAnimationTime + 5000)
         }
 
-        sequence.play();
-        
-        await delay(combinedAnimationTime + 5000);
-        
+        await sequence.play();
 }
