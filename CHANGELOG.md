@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+ - Tectonic Stomp Automation and Animation
+
 ## [0.56.0] - 2025-09-22
 
 - Frightened & Antagonized Automations
