@@ -1,9 +1,9 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
-import { logd } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
+import { logd } from "../utils.ts";
 
 export function checkForBravado(chatMessage: ChatMessagePF2e) {
-  //don't run if tumble through or enjoy the show
+  // don't run if tumble through or enjoy the show
   // those hooks will call this function after the animation
   if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
     && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
@@ -24,36 +24,48 @@ export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
   }
 }
 
+let isApplyingPanache = false;
+
 async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
-  const existingPanacheStatus = await hasPanache(actor);
-
-  if (existingPanacheStatus === "success") {
+  
+  if (isApplyingPanache) {
     return;
-  } else if (existingPanacheStatus === "failure") {
-    if (outcome === "success" || outcome === "criticalSuccess") {
-      editPanacheEffect(actor, outcome);
-    }
-  } else {
-    const panacheItemId = "uBJsxCzNhje8m8jj";
-    const compendiumPack = game?.packs?.get("pf2e.feat-effects");
-    if (!compendiumPack) {
-      logd("Compendium not found in Game.");
-      return;
-    }
-    const panacheEffect = await compendiumPack.getDocument(panacheItemId);
-    if (!panacheEffect){
-      logd("Panache effect not found in Compendium pack.");
-      return;
-    }
-    await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
+  }
 
-    if (outcome === "failure") {
-      await editPanacheEffect(actor, outcome);
+  isApplyingPanache = true;
+  try {
+    const existingPanacheStatus = hasPanache(actor);
+
+    if (existingPanacheStatus === "success") {
+      return;
+    } else if (existingPanacheStatus === "failure") {
+      if (outcome === "success" || outcome === "criticalSuccess") {
+        editPanacheEffect(actor, outcome);
+      }
+    } else {
+      const panacheItemId = "uBJsxCzNhje8m8jj";
+      const compendiumPack = game?.packs?.get("pf2e.feat-effects");
+      if (!compendiumPack) {
+        logd("Compendium not found in Game.");
+        return;
+      }
+      const panacheEffect = await compendiumPack.getDocument(panacheItemId);
+      if (!panacheEffect){
+        logd("Panache effect not found in Compendium pack.");
+        return;
+      }
+      await actor.createEmbeddedDocuments("Item", [panacheEffect.toObject()]);
+
+      if (outcome === "failure") {
+        await editPanacheEffect(actor, outcome);
+      }
     }
+  } finally {
+    isApplyingPanache = false;
   }
 }
 
-async function hasPanache(actor: ActorPF2e) {
+function hasPanache(actor: ActorPF2e) {
   const items = actor.items.contents;
   const panacheEffect = items.find(item =>
     item.type === "effect" && item.system.slug === "effect-panache"

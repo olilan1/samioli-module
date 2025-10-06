@@ -1,5 +1,7 @@
 import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
+import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export const MODULE_ID = "samioli-module";
 
@@ -171,4 +173,25 @@ export function returnStringOfNamesFromArray(names: string[]): string {
   const last = names[names.length - 1];
 
   return `${allButLast} and ${last}`;
+}
+
+export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
+    return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)
+}
+
+export async function createTemplateAtPoint(point: Point, userId: string, radius: number, shape: MeasuredTemplateType): Promise<MeasuredTemplateDocumentPF2e> {
+    
+    const templateData = {
+        t: shape,
+        distance: radius,
+        x: point.x,
+        y: point.y,
+        user: userId
+    };
+
+    const template = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene }) as MeasuredTemplateDocumentPF2e;
+    if (!template) {
+        throw new Error("Failed to create template");
+    }
+    return template;
 }
