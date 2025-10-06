@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Dazzling Display Animation and Automation
+- Tectonic Stomp Automation and Animation
 
 ## [0.56.0] - 2025-09-22
 
