@@ -6,12 +6,13 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage } from "./sustain.ts";
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
+import { checkIfCombatantIsStartingTurnWhileUnderTemplate, checkIfTemplateHasEffectsAndDeleteIfNeeded, checkIfTemplatePlacedIsStartOfTurnSpell, checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded } from "./startofturnspells.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -42,6 +43,11 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
             .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
             .ifGM()
             .run();
+
+    hook(checkIfTemplatePlacedIsStartOfTurnSpell, template)
+            .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+            .ifGM()
+            .run();
 });
 
 Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _data, _context, _userId) => {
@@ -56,6 +62,10 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
             .run();
     hook(deleteTemplateTargets, template)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
+            .run();
+    hook(checkIfTemplateHasEffectsAndDeleteIfNeeded, template)
+            .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+            .ifGM()
             .run();
 });
 
@@ -87,6 +97,9 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
+    hook(checkIfCombatantIsStartingTurnWhileUnderTemplate, combatant)
+                    .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+                    .run();
 });
 
 //pf2e.endTurn only runs for the GM
@@ -105,6 +118,12 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
                     .run();
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+                    .run();
+});
+
+Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
+    hook(checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded, token, movement.passed.spaces)
+                    .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
                     .run();
 });
 

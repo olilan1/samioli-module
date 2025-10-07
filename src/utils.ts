@@ -195,3 +195,14 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
     }
     return template;
 }
+
+export async function addEffectToActor(actor: ActorPF2e, effectData: any) {
+    const existingEffect = actor.items.find(item => item.slug === effectData.system.slug
+        && item.type === 'effect');
+    if (existingEffect) {
+        await existingEffect.update(effectData);
+        return;
+    }
+    await actor.createEmbeddedDocuments('Item', [effectData]);
+}
+

@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e } from "foundry-pf2e";
-import { deleteTemplateById, isEffect } from "./utils.ts";
+import { addEffectToActor, deleteTemplateById, isEffect } from "./utils.ts";
 import { runMatchingSustainFunction } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
@@ -51,16 +51,6 @@ function createEffect(spell: SpellPF2e) {
             }
         }
     };
-}
-
-async function addEffectToActor(actor: ActorPF2e, effectData: any) {
-    const existingEffect = actor.items.find(item => item.slug === effectData.system.slug
-        && item.type === 'effect');
-    if (existingEffect) {
-        await existingEffect.update(effectData);
-        return;
-    }
-    await actor.createEmbeddedDocuments('Item', [effectData]);
 }
 
 export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {

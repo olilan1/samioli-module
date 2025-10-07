@@ -1,4 +1,4 @@
-import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay } from "./utils.ts";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
@@ -144,3 +144,9 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
         borderColor: "#000000"
     });
  }
+
+ export async function isTokenInTemplateArea(token: TokenPF2e, 
+    measuredTemplateDocument: MeasuredTemplateDocumentPF2e): Promise<boolean> {
+    const tokens = await getTemplateTokens(measuredTemplateDocument);
+    return tokens.some(t => t.id === token.id);
+}
