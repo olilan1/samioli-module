@@ -1,38 +1,67 @@
-import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
+import { ItemPF2e, TokenPF2e } from "foundry-pf2e";
+import { CrosshairUpdatable } from "../types.ts";
 import { delay } from "../utils.ts";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 
 //TODO: investigate removing tokens that are too central for the circle template
 let adjustedOffsetX: number;
 let adjustedOffsetY: number;
+
+const { DialogV2 } = foundry.applications.api;
+export interface CustomTemplateData {
+  t: MeasuredTemplateType;
+  x: number;
+  y: number;
+  width: number;
+  distance: number;
+  direction: number;
+  fillColor: `#${string}`;
+  borderColor: `#${string}`;
+  flags?: { [x: string]: { [x: string]: JSONValue } | undefined };
+  [key: string]: JSONValue | undefined;
+}
 
 const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
 const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
 const FIRESPREADSOUND = "sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-export async function startWallOfFire(token: Token) {
+export async function startWallOfFire(token: TokenPF2e) {
   await chooseWallOfFireShape(token);
 }
 
-async function chooseWallOfFireShape(token: Token) {
+async function chooseWallOfFireShape(token: TokenPF2e) {
 
-  const dialog = new Dialog({
-    title: "Wall of Fire Shape",
-    buttons: {
-      line: {
-        label: "Line up to 60 ft long",
-        callback: () => wallOfFireLine(token)
+  const dialog = new DialogV2({
+    window: {
+      title: "Select Wall of Fire Shape",
+    },
+    position: {
+      width: 400,
+      height: "auto"
+    },
+    buttons: [
+      {
+        action: "ring",
+        label: "5ft thick 10ft radius ring",
+        callback: () => {
+          wallOfFireRing(token)
+        }
       },
-      ring: {
-        label: "5ft thick, 10ft radius ring",
-        callback: () => wallOfFireRing(token)
+      {
+        action: "line",
+        label: "Line up to 60 ft long",
+        callback: () => {
+          wallOfFireLine(token)
+        }
       }
-    }
+    ]
   })
   dialog.render(true);
 }
 
-async function wallOfFireLine(token: Token) {
+async function wallOfFireLine(token: TokenPF2e) {
   const firstLocation = await selectStartingPoint(token);
 
   if (firstLocation === false) {
@@ -47,7 +76,7 @@ async function wallOfFireLine(token: Token) {
     return;
   }
 
-  const myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
+  const myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation, token);
   if (!myTemplateDocument) {
     return;
   }
@@ -58,13 +87,13 @@ async function wallOfFireLine(token: Token) {
   await animateLine(myTemplate);
 }
 
-async function wallOfFireRing(token: Token) {
+async function wallOfFireRing(token: TokenPF2e) {
   const firstLocation = await selectCentrePoint(token);
   if (firstLocation === false) {
     ui.notifications.info("Wall of fire cancelled.");
     return;
   }
-  const myTemplateDocument = await createRingTemplateDocument(firstLocation);
+  const myTemplateDocument = await createRingTemplateDocument(firstLocation, token);
   const myTemplate = await createTemplate(myTemplateDocument);
   await delay(500);
   await animateSpellCasting(token);
@@ -72,15 +101,13 @@ async function wallOfFireRing(token: Token) {
   //remove tokens that are too central
 }
 
-async function selectCentrePoint(token: Token): Promise<Point | false> {
+async function selectCentrePoint(token: TokenPF2e): Promise<Point | false> {
   const centrePoint = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: token,
       limitMaxRange: 120,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -94,20 +121,24 @@ async function selectCentrePoint(token: Token): Promise<Point | false> {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
-    }
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
   return centrePoint;
 }
 
-async function selectStartingPoint(token: Token): Promise<Point | false> {
+async function selectStartingPoint(token: TokenPF2e): Promise<Point | false> {
   const startingPointTemplate = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: token,
       limitMaxRange: 120,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -121,7 +152,13 @@ async function selectStartingPoint(token: Token): Promise<Point | false> {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
-    }
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
 
   return startingPointTemplate;
@@ -129,13 +166,11 @@ async function selectStartingPoint(token: Token): Promise<Point | false> {
 
 async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
   const endPointTemplate = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: startingPoint,
       limitMaxRange: 60,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -143,21 +178,30 @@ async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
     [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/cancel.svg"
-      })
+      });
     },
     [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
-      })
-    }
+      });
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
 
   return endPointTemplate;
 }
 
-async function createRingTemplateDocument(location: Point) {
+async function createRingTemplateDocument(location: Point, token: TokenPF2e): Promise<CustomTemplateData> {
+
+  const originData = getWallOfFireItemFromToken(token)?.getOriginData();
+
   const templateData : CustomTemplateData = {
-    t: "circle",
+    t: "circle" as MeasuredTemplateType,
     x: location.x,
     y: location.y,
     width: 0,
@@ -165,12 +209,21 @@ async function createRingTemplateDocument(location: Point) {
     direction: 0,
     fillColor: "#f59042",
     borderColor: "#f59042",
+    flags: {
+      pf2e: {
+        origin: {
+          name: "Wall of Fire",
+          slug: "wall-of-fire",
+          ...originData
+        }
+      }
+    }
   };
 
   return templateData;
 }
 
-async function createRayTemplateDocument(location1: Point, location2: Point): Promise<CustomTemplateData | null> {
+async function createRayTemplateDocument(location1: Point, location2: Point, token: TokenPF2e): Promise<CustomTemplateData | null> {
 
   const distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
@@ -231,15 +284,26 @@ async function createRayTemplateDocument(location1: Point, location2: Point): Pr
     adjustedOffsetY *= 1;
   }
 
+  const originData = getWallOfFireItemFromToken(token)?.getOriginData();
+
   const templateData : CustomTemplateData = {
-    t: "ray",
+    t: "ray" as MeasuredTemplateType,
     x: location1.x + adjustedOffsetX,
     y: location1.y + adjustedOffsetY,
     width: 5,
     distance: foundryDistance + 5,
     direction: distanceAndAngle.normalizedAngleDegrees,
-    fillColor: "#f59042",
-    borderColor: "#f59042",
+    fillColor: "#f59042" as `#${string}`,
+    borderColor: "#f59042" as `#${string}`,
+    flags: {
+      pf2e: {
+        origin: {
+          name: "Wall of Fire",
+          slug: "wall-of-fire",
+          ...originData
+        }
+      }
+    }
   };
 
   return templateData;
@@ -298,6 +362,13 @@ function calculateNewCoordinates(x: number, y: number, angleDegrees: number, hyp
   return newPoint;
 }
 
+function getWallOfFireItemFromToken(token: TokenPF2e): ItemPF2e | null {
+  if (!token.actor) return null;
+  const wallOfFireItem = token.actor.items.find(i => i.slug === "wall-of-fire");
+  if (!wallOfFireItem) return null;
+  return wallOfFireItem;
+}
+
 async function fileExistsAtPath(path: string | URL | Request) {
 
   try {
@@ -309,7 +380,7 @@ async function fileExistsAtPath(path: string | URL | Request) {
   }
 }
 
-async function animateSpellCasting(token: Token) {
+async function animateSpellCasting(token: TokenPF2e) {
   
   const soundExists = await fileExistsAtPath(CASTSOUND);
 
@@ -325,7 +396,7 @@ async function animateSpellCasting(token: Token) {
     .play()
 }
 
-async function animateCastingLine(token: Token, location1: Point, location2: Point) {
+async function animateCastingLine(token: TokenPF2e, location1: Point, location2: Point) {
 
   const distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
 

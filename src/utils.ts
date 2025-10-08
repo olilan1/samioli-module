@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -196,13 +196,12 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
     return template;
 }
 
-export async function addEffectToActor(actor: ActorPF2e, effectData: any) {
-    const existingEffect = actor.items.find(item => item.slug === effectData.system.slug
+export async function addEffectToActor(actor: ActorPF2e, effect: EffectSource) {
+    const existingEffect = actor.items.find(item => item.slug === effect.system.slug
         && item.type === 'effect');
     if (existingEffect) {
-        await existingEffect.update(effectData);
+        await existingEffect.update(effect);
         return;
     }
-    await actor.createEmbeddedDocuments('Item', [effectData]);
+    await actor.createEmbeddedDocuments('Item', [effect]);
 }
-

@@ -12,7 +12,7 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
-import { checkIfCombatantIsStartingTurnWhileUnderTemplate, checkIfTemplateHasEffectsAndDeleteIfNeeded, checkIfTemplatePlacedIsStartOfTurnSpell, checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded } from "./startofturnspells.ts";
+import { checkIfCombatantIsStartingTurnWithRelevantEffect, checkIfTemplateHasEffectsAndDeleteIfNeeded, checkIfTemplatePlacedIsStartOfTurnSpell, checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded } from "./startofturnspells.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -97,7 +97,7 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
-    hook(checkIfCombatantIsStartingTurnWhileUnderTemplate, combatant)
+    hook(checkIfCombatantIsStartingTurnWithRelevantEffect, combatant)
                     .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
                     .run();
 });
