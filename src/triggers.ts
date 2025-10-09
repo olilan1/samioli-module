@@ -4,6 +4,7 @@ import { animateLightningDash } from "./actions/lightningdash.ts";
 import { chooseEffectOfPerniciousPoltergeist, initiatePerniciousPoltergeist } from "./spells/perniciouspoltergeist.ts";
 import { initiateBlazingDive } from "./spells/blazingdive.ts";
 import { initiateFloatingFlame, sustainFloatingFlame, removeFloatingFlame } from "./spells/floatingflame.ts";
+import { removeWallOfFire } from "./spells/walloffire.ts";
 
 const TEMPLATE_MAPPINGS_RUN_AS_CREATOR = {
     "origin:item:storm-spiral": initiateStormSpiral,
@@ -22,7 +23,8 @@ const SUSTAIN_MAPPINGS = {
 };
 
 const TEMPLATE_DELETION_MAPPINGS = {
-    "origin:item:floating-flame": removeFloatingFlame
+    "origin:item:floating-flame": removeFloatingFlame,
+    "origin:item:wall-of-fire": removeWallOfFire
 };
 
 export function runMatchingTemplateFunctionAsCreator(template: MeasuredTemplateDocumentPF2e): boolean {

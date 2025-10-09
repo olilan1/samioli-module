@@ -1,38 +1,69 @@
-import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
-import { delay } from "../utils.ts";
+import { ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { CrosshairUpdatable } from "../types.ts";
+import { delay, deleteTemplateById, getTokenIdsFromTokens } from "../utils.ts";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
+import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
-//TODO: investigate removing tokens that are too central for the circle template
+type WallOfFireLineTemplates = 'horizontal' | 'vertical';
+
 let adjustedOffsetX: number;
 let adjustedOffsetY: number;
+
+const { DialogV2 } = foundry.applications.api;
+export interface CustomTemplateData {
+  t: MeasuredTemplateType;
+  x: number;
+  y: number;
+  width: number;
+  distance: number;
+  direction: number;
+  fillColor: `#${string}`;
+  borderColor: `#${string}`;
+  flags?: { [x: string]: { [x: string]: JSONValue } | undefined };
+  [key: string]: JSONValue | undefined;
+}
 
 const CASTSOUND = "sound/BG2-Sounds/sim_pulsfire.wav"
 const BOLTSOUNDS = "sound/NWN2-Sounds/sim_explflame.WAV"
 const FIRESPREADSOUND = "sound/NWN2-Sounds/sff_firewhoosh02.WAV"
 const REMAININGSOUNDS = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
 
-export async function startWallOfFire(token: Token) {
+export async function startWallOfFire(token: TokenPF2e) {
   await chooseWallOfFireShape(token);
 }
 
-async function chooseWallOfFireShape(token: Token) {
+async function chooseWallOfFireShape(token: TokenPF2e) {
 
-  const dialog = new Dialog({
-    title: "Wall of Fire Shape",
-    buttons: {
-      line: {
-        label: "Line up to 60 ft long",
-        callback: () => wallOfFireLine(token)
+  const dialog = new DialogV2({
+    window: {
+      title: "Select Wall of Fire Shape",
+    },
+    position: {
+      width: 400,
+      height: "auto"
+    },
+    buttons: [
+      {
+        action: "ring",
+        label: "5ft thick 10ft radius ring",
+        callback: () => {
+          wallOfFireRing(token)
+        }
       },
-      ring: {
-        label: "5ft thick, 10ft radius ring",
-        callback: () => wallOfFireRing(token)
+      {
+        action: "line",
+        label: "Line up to 60 ft long",
+        callback: () => {
+          wallOfFireLine(token)
+        }
       }
-    }
+    ]
   })
   dialog.render(true);
 }
 
-async function wallOfFireLine(token: Token) {
+async function wallOfFireLine(token: TokenPF2e) {
   const firstLocation = await selectStartingPoint(token);
 
   if (firstLocation === false) {
@@ -47,7 +78,7 @@ async function wallOfFireLine(token: Token) {
     return;
   }
 
-  const myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation);
+  const myTemplateDocument = await getWallOfFireLineTemplateData(firstLocation, secondLocation, token);
   if (!myTemplateDocument) {
     return;
   }
@@ -58,29 +89,78 @@ async function wallOfFireLine(token: Token) {
   await animateLine(myTemplate);
 }
 
-async function wallOfFireRing(token: Token) {
-  const firstLocation = await selectCentrePoint(token);
-  if (firstLocation === false) {
+async function wallOfFireRing(token: TokenPF2e) {
+  
+  const location = await selectCentrePoint(token);
+  if (location === false) {
     ui.notifications.info("Wall of fire cancelled.");
     return;
   }
-  const myTemplateDocument = await createRingTemplateDocument(firstLocation);
-  const myTemplate = await createTemplate(myTemplateDocument);
+
+  //based on firstLocation, determine locations of 4 other points to create a square
+
+  const gridSize = canvas.scene!.grid.size;
+
+  const abovePoint = { x: location.x - gridSize * 1.5, y: location.y - gridSize * 2 };
+  const belowPoint = { x: location.x - gridSize * 1.5, y: location.y + gridSize * 2 };
+  const leftPoint = { x: location.x - gridSize * 2, y: location.y - gridSize * 1.5 };
+  const rightPoint = { x: location.x + gridSize * 2, y: location.y - gridSize * 1.5 };
+
+  //create ray templates starting from these points
+
+  const aboveTemplateData = await getWallOfFireRingSideTemplateData(abovePoint, token, 'horizontal');
+  const belowTemplateData = await getWallOfFireRingSideTemplateData(belowPoint, token, 'horizontal');
+  const leftTemplateData = await getWallOfFireRingSideTemplateData(leftPoint, token, 'vertical');
+  const rightTemplateData = await getWallOfFireRingSideTemplateData(rightPoint, token, 'vertical');
+
+  if (!aboveTemplateData || !belowTemplateData || !leftTemplateData || !rightTemplateData) {
+    return;
+  }
+
+  const aboveTemplate = await createTemplate(aboveTemplateData) as MeasuredTemplateDocumentPF2e;
+  const belowTemplate = await createTemplate(belowTemplateData) as MeasuredTemplateDocumentPF2e;
+  const leftTemplate = await createTemplate(leftTemplateData) as MeasuredTemplateDocumentPF2e;
+  const rightTemplate = await createTemplate(rightTemplateData) as MeasuredTemplateDocumentPF2e;
+
+  //tell each template about each other so they can be deleted together later
+
+  aboveTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", belowTemplate.id);
+  belowTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", leftTemplate.id);
+  leftTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", rightTemplate.id);
+  rightTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", aboveTemplate.id);
+
   await delay(500);
   await animateSpellCasting(token);
-  await animateRing(myTemplate);
-  //remove tokens that are too central
+  await animateRingNew(location, aboveTemplate, belowTemplate, leftTemplate, rightTemplate);
+
+  //capture tokens under all four templates and add to player's targeting
+
+  const tokensInAboveTemplate = await getTemplateTokens(aboveTemplate);
+  const tokensInBelowTemplate = await getTemplateTokens(belowTemplate);
+  const tokensInLeftTemplate = await getTemplateTokens(leftTemplate);
+  const tokensInRightTemplate = await getTemplateTokens(rightTemplate);
+
+  const allTokens = [...tokensInAboveTemplate, ...tokensInBelowTemplate, 
+    ...tokensInLeftTemplate, ...tokensInRightTemplate];
+
+  await replaceTargets(getTokenIdsFromTokens(allTokens));
+
 }
 
-async function selectCentrePoint(token: Token): Promise<Point | false> {
+export function removeWallOfFire(template: MeasuredTemplateDocumentPF2e) {
+  const associatedTemplateId = template.getFlag("samioli-module", "wallOfFireAssociatedTemplateId");
+  if (associatedTemplateId) {
+    deleteTemplateById(associatedTemplateId.toString());
+  }
+}
+
+async function selectCentrePoint(token: TokenPF2e): Promise<Point | false> {
   const centrePoint = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: token,
       limitMaxRange: 120,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -94,20 +174,24 @@ async function selectCentrePoint(token: Token): Promise<Point | false> {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
-    }
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
   return centrePoint;
 }
 
-async function selectStartingPoint(token: Token): Promise<Point | false> {
+async function selectStartingPoint(token: TokenPF2e): Promise<Point | false> {
   const startingPointTemplate = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: token,
       limitMaxRange: 120,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -121,7 +205,13 @@ async function selectStartingPoint(token: Token): Promise<Point | false> {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
       })
-    }
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
 
   return startingPointTemplate;
@@ -129,13 +219,11 @@ async function selectStartingPoint(token: Token): Promise<Point | false> {
 
 async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
   const endPointTemplate = await Sequencer.Crosshair.show({
-    //@ts-expect-error: parameters are not all required
     location: {
       obj: startingPoint,
       limitMaxRange: 60,
       wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
     },
-    //@ts-expect-error: parameters are not all required
     icon: {
       texture: "icons/svg/fire.svg"
     }
@@ -143,34 +231,61 @@ async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
     [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/cancel.svg"
-      })
+      });
     },
     [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
       crosshair.updateCrosshair({
         "icon.texture": "icons/svg/fire.svg"
-      })
-    }
+      });
+    },
+    show: undefined,
+    move: undefined,
+    mouseMove: undefined,
+    invalidPlacement: undefined,
+    placed: undefined,
+    cancel: undefined
   });
 
   return endPointTemplate;
 }
 
-async function createRingTemplateDocument(location: Point) {
-  const templateData : CustomTemplateData = {
-    t: "circle",
+async function getWallOfFireRingSideTemplateData(location: Point, token: TokenPF2e, 
+  side: WallOfFireLineTemplates): Promise<CustomTemplateData | null> {
+
+    const originData = getWallOfFireItemFromToken(token)?.getOriginData();
+
+    let templateDirection = 0;
+
+    if (side === 'vertical') {
+      templateDirection = 90;
+    }
+
+    const templateData : CustomTemplateData = {
+    t: "ray" as MeasuredTemplateType,
     x: location.x,
     y: location.y,
-    width: 0,
-    distance: 10,
-    direction: 0,
-    fillColor: "#f59042",
-    borderColor: "#f59042",
+    width: 5,
+    distance: 15,
+    direction: templateDirection,
+    fillColor: "#f59042" as `#${string}`,
+    borderColor: "#f59042" as `#${string}`,
+    flags: {
+      pf2e: {
+        origin: {
+          name: "Wall of Fire",
+          slug: "wall-of-fire",
+          ...originData
+        }
+      }
+    }
   };
 
   return templateData;
+
 }
 
-async function createRayTemplateDocument(location1: Point, location2: Point): Promise<CustomTemplateData | null> {
+async function getWallOfFireLineTemplateData(location1: Point, location2: Point, token: TokenPF2e)
+  : Promise<CustomTemplateData | null> {
 
   const distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
@@ -231,15 +346,26 @@ async function createRayTemplateDocument(location1: Point, location2: Point): Pr
     adjustedOffsetY *= 1;
   }
 
+  const originData = getWallOfFireItemFromToken(token)?.getOriginData();
+
   const templateData : CustomTemplateData = {
-    t: "ray",
+    t: "ray" as MeasuredTemplateType,
     x: location1.x + adjustedOffsetX,
     y: location1.y + adjustedOffsetY,
     width: 5,
     distance: foundryDistance + 5,
     direction: distanceAndAngle.normalizedAngleDegrees,
-    fillColor: "#f59042",
-    borderColor: "#f59042",
+    fillColor: "#f59042" as `#${string}`,
+    borderColor: "#f59042" as `#${string}`,
+    flags: {
+      pf2e: {
+        origin: {
+          name: "Wall of Fire",
+          slug: "wall-of-fire",
+          ...originData
+        }
+      }
+    }
   };
 
   return templateData;
@@ -298,6 +424,13 @@ function calculateNewCoordinates(x: number, y: number, angleDegrees: number, hyp
   return newPoint;
 }
 
+function getWallOfFireItemFromToken(token: TokenPF2e): ItemPF2e | null {
+  if (!token.actor) return null;
+  const wallOfFireItem = token.actor.items.find(i => i.slug === "wall-of-fire");
+  if (!wallOfFireItem) return null;
+  return wallOfFireItem;
+}
+
 async function fileExistsAtPath(path: string | URL | Request) {
 
   try {
@@ -309,7 +442,7 @@ async function fileExistsAtPath(path: string | URL | Request) {
   }
 }
 
-async function animateSpellCasting(token: Token) {
+async function animateSpellCasting(token: TokenPF2e) {
   
   const soundExists = await fileExistsAtPath(CASTSOUND);
 
@@ -325,7 +458,7 @@ async function animateSpellCasting(token: Token) {
     .play()
 }
 
-async function animateCastingLine(token: Token, location1: Point, location2: Point) {
+async function animateCastingLine(token: TokenPF2e, location1: Point, location2: Point) {
 
   const distanceMeasuredBolt = translateDistanceIntoFoundry(calculateDistanceAndAngle(token, location1).distance);
 
@@ -420,14 +553,16 @@ async function animateLine(templateToAttachTo: MeasuredTemplateDocument) {
     .play()
 }
 
-async function animateRing(templateToAttachTo: MeasuredTemplateDocument) {
+async function animateRingNew(location: Point, aboveTemplate: MeasuredTemplateDocument, 
+  belowTemplate: MeasuredTemplateDocument, leftTemplate: MeasuredTemplateDocument, 
+  rightTemplate: MeasuredTemplateDocument) {
 
 const fireSpreadSoundExists = await fileExistsAtPath(FIRESPREADSOUND);
 const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
 
   await new Sequence()
     .effect()
-      .atLocation(templateToAttachTo)
+      .atLocation(location)
       .scale(1.3)
       .file("jb2a.impact.fire.01.orange.0")
     .sound()
@@ -437,12 +572,13 @@ const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
       .playIf(fireSpreadSoundExists)
     .effect()
       .file("jb2a.wall_of_fire.ring.yellow")
-      .attachTo(templateToAttachTo)
+      .atLocation(location)
       .fadeIn(500)
       .rotateIn(520, 2300, { ease: "easeOutQuint" })
       .scale(1.15)
       .scaleIn(0, 1000, { ease: "easeOutBack" })
       .persist()
+      .tieToDocuments([aboveTemplate, belowTemplate, leftTemplate, rightTemplate])
       .loopOptions({loopDelay: 0, loops: 3600, endOnLastLoop: false})
     .sound()
       .volume(0.5)
