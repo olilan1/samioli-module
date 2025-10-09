@@ -1,10 +1,12 @@
-import { ItemPF2e, TokenPF2e } from "foundry-pf2e";
+import { ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { CrosshairUpdatable } from "../types.ts";
-import { delay } from "../utils.ts";
+import { delay, deleteTemplateById, getTokenIdsFromTokens } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
+import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
-//TODO: investigate removing tokens that are too central for the circle template
+type WallOfFireLineTemplates = 'horizontal' | 'vertical';
+
 let adjustedOffsetX: number;
 let adjustedOffsetY: number;
 
@@ -76,7 +78,7 @@ async function wallOfFireLine(token: TokenPF2e) {
     return;
   }
 
-  const myTemplateDocument = await createRayTemplateDocument(firstLocation, secondLocation, token);
+  const myTemplateDocument = await getWallOfFireLineTemplateData(firstLocation, secondLocation, token);
   if (!myTemplateDocument) {
     return;
   }
@@ -88,17 +90,68 @@ async function wallOfFireLine(token: TokenPF2e) {
 }
 
 async function wallOfFireRing(token: TokenPF2e) {
-  const firstLocation = await selectCentrePoint(token);
-  if (firstLocation === false) {
+  
+  const location = await selectCentrePoint(token);
+  if (location === false) {
     ui.notifications.info("Wall of fire cancelled.");
     return;
   }
-  const myTemplateDocument = await createRingTemplateDocument(firstLocation, token);
-  const myTemplate = await createTemplate(myTemplateDocument);
+
+  //based on firstLocation, determine locations of 4 other points to create a square
+
+  const gridSize = canvas.scene!.grid.size;
+
+  const abovePoint = { x: location.x - gridSize * 1.5, y: location.y - gridSize * 2 };
+  const belowPoint = { x: location.x - gridSize * 1.5, y: location.y + gridSize * 2 };
+  const leftPoint = { x: location.x - gridSize * 2, y: location.y - gridSize * 1.5 };
+  const rightPoint = { x: location.x + gridSize * 2, y: location.y - gridSize * 1.5 };
+
+  //create ray templates starting from these points
+
+  const aboveTemplateData = await getWallOfFireRingSideTemplateData(abovePoint, token, 'horizontal');
+  const belowTemplateData = await getWallOfFireRingSideTemplateData(belowPoint, token, 'horizontal');
+  const leftTemplateData = await getWallOfFireRingSideTemplateData(leftPoint, token, 'vertical');
+  const rightTemplateData = await getWallOfFireRingSideTemplateData(rightPoint, token, 'vertical');
+
+  if (!aboveTemplateData || !belowTemplateData || !leftTemplateData || !rightTemplateData) {
+    return;
+  }
+
+  const aboveTemplate = await createTemplate(aboveTemplateData) as MeasuredTemplateDocumentPF2e;
+  const belowTemplate = await createTemplate(belowTemplateData) as MeasuredTemplateDocumentPF2e;
+  const leftTemplate = await createTemplate(leftTemplateData) as MeasuredTemplateDocumentPF2e;
+  const rightTemplate = await createTemplate(rightTemplateData) as MeasuredTemplateDocumentPF2e;
+
+  //tell each template about each other so they can be deleted together later
+
+  aboveTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", belowTemplate.id);
+  belowTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", leftTemplate.id);
+  leftTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", rightTemplate.id);
+  rightTemplate.setFlag("samioli-module", "wallOfFireAssociatedTemplateId", aboveTemplate.id);
+
   await delay(500);
   await animateSpellCasting(token);
-  await animateRing(myTemplate);
-  //remove tokens that are too central
+  await animateRingNew(location, aboveTemplate, belowTemplate, leftTemplate, rightTemplate);
+
+  //capture tokens under all four templates and add to player's targeting
+
+  const tokensInAboveTemplate = await getTemplateTokens(aboveTemplate);
+  const tokensInBelowTemplate = await getTemplateTokens(belowTemplate);
+  const tokensInLeftTemplate = await getTemplateTokens(leftTemplate);
+  const tokensInRightTemplate = await getTemplateTokens(rightTemplate);
+
+  const allTokens = [...tokensInAboveTemplate, ...tokensInBelowTemplate, 
+    ...tokensInLeftTemplate, ...tokensInRightTemplate];
+
+  await replaceTargets(getTokenIdsFromTokens(allTokens));
+
+}
+
+export function removeWallOfFire(template: MeasuredTemplateDocumentPF2e) {
+  const associatedTemplateId = template.getFlag("samioli-module", "wallOfFireAssociatedTemplateId");
+  if (associatedTemplateId) {
+    deleteTemplateById(associatedTemplateId.toString());
+  }
 }
 
 async function selectCentrePoint(token: TokenPF2e): Promise<Point | false> {
@@ -196,19 +249,26 @@ async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
   return endPointTemplate;
 }
 
-async function createRingTemplateDocument(location: Point, token: TokenPF2e): Promise<CustomTemplateData> {
+async function getWallOfFireRingSideTemplateData(location: Point, token: TokenPF2e, 
+  side: WallOfFireLineTemplates): Promise<CustomTemplateData | null> {
 
-  const originData = getWallOfFireItemFromToken(token)?.getOriginData();
+    const originData = getWallOfFireItemFromToken(token)?.getOriginData();
 
-  const templateData : CustomTemplateData = {
-    t: "circle" as MeasuredTemplateType,
+    let templateDirection = 0;
+
+    if (side === 'vertical') {
+      templateDirection = 90;
+    }
+
+    const templateData : CustomTemplateData = {
+    t: "ray" as MeasuredTemplateType,
     x: location.x,
     y: location.y,
-    width: 0,
-    distance: 10,
-    direction: 0,
-    fillColor: "#f59042",
-    borderColor: "#f59042",
+    width: 5,
+    distance: 15,
+    direction: templateDirection,
+    fillColor: "#f59042" as `#${string}`,
+    borderColor: "#f59042" as `#${string}`,
     flags: {
       pf2e: {
         origin: {
@@ -221,9 +281,11 @@ async function createRingTemplateDocument(location: Point, token: TokenPF2e): Pr
   };
 
   return templateData;
+
 }
 
-async function createRayTemplateDocument(location1: Point, location2: Point, token: TokenPF2e): Promise<CustomTemplateData | null> {
+async function getWallOfFireLineTemplateData(location1: Point, location2: Point, token: TokenPF2e)
+  : Promise<CustomTemplateData | null> {
 
   const distanceAndAngle = calculateDistanceAndAngle(location1, location2);
   let foundryDistance = translateDistanceIntoFoundry(distanceAndAngle.distance);
@@ -491,14 +553,16 @@ async function animateLine(templateToAttachTo: MeasuredTemplateDocument) {
     .play()
 }
 
-async function animateRing(templateToAttachTo: MeasuredTemplateDocument) {
+async function animateRingNew(location: Point, aboveTemplate: MeasuredTemplateDocument, 
+  belowTemplate: MeasuredTemplateDocument, leftTemplate: MeasuredTemplateDocument, 
+  rightTemplate: MeasuredTemplateDocument) {
 
 const fireSpreadSoundExists = await fileExistsAtPath(FIRESPREADSOUND);
 const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
 
   await new Sequence()
     .effect()
-      .atLocation(templateToAttachTo)
+      .atLocation(location)
       .scale(1.3)
       .file("jb2a.impact.fire.01.orange.0")
     .sound()
@@ -508,12 +572,13 @@ const remainingSoundsExists = await fileExistsAtPath(REMAININGSOUNDS);
       .playIf(fireSpreadSoundExists)
     .effect()
       .file("jb2a.wall_of_fire.ring.yellow")
-      .attachTo(templateToAttachTo)
+      .atLocation(location)
       .fadeIn(500)
       .rotateIn(520, 2300, { ease: "easeOutQuint" })
       .scale(1.15)
       .scaleIn(0, 1000, { ease: "easeOutBack" })
       .persist()
+      .tieToDocuments([aboveTemplate, belowTemplate, leftTemplate, rightTemplate])
       .loopOptions({loopDelay: 0, loops: 3600, endOnLastLoop: false})
     .sound()
       .volume(0.5)

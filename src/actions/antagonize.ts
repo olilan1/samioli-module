@@ -97,7 +97,7 @@ async function createAntagonizedChatMessage(token: TokenPF2e, antagonizedEffects
     const content = 
         `<p><strong>${token.name}</strong> is antangonized by <strong>${antagonizerNamesAsString}</strong>.</p>`;
 
-    await sendBasicChatMessage(content, recipients, token.actor);
+    await sendBasicChatMessage(content, token.actor, recipients);
 }
 
 export async function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF2e) {
@@ -125,7 +125,7 @@ export async function warnIfDeletedItemIsFrightenedWhileAntagonized(item: ItemPF
 
     const content = `${actorName} is antagonized. Frightened should not be removed unless they took a hostile action against their antagonizer, or they can no longer observe or sense them for at least one round.`;
     const recipients = getOwnersFromActor(actor).map(user => user.id);
-    await sendBasicChatMessage(content, recipients, actor);
+    await sendBasicChatMessage(content, actor, recipients);
 
 }
 

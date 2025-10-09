@@ -68,19 +68,19 @@ export function postUINotification(message: string, type: "info" | "warn" | "err
 
 export async function deleteTemplateById(templateId: string) {
     if (!canvas.scene) {
-        ui.notifications.error("No active scene found.");
+        console.log("No active scene found.");
         return;
     }
 
     if (!templateId) {
-        ui.notifications.warn("No template ID provided for deletion.");
+        console.log("No template ID provided for deletion.");
         return;
     }
 
     // Check if the template exists before attempting to delete
     const template = canvas.scene.templates.get(templateId);
     if (!template) {
-        ui.notifications.warn(`Measured Template with ID ${templateId} not found on the current scene.`);
+        console.log(`Measured Template with ID ${templateId} not found on the current scene.`);
         return;
     }
 
@@ -152,12 +152,32 @@ export function isEffect(item: ItemPF2e) : item is EffectPF2e {
     return item.type === "effect";  
 }
 
-export async function sendBasicChatMessage(content: string, recipients: string[], speaker: ActorPF2e) {
-    await ChatMessage.create({
+interface CustomMessageData {
+    [key: string]: JSONValue | undefined;
+    content?: string;
+    whisper?: string[];
+    flags?: Record<string, Record<string, JSONValue>>;
+}
+
+export async function sendBasicChatMessage(content: string, speaker: ActorPF2e, 
+    recipients?: string[]) {
+
+    const isWhisper = recipients && recipients.length > 0;
+
+    const messageData: Partial<CustomMessageData> = {
         content: content,
-        whisper: recipients,
         speaker: ChatMessage.getSpeaker({ actor: speaker }),
-    });
+    };
+
+    if (isWhisper) {
+        messageData.whisper = recipients;
+    } 
+
+    try {
+        await ChatMessage.create(messageData);
+    } catch (error) {
+        console.error("Caught expected error:", error);
+    }
 }
 
 export function returnStringOfNamesFromArray(names: string[]): string {

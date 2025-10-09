@@ -166,9 +166,7 @@ export async function checkIfCombatantIsStartingTurnWithRelevantEffect(combatant
         if (!spellName) continue;
         
         const content = `${combatant.name} has started their turn within ${spellName}`
-
-        await sendBasicChatMessage(content, [], speaker);
-
+        await sendBasicChatMessage(content, speaker);
         await addSpellBackIntoChat(effect);
     }
 }

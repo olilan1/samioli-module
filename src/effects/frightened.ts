@@ -1,4 +1,4 @@
-import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
+import { ActorPF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
 import { getOwnersFromActor, logd, sendBasicChatMessage } from "../utils.ts";
 import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
@@ -79,7 +79,7 @@ export async function removeFrightenedAndAntagonize(frightenedConditionId: strin
     if (antagonizedEffects.length !== 0) {
         const content = `<strong>${token.name}</strong> is still antagonized from a different source. Keeping Frightened value at 1.`;
         const recipients = getOwnersFromActor(actor).map(user => user.id);
-        await sendBasicChatMessage(content, recipients, actor);
+        await sendBasicChatMessage(content, actor, recipients);
         return;
     }
     
@@ -104,7 +104,7 @@ async function sendFrightenedReducedMessage(actor: ActorPF2e, frightenedValue: n
         content = `<strong>${actorName}'s</strong> Frightened is reduced to ${newFrightenedValue}.`
     }
 
-    await sendBasicChatMessage(content, recipients, actor);
+    await sendBasicChatMessage(content, actor, recipients);
 }
 
 async function createAntagonizeRemovalConfirmationChatMessage(token: TokenPF2e, antagonizeEffect: EffectPF2e) {
