@@ -49,7 +49,7 @@ function createEffect(spell: SpellPF2e) {
         },
         flags: {
             "samioli-module": {
-                spellId: spell.id
+                sustainedSpellId: spell.id
             }
         }
     };
@@ -117,14 +117,14 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
 }
 
 function getTemplateFromEffect(effect: EffectPF2e) {
-    const templateId = effect.getFlag("samioli-module", "templateId");
+    const templateId = effect.getFlag("samioli-module", "sustainedTemplateId");
     if (typeof templateId !== "string" || !templateId) return;
     if (!canvas.scene) return;
     return canvas.scene.templates.get(templateId);
 }
 
 async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2e) {
-    const spellId = effect.getFlag("samioli-module", "spellId");
+    const spellId = effect.getFlag("samioli-module", "sustainedSpellId");
     if (typeof spellId !== "string" || !spellId) return;
     if (!spellId) return;
     const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
@@ -166,7 +166,7 @@ async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2
     effect: EffectPF2e) {
     await effect.update({
         'flags.samioli-module': {
-            templateId: template.id
+            sustainedTemplateId: template.id
         }
     });
 }
@@ -192,7 +192,7 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
 export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.getFlag("samioli-module", "templateId"); 
+    const templateId = item.getFlag("samioli-module", "sustainedTemplateId"); 
     if (typeof templateId !== "string" || !templateId) {
         return;
     }

@@ -1,5 +1,5 @@
 import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { addEffectToActor, delay, logd, sendBasicChatMessage } from "./utils.ts";
+import { addEffectToActor, delay, sendBasicChatMessage } from "./utils.ts";
 import { getTemplateTokens, isTokenInTemplateArea } from "./templatetarget.ts";
 
 export async function checkIfTemplatePlacedIsStartOfTurnSpell(template: MeasuredTemplateDocumentPF2e) {
@@ -22,10 +22,8 @@ export async function checkIfTemplatePlacedIsStartOfTurnSpell(template: Measured
 
     // @ts-expect-error slug is valid
     const spellSlug = template.flags.pf2e?.origin?.slug;
-    logd(`Checking template for start of turn spell logic, found slug: ${spellSlug}`);
 
     const spellUuid = template.flags.pf2e?.origin?.uuid as string;
-    logd(`Checking template for start of turn spell logic, found uuid: ${spellUuid}`);
 
     if (!validStartsTurnSlugs.includes(spellSlug)) return;
 
@@ -58,7 +56,7 @@ async function addSpellEffectToTokenActor(token: TokenPF2e, spell: SpellPF2e, te
     const effectUuid = effectItem.uuid as string;
 
     // Retrieve Existing UUIDs
-    const current = template.getFlag('samioli-module', 'effectUuid');
+    const current = template.getFlag('samioli-module', 'startOfTurnEffectUuid');
     const uuids = Array.isArray(current) ? current : current ? [current] : [];
 
     const templateLinkedUuids: string[] = uuids as string[]; 
@@ -69,7 +67,7 @@ async function addSpellEffectToTokenActor(token: TokenPF2e, spell: SpellPF2e, te
     }
     
     // update template with new UUIDs
-    await template.setFlag("samioli-module", 'effectUuid', templateLinkedUuids);
+    await template.setFlag("samioli-module", 'startOfTurnEffectUuid', templateLinkedUuids);
 }
 
 async function removeSpellEffectFromTokenActor(token: TokenPF2e, spellEffect: ItemPF2e, 
@@ -79,9 +77,9 @@ async function removeSpellEffectFromTokenActor(token: TokenPF2e, spellEffect: It
     const spellEffectUuid = spellEffect.uuid;
     await spellEffect.delete();
     // update the template to remove the effect
-    const templateLinkedUuids = template.getFlag('samioli-module', 'effectUuid') as string[];
+    const templateLinkedUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
     const newTemplateLinkedUuids = templateLinkedUuids.filter(uuid => uuid !== spellEffectUuid);
-    await template.setFlag("samioli-module", 'effectUuid', newTemplateLinkedUuids);
+    await template.setFlag("samioli-module", 'startOfTurnEffectUuid', newTemplateLinkedUuids);
 }
 
 export async function checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded(token: TokenPF2e, 
@@ -123,7 +121,7 @@ export async function checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded(token:
             const actor = token.actor;
             if (!actor) return;
             const effect = actor.items.find(item => item.type === 'effect' 
-                && (item.flags?.["samioli-module"]?.templateId === template.id));
+                && (item.flags?.["samioli-module"]?.startOfTurnTemplateId === template.id));
             // apply effect if not found
             if (!effect) {
                 const spellUuid = template.document.flags.pf2e.origin?.uuid as string;
@@ -137,7 +135,7 @@ export async function checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded(token:
             const actor = token.actor;
             if (!actor) return;
             const effect = actor.items.find(item => item.type === 'effect' 
-                && (item.flags?.["samioli-module"]?.templateId === template.id));
+                && (item.flags?.["samioli-module"]?.startOfTurnTemplateId === template.id));
             if (effect) {
                 // remove effect if it exists as it's outside the template area.
                 await removeSpellEffectFromTokenActor(token, effect, template.document);
@@ -159,11 +157,11 @@ export async function checkIfCombatantIsStartingTurnWithRelevantEffect(combatant
 
     for (const effect of startOfTurnEffects) {
 
-        const speakerUuid = effect.flags["samioli-module"]?.actorUuid as string;
+        const speakerUuid = effect.flags["samioli-module"]?.startOfTurnActorUuid as string;
         if (!speakerUuid) continue;
         const speaker = fromUuidSync(speakerUuid) as ActorPF2e;
         if (!speaker) continue;
-        const spellUuid = effect.flags["samioli-module"]?.spellUuid as string;
+        const spellUuid = effect.flags["samioli-module"]?.startOfTurnSpellUuid as string;
         const spellName = fromUuidSync(spellUuid)?.name as string;
         if (!spellName) continue;
         
@@ -176,7 +174,7 @@ export async function checkIfCombatantIsStartingTurnWithRelevantEffect(combatant
 }
 
 export async function checkIfTemplateHasEffectsAndDeleteIfNeeded(template: MeasuredTemplateDocumentPF2e) {
-    const effectUuids = template.getFlag('samioli-module', 'effectUuid') as string[];
+    const effectUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
     if (!effectUuids || effectUuids.length === 0) return;
 
     for (const effectUuid of effectUuids) {
@@ -187,7 +185,7 @@ export async function checkIfTemplateHasEffectsAndDeleteIfNeeded(template: Measu
 }
 
 async function addSpellBackIntoChat(effect: ItemPF2e) {
-    const spellUuid = effect.flags["samioli-module"].spellUuid as string;
+    const spellUuid = effect.flags["samioli-module"].startOfTurnSpellUuid as string;
     if (!spellUuid) return;
     const spell = fromUuidSync(spellUuid) as SpellPF2e;
     if (!spell) return;
@@ -231,9 +229,9 @@ function getStartOfTurnEffect(spell: SpellPF2e, template: MeasuredTemplateDocume
                 grantedBy: null 
             },
             "samioli-module": { 
-                spellUuid: spell.uuid,
-                templateId: template.id,
-                actorUuid: spell.actor?.uuid
+                startOfTurnSpellUuid: spell.uuid,
+                startOfTurnTemplateId: template.id,
+                startOfTurnActorUuid: spell.actor?.uuid
             }
         }
     };
