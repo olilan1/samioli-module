@@ -80,10 +80,11 @@ export function registerSettings() {
 
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.DAMAGE_HELPER_BUTTON, {
         name: "Damage Helper Button",
-        hint: "Add a button to the chat UI that allows you to create damage rolls easily",
+        hint: "Add a button to the chat UI that allows you to create damage rolls easily. (Requires a refresh after changing this setting)",
         scope: "world",
         config: true,
         default: false,
+        requiresReload: true,
         type: Boolean
     });
 

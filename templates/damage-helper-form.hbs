@@ -1,0 +1,36 @@
+<form class="damage-helper-form">
+    <div class="dialog-content">
+        <div class="form-group" style="margin-bottom: 5px;">
+            <label>Amount:</label>
+            <input type="text" name="damageAmount" min="1" step="1" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 5px;">
+            <label>Type:</label>
+            <select name="damageType">
+                {{selectOptions damageTypes selected=defaultDamageValue nameAttr="value" labelAttr="label"}}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 5px;">
+            <label>Material:</label>
+            <select name="preciousMaterial">
+                <option value="">(None)</option>
+                {{selectOptions preciousMaterials nameAttr="value" labelAttr="label"}}
+            </select>
+        </div>
+
+        <hr />
+
+        <h4 class="form-header">Damage Modifiers</h4>
+        {{#each damageModifiers}}
+        <div class="form-group form-group-checkbox">
+            <label for="{{this.name}}">{{this.label}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="{{this.name}}" data-dtype="Boolean" id="{{this.name}}">
+            </div>
+        </div>
+        {{/each}}
+
+    </div>
+</form>
