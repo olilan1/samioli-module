@@ -190,7 +190,7 @@ function createDamageRoll(formData: Record<string, unknown>) {
         formula = `{${value}[${damageAndMaterialTypes}]}`;
     }
 
-    const newFlavor = getFlavorHtml(damageTraits, material);
+    const newFlavor = getFlavorHtml(damageType, damageTraits, material);
 
     const myRoll = new DamageRoll(formula);
 
@@ -207,20 +207,45 @@ function createDamageRoll(formData: Record<string, unknown>) {
     });
 }
 
-function getFlavorHtml(damageTraits: { key: string; label: string; group: string; value: string; 
-    hasTag: boolean; }[] , material: string): string {
+function getFlavorHtml(damageType: string, damageTraits: { key: string; label: string; 
+    group: string; value: string; hasTag: boolean; }[] , material: string): string {
 
     const hasTagTraits = damageTraits.filter(trait => trait.hasTag);
+    const noTagTraits = damageTraits.filter(trait => !trait.hasTag);
+    const headerStart = `
+        <h4 class="action">
+        <strong>Custom Damage Roll: 
+    `;
+    const traitLabels = noTagTraits.map(trait => trait.label);
+    let headerNoTagTraitsString: string;
 
-    const outerDiv = `<div class="tags" data-tooltip-class="pf2e">`;
-    const closingDiv = `</div>`;
+    if (traitLabels.length === 0) {
+        headerNoTagTraitsString = ``;
+    } else if (traitLabels.length === 1) {
+        headerNoTagTraitsString = `with ${traitLabels[0]}`;
+    } else {
+        const start = traitLabels.slice(0, -1).join(', ');
+        const end = traitLabels.slice(-1)[0];
+        headerNoTagTraitsString = `with ${start} and ${end}`; 
+    }
+
+    const headerDamageType = `${game.i18n.localize(damageType).capitalize()} `;
+    const headerEnd = `</strong></h4>`;
+    const outerTagsDiv = `<div class="tags" data-tooltip-class="pf2e">`;
+    const closingTagsDiv = `</div>`;
 
     const materialHtml = material ? getMaterialTagHtml(material) : ``;
 
-    const fullFlavorHtml = `${outerDiv}
+    const fullFlavorHtml = `
+        ${headerStart}
+        ${headerDamageType}
+        ${headerNoTagTraitsString}
+        ${headerEnd}
+        ${outerTagsDiv}
         ${materialHtml}
         ${hasTagTraits.map(trait => getTraitTagHtml(trait.key)).join(" ")}
-    ${closingDiv}`;
+        ${closingTagsDiv}
+    `;
 
     return fullFlavorHtml;
 
