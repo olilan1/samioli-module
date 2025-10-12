@@ -5,17 +5,17 @@ const { renderTemplate } = foundry.applications.handlebars;
 const { FormDataExtended } = foundry.applications.ux;
 
 const damageTagConfig = {
-    persistent: { label: "Persistent", group: 'type', value: 'persistent' },
-    precision: { label: "Precision", group: 'modifier', value: 'precision' },
-    splash: { label: "Splash", group: 'modifier', value: 'splash' },
-    area: { label: "Area", group: 'trait', value: 'area-damage' },
-    magical: { label: "Magical", group: 'trait', value: 'item:magical' },
-    ghostTouch: { label: "Ghost Touch", group: 'trait', value: 'item:rune:property:ghost-touch' },
-    holy: { label: "Holy", group: 'trait', value: 'item:trait:holy' },
-    unholy: { label: "Unholy", group: 'trait', value: 'item:trait:unholy' }
+    persistent: { label: "Persistent", group: 'type', value: 'persistent', hasTag: false },
+    precision: { label: "Precision", group: 'modifier', value: 'precision', hasTag: false },
+    splash: { label: "Splash", group: 'modifier', value: 'splash', hasTag: false },
+    area: { label: "Area", group: 'trait', value: 'area-damage', hasTag: false },
+    magical: { label: "Magical", group: 'trait', value: 'item:magical', hasTag: true },
+    ghostTouch: { label: "Ghost Touch", group: 'trait', value: 'item:rune:property:ghost-touch', hasTag: false },
+    holy: { label: "Holy", group: 'trait', value: 'item:trait:holy', hasTag: true },
+    unholy: { label: "Unholy", group: 'trait', value: 'item:trait:unholy', hasTag: true }
 };
 
-export function addDamageHelperButtonToChatUI(cssMappings: Record<string, HTMLElement>) {
+export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTMLElement>) {
 
     const html = cssMappings["#chat-controls"];
     if (!html) {
@@ -43,6 +43,12 @@ export function addDamageHelperButtonToChatUI(cssMappings: Record<string, HTMLEl
         event.preventDefault();
         showDamageHelperDialog();
     });
+}
+
+export function addDamageHelperButtonToChatUIv12(_html: HTMLElement) {
+    
+    //TODO: build support for v12 injection
+    logd("Foundry v12 is not yet supported for the damage helper button.");
 }
 
 async function showDamageHelperDialog() {
@@ -106,27 +112,7 @@ async function submitDamageForm(dialog: InstanceType<typeof DialogV2>): Promise<
         return;
     }
 
-    const damageType = formData.damageType as string;
-    const material = formData.preciousMaterial as string;
-    const isPersistent = formData.persistent === true;
-    const damageTraits = [];
-    const damageModifiers = [];
-
-    for (const key of Object.keys(damageTagConfig) as Array<keyof typeof damageTagConfig>) {
-        if (formData[key] === true) {
-            const { group, value: tagValue } = damageTagConfig[key];
-            switch (group) {
-                case 'modifier':
-                    damageModifiers.push(tagValue);
-                    break;
-                case 'trait':
-                    damageTraits.push(tagValue);
-                    break;
-            }
-        }
-    }
-
-    createDamageRoll(value, damageType, material, isPersistent, damageModifiers, damageTraits);
+    createDamageRoll(formData);
     dialog.close();
 }
 
@@ -163,8 +149,30 @@ function createLocalizedCheckboxData(options: Record<string,
     return localizedCheckboxes;
 }
 
-function createDamageRoll(value: string, damageType: string, material: string, isPersistent: boolean,
-    damageModifiers: string[], damageTraits: string[]) {
+function createDamageRoll(formData: Record<string, unknown>) {
+
+    type DamageTrait = { key: string; label: string; group: string; value: string; hasTag: boolean; };
+
+    const value = formData.damageAmount as string;
+    const damageType = formData.damageType as string;
+    const material = formData.preciousMaterial as string;
+    const isPersistent = formData.persistent === true;
+    const damageTraits: DamageTrait[] = [];
+    const damageModifiers: string[] =[];
+
+    for (const key of Object.keys(damageTagConfig) as Array<keyof typeof damageTagConfig>) {
+        if (formData[key] === true) {
+            const { group, value: tagValue } = damageTagConfig[key];
+            switch (group) {
+                case 'modifier':
+                    damageModifiers.push(tagValue);
+                    break;
+                case 'trait':
+                    damageTraits.push({ key: key, ...damageTagConfig[key] });
+                    break;
+            }
+        }
+    }
 
     const damageAndMaterialTypes = [];
 
@@ -182,37 +190,60 @@ function createDamageRoll(value: string, damageType: string, material: string, i
         formula = `{${value}[${damageAndMaterialTypes}]}`;
     }
 
-    const damageTypes: Record<string, string> = CONFIG.PF2E.damageTypes;
-    const preciousMaterials: Record<string, string> = CONFIG.PF2E.preciousMaterials;
-
-    const damageTypeFlavor = `<b>Type: </b>${game.i18n.localize(damageTypes[damageType])}`;
-    const materialFlavor = material ? `; <b>Material: </b>${game.i18n.localize(preciousMaterials[material])}` : ``;
-    const damageModifiersText = damageModifiers.map(mod => {
-        const configEntry = Object.values(damageTagConfig).find(entry => entry.value === mod);
-        return configEntry ? game.i18n.localize(configEntry.label) : mod;
-    });
-    const damageTraitsText = damageTraits.map(trait => {
-        const configEntry = Object.values(damageTagConfig).find(entry => entry.value === trait);
-        return configEntry ? game.i18n.localize(configEntry.label) : trait;
-    });
-
-    const modifiersFlavor = damageModifiers.length > 0 ? `; <b>Modifiers: </b>${damageModifiersText.join(", ")}` : ``;
-    const traitsFlavor = damageTraits.length > 0 ? `; <b>Traits: </b>${damageTraitsText.join(", ")}` : ``;
-    const fullFlavor = `${damageTypeFlavor}${materialFlavor}${modifiersFlavor}${traitsFlavor}`;
+    const newFlavor = getFlavorHtml(damageTraits, material);
 
     const myRoll = new DamageRoll(formula);
 
     myRoll.toMessage({
-        flavor: `${fullFlavor}`,
+        flavor: `${newFlavor}`,
         speaker: ChatMessage.getSpeaker(),
         flags: {
             pf2e: {
                 context: {
-                    options: damageTraits
+                    options: damageTraits.map(trait => trait.value)
                 }
             }
         }
     });
+}
+
+function getFlavorHtml(damageTraits: { key: string; label: string; group: string; value: string; 
+    hasTag: boolean; }[] , material: string): string {
+
+    const hasTagTraits = damageTraits.filter(trait => trait.hasTag);
+
+    const outerDiv = `<div class="tags" data-tooltip-class="pf2e">`;
+    const closingDiv = `</div>`;
+
+    const materialHtml = material ? getMaterialTagHtml(material) : ``;
+
+    const fullFlavorHtml = `${outerDiv}
+        ${materialHtml}
+        ${hasTagTraits.map(trait => getTraitTagHtml(trait.key)).join(" ")}
+    ${closingDiv}`;
+
+    return fullFlavorHtml;
+
+}
+
+function getTraitTagHtml(trait: string): string {
+
+    const damageTraits: Record<string, string> = CONFIG.PF2E.damageTraits
+    const localizedTrait = game.i18n.localize(damageTraits[trait]);
+    const traitsDescriptions: Record<string, string> = CONFIG.PF2E.traitsDescriptions;
+    const traitDescriptionTag = traitsDescriptions[trait];
+
+    return `<span class="tag tag_alt" data-trait="${trait}" data-tooltip="${traitDescriptionTag}">${localizedTrait}</span>`;
+}
+
+function getMaterialTagHtml(material: string): string {
+
+    const preciousMaterials: Record<string, string> = CONFIG.PF2E.preciousMaterials;
+    const localizedMaterial = game.i18n.localize(preciousMaterials[material]);
+    const materialDescriptions: Record<string, string> = CONFIG.PF2E.traitsDescriptions;
+    const materialDescriptionTag = materialDescriptions[material];
+
+    return `<span class="tag tag_material" data-material="${material}" data-tooltip="${materialDescriptionTag}">${localizedMaterial}</span>`;
 }
 
 function isIntegerOrRoll(input: string): boolean {
