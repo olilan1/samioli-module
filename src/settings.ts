@@ -6,6 +6,7 @@ export const SETTINGS = {
     AUTO_PANACHE: "automatic_panache_enable",
     AUTO_HUNT_PREY: "automatic_hunt_prey_enable",
     AUTO_UNSTABLE_CHECK: "automatic_unstable_check_enable",
+    AUTO_TEMPLATE_HELPER: "automatic_template_helper_enable",
     AUTO_SUSTAIN_CHECK: "automatic_sustain_check_enable",
     AUTO_START_OF_TURN_SPELL_CHECK: "automatic_start_of_turn_spell_check_enable",
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
@@ -54,6 +55,15 @@ export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_UNSTABLE_CHECK, {
         name: "Unstable Check Automation",
         hint: "Automatically add Unstable Effect",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_TEMPLATE_HELPER, {
+        name: "Template Helper",
+        hint: "Automatically adds an Effect to actors who place templates from spells and items. Deleting the effect will delete the template.",
         scope: "world",
         config: true,
         default: false,

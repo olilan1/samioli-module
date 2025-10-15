@@ -13,6 +13,7 @@ import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonize
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
 import { postMessagesForWithinSpellEffects, deleteWithinEffectsForTemplate, addEffectsToTokensInStartOfTurnTemplates, addOrRemoveWithinEffectIfNeeded } from "./startofturnspells.ts";
+import { deleteEffectWhenTemplateDeleted, deleteTemplateWhenEffectDeleted, runTemplateHelper } from "./templatehelper.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -48,6 +49,10 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
             .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
             .ifGM()
             .run();
+    hook(runTemplateHelper, template)
+            .ifEnabled(SETTINGS.AUTO_TEMPLATE_HELPER)
+            .ifGM()
+            .run();
 });
 
 Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _data, _context, _userId) => {
@@ -65,6 +70,10 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
             .run();
     hook(deleteWithinEffectsForTemplate, template)
             .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+            .ifGM()
+            .run();
+    hook(deleteEffectWhenTemplateDeleted, template)
+            .ifEnabled(SETTINGS.AUTO_TEMPLATE_HELPER)
             .ifGM()
             .run();
 });
@@ -118,6 +127,10 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
                     .run();
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+                    .run();
+    hook(deleteTemplateWhenEffectDeleted, item)
+                    .ifEnabled(SETTINGS.AUTO_TEMPLATE_HELPER)
+                    .ifGM()
                     .run();
 });
 
