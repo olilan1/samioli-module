@@ -1,20 +1,21 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { addEffectToActor, deleteTemplateById, isEffect } from "./utils.ts";
+import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect } from "./utils.ts";
 import { runMatchingSustainFunction } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
-    const messageItem = message.item;
-    if (messageItem?.type === 'spell') {
-        const spell = messageItem as SpellPF2e;
-        if (spell.system.duration.sustained) {
-            if (!message.actor) {
-                return;
-            }
-            const effect = createEffect(spell);
-            await addEffectToActor(message.actor, effect);
+    const messageItem: ItemPF2e | null = message.item;
+    if (isSpellPF2e(messageItem)) {
+        if (messageItem.system.duration.sustained) {
+            if (!message.actor) return;
+            const effect = createEffect(messageItem);
+            await addOrUpdateEffectOnActor(message.actor, effect);
         }
     }
+}
+
+function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
+    return !!item && item.type === "spell";
 }
 
 function createEffect(spell: SpellPF2e) {

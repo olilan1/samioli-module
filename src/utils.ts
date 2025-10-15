@@ -152,32 +152,14 @@ export function isEffect(item: ItemPF2e) : item is EffectPF2e {
     return item.type === "effect";  
 }
 
-interface CustomMessageData {
-    [key: string]: JSONValue | undefined;
-    content?: string;
-    whisper?: string[];
-    flags?: Record<string, Record<string, JSONValue>>;
-}
-
 export async function sendBasicChatMessage(content: string, speaker: ActorPF2e, 
     recipients?: string[]) {
-
-    const isWhisper = recipients && recipients.length > 0;
-
-    const messageData: Partial<CustomMessageData> = {
-        content: content,
-        speaker: ChatMessage.getSpeaker({ actor: speaker }),
-    };
-
-    if (isWhisper) {
-        messageData.whisper = recipients;
-    } 
-
-    try {
-        await ChatMessage.create(messageData);
-    } catch (error) {
-        console.error("Caught expected error:", error);
-    }
+    const isWhisper = recipients && recipients.length > 0;  
+    await ChatMessage.create({  
+        content: content,  
+        speaker: ChatMessage.getSpeaker({ actor: speaker }),  
+        ...(isWhisper ? { whisper: recipients } : {})  
+    }); 
 }
 
 export function returnStringOfNamesFromArray(names: string[]): string {
@@ -216,12 +198,16 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
     return template;
 }
 
-export async function addEffectToActor(actor: ActorPF2e, effect: EffectSource) {
-    const existingEffect = actor.items.find(item => item.slug === effect.system.slug
+export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: EffectSource):
+    Promise<EffectPF2e | void> {
+    const existingEffect = actor.items.find(item => item.slug === effectSource.system.slug
         && item.type === 'effect');
     if (existingEffect) {
-        await existingEffect.update(effect);
-        return;
+        await existingEffect.update(effectSource);
+        return existingEffect as EffectPF2e;
     }
-    await actor.createEmbeddedDocuments('Item', [effect]);
+    await actor.createEmbeddedDocuments('Item', [effectSource]);
+    const newEffect = actor.items.find(item => item.slug === effectSource.system.slug
+        && item.type === 'effect');
+    return newEffect as EffectPF2e;
 }

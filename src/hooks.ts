@@ -12,7 +12,7 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
-import { checkIfCombatantIsStartingTurnWithRelevantEffect, checkIfTemplateHasEffectsAndDeleteIfNeeded, checkIfTemplatePlacedIsStartOfTurnSpell, checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded } from "./startofturnspells.ts";
+import { postMessagesForWithinSpellEffects, deleteWithinEffectsForTemplate, addEffectsToTokensInStartOfTurnTemplates, addOrRemoveWithinEffectIfNeeded } from "./startofturnspells.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -44,7 +44,7 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
             .ifGM()
             .run();
 
-    hook(checkIfTemplatePlacedIsStartOfTurnSpell, template)
+    hook(addEffectsToTokensInStartOfTurnTemplates, template)
             .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
             .ifGM()
             .run();
@@ -63,7 +63,7 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
     hook(deleteTemplateTargets, template)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .run();
-    hook(checkIfTemplateHasEffectsAndDeleteIfNeeded, template)
+    hook(deleteWithinEffectsForTemplate, template)
             .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
             .ifGM()
             .run();
@@ -97,7 +97,7 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
     hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
-    hook(checkIfCombatantIsStartingTurnWithRelevantEffect, combatant)
+    hook(postMessagesForWithinSpellEffects, combatant)
                     .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
                     .run();
 });
@@ -122,7 +122,7 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
 });
 
 Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
-    hook(checkIfTokenIsWithinTemplateBoundsAndUpdateIfNeeded, token, movement.passed.spaces)
+    hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
                     .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
                     .run();
 });
