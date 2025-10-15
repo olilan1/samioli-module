@@ -6,7 +6,9 @@ export const SETTINGS = {
     AUTO_PANACHE: "automatic_panache_enable",
     AUTO_HUNT_PREY: "automatic_hunt_prey_enable",
     AUTO_UNSTABLE_CHECK: "automatic_unstable_check_enable",
+    AUTO_TEMPLATE_HELPER: "automatic_template_helper_enable",
     AUTO_SUSTAIN_CHECK: "automatic_sustain_check_enable",
+    AUTO_START_OF_TURN_SPELL_CHECK: "automatic_start_of_turn_spell_check_enable",
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
     DEBUG_LOGGING: "debug_logging"
 } as const;
@@ -59,9 +61,27 @@ export function registerSettings() {
         type: Boolean
     });
 
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_TEMPLATE_HELPER, {
+        name: "Template Helper",
+        hint: "Automatically adds an Effect to actors who place templates from spells and items. Deleting the effect will delete the template.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_SUSTAIN_CHECK, {
         name: "Sustain Spell Automation",
         hint: "Automatically add Sustain Spell Effects and Messages to Chat",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK, {
+        name: "Start of Turn Spell Automation",
+        hint: "Automatically add reminders for spells that trigger on start of turn",
         scope: "world",
         config: true,
         default: false,
