@@ -4,7 +4,7 @@ const { DialogV2 } = foundry.applications.api;
 const { renderTemplate } = foundry.applications.handlebars;
 const { FormDataExtended } = foundry.applications.ux;
 
-const damageTagConfig = {
+const DAMAGE_TAG_CONFIG = {
     persistent: { label: "Persistent", group: 'type', value: 'persistent', hasTag: false },
     precision: { label: "Precision", group: 'modifier', value: 'precision', hasTag: false },
     splash: { label: "Splash", group: 'modifier', value: 'splash', hasTag: false },
@@ -14,6 +14,8 @@ const damageTagConfig = {
     holy: { label: "Holy", group: 'trait', value: 'item:trait:holy', hasTag: true },
     unholy: { label: "Unholy", group: 'trait', value: 'item:trait:unholy', hasTag: true }
 };
+
+type DamageTrait = { key: string; label: string; group: string; value: string; hasTag: boolean; };
 
 export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTMLElement>) {
 
@@ -39,8 +41,7 @@ export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTM
     controlButtons.insertAdjacentHTML("afterbegin", (myButtonHTML));
     const myButtonHTMLElement = controlButtons.querySelector<HTMLButtonElement>("#damage-helper-button");
 
-    myButtonHTMLElement?.addEventListener("click", async (event) => {
-        event.preventDefault();
+    myButtonHTMLElement?.addEventListener("click", async () => {
         showDamageHelperDialog();
     });
 }
@@ -56,11 +57,11 @@ async function showDamageHelperDialog() {
     const damageTypes: Record<string, string> = CONFIG.PF2E.damageTypes;
     const preciousMaterials: Record<string, string> = CONFIG.PF2E.preciousMaterials;
 
-    const checkboxData = createLocalizedCheckboxData(damageTagConfig);
+    const checkboxData = createLocalizedCheckboxData(DAMAGE_TAG_CONFIG);
 
     const context = {
-        damageTypes: createLocalizedContexts(damageTypes),
-        preciousMaterials: createLocalizedContexts(preciousMaterials),
+        damageTypes: createLocalizedContext(damageTypes),
+        preciousMaterials: createLocalizedContext(preciousMaterials),
         damageModifiers: checkboxData,
         defaultDamageValue: "untyped"
     };
@@ -116,14 +117,13 @@ async function submitDamageForm(dialog: InstanceType<typeof DialogV2>): Promise<
     dialog.close();
 }
 
-function createLocalizedContexts(options: Record<string, string>): 
+function createLocalizedContext(options: Record<string, string>): 
     { value: string, label: string }[] {
 
     const localizedContext = Object.entries(options).map(([key, labelKey]) => {
-        const value = key;
         const localizedLabel = game.i18n.localize(labelKey);
         return {
-            value: value,
+            value: key,
             label: localizedLabel
         };
     });
@@ -133,7 +133,7 @@ function createLocalizedContexts(options: Record<string, string>):
 
 function createLocalizedCheckboxData(options: Record<string,
     { label: string, group: string, value: string }>): 
-    { name: string, label: string, isChecked: boolean }[] {
+    { name: string, label: string }[] {
 
     const localizedCheckboxes = Object.entries(options)
         .map(([key, entry]) => {
@@ -141,8 +141,7 @@ function createLocalizedCheckboxData(options: Record<string,
             const localizedLabel = game.i18n.localize(labelKey);
             return {
                 name: key,
-                label: localizedLabel,
-                isChecked: false
+                label: localizedLabel
             };
         });
 
@@ -151,34 +150,31 @@ function createLocalizedCheckboxData(options: Record<string,
 
 function createDamageRoll(formData: Record<string, unknown>) {
 
-    type DamageTrait = { key: string; label: string; group: string; value: string; hasTag: boolean; };
-
     const value = formData.damageAmount as string;
     const damageType = formData.damageType as string;
     const material = formData.preciousMaterial as string;
-    const isPersistent = formData.persistent === true;
     const damageTraits: DamageTrait[] = [];
-    const damageModifiers: string[] =[];
-
-    for (const key of Object.keys(damageTagConfig) as Array<keyof typeof damageTagConfig>) {
-        if (formData[key] === true) {
-            const { group, value: tagValue } = damageTagConfig[key];
-            switch (group) {
-                case 'modifier':
-                    damageModifiers.push(tagValue);
-                    break;
-                case 'trait':
-                    damageTraits.push({ key: key, ...damageTagConfig[key] });
-                    break;
-            }
-        }
-    }
-
+    const damageModifiers: string[] = [];
     const damageAndMaterialTypes = [];
+
+    for (const [key, config] of Object.entries(DAMAGE_TAG_CONFIG)) {
+        if (formData[key]) {  
+            switch (config.group) {  
+                case 'modifier':  
+                    damageModifiers.push(config.value);  
+                    break;  
+                case 'trait':  
+                    damageTraits.push({ key, ...config });  
+                    break;
+                case 'type':  
+                    damageAndMaterialTypes.push(config.value);  
+                    break;  
+            }  
+        }  
+    }  
 
     damageAndMaterialTypes.push(damageType);
     if (material) damageAndMaterialTypes.push(material);
-    if (isPersistent) damageAndMaterialTypes.push(damageTagConfig.persistent.value);
 
     const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll");
     if (!DamageRoll) return;
@@ -195,7 +191,7 @@ function createDamageRoll(formData: Record<string, unknown>) {
     const myRoll = new DamageRoll(formula);
 
     myRoll.toMessage({
-        flavor: `${newFlavor}`,
+        flavor: newFlavor,
         speaker: ChatMessage.getSpeaker(),
         flags: {
             pf2e: {
@@ -253,7 +249,7 @@ function getFlavorHtml(damageType: string, damageTraits: { key: string; label: s
 
 function getTraitTagHtml(trait: string): string {
 
-    const damageTraits: Record<string, string> = CONFIG.PF2E.damageTraits
+    const damageTraits: Record<string, string> = CONFIG.PF2E.damageTraits;
     const localizedTrait = game.i18n.localize(damageTraits[trait]);
     const traitsDescriptions: Record<string, string> = CONFIG.PF2E.traitsDescriptions;
     const traitDescriptionTag = traitsDescriptions[trait];
