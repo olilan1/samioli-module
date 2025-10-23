@@ -187,13 +187,7 @@ function createDamageRoll(formData: Record<string, unknown>) {
         formula = `{${value}[${damageAndMaterialTypes}]}`;
     }
 
-    let newFlavor: string;
-
-    if (damageType === "bleed") {
-        newFlavor = getFlavorHtml(damageType, damageTraits, material, false);
-    } else {
-        newFlavor = getFlavorHtml(damageType, damageTraits, material, isPersistent);
-    }
+    const newFlavor = getFlavorHtml(damageType, damageTraits, material, isPersistent);
 
     const myRoll = new DamageRoll(formula);
 
@@ -234,7 +228,7 @@ function getFlavorHtml(damageType: string, damageTraits: { key: string; label: s
     }
 
     let headerDamagePersistent = ``;
-    if (isPersistent) {
+    if ((isPersistent && damageType !== "bleed")) {
         headerDamagePersistent = `Persistent `;
     }
 
