@@ -41,9 +41,9 @@ export async function addEffectsToTokensInStartOfTurnTemplates(template: Measure
 }
 
 async function addWithinEffectToTokenActor(token: TokenPF2e, spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e) {
-    // get the effect from the spell
-    const effectSource = createStartOfTurnEffectSource(spell, template);
-    // add the effect to the actor
+    // create the within effect from the spell
+    const effectSource = createWithinEffectSource(spell, template);
+    // add the within effect to the actor
     if (!token.actor) return;
     const effectItem = await addOrUpdateEffectOnActor(token.actor, effectSource);
     if (!effectItem) return;
@@ -65,7 +65,7 @@ async function removeSpellEffectFromTokenActor(token: TokenPF2e, spellEffect: It
     if (!token.actor) return;
     const spellEffectUuid = spellEffect.uuid;
     await spellEffect.delete();
-    // update the template to remove the effect
+    // update the template to remove the within effect
     const templateLinkedUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
     const newTemplateLinkedUuids = templateLinkedUuids.filter(uuid => uuid !== spellEffectUuid);
     await template.setFlag("samioli-module", 'startOfTurnEffectUuid', newTemplateLinkedUuids);
@@ -85,6 +85,7 @@ export async function addOrRemoveWithinEffectIfNeeded(token: TokenPF2e, costInFe
 
     // add a required delay based on the movement distance to ensure the calculation occurs at the
     // correct time, or it triggers too early and doesn't detect that it's within the template
+    // TODO: find a better way to handle this timing issue
     if (costInSquares <= 3) {
         await delay(costInSquares * 220);
     } else {
@@ -107,27 +108,27 @@ export async function addOrRemoveWithinEffectIfNeeded(token: TokenPF2e, costInFe
                 const spell = fromUuidSync(spellUuid) as SpellPF2e;
                 if (!spell) return;
                 await addWithinEffectToTokenActor(token, spell, template.document);
-            } // token is in template area and has effect, do nothing
+            }
         } else {
             // token is not within the template
             if (effect) {
                 // remove effect if it exists as it's outside the template area.
                 await removeSpellEffectFromTokenActor(token, effect, template.document);
-            } // token is not in template area and has no effect, do nothing
+            }
         }   
     }
 }
 
-export async function postMessagesForWithinSpellEffects(combatant: CombatantPF2e) {
+export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
     const actor = combatant.token?.actor;
     if (!actor) return;
-    const startOfTurnEffects = actor.items.filter(item => 
-        item.type === 'effect' && item.flags.samioli?.startOfTurnSpellUuid != null);
+    const startOfTurnEffects = actor.items.filter(item =>
+        item.type === 'effect' && item.flags["samioli-module"]?.startOfTurnSpellUuid != null);
 
     if (startOfTurnEffects.length === 0) return;
 
     for (const effect of startOfTurnEffects) {
-        const speakerUuid = effect.flags["samioli-module"]?.startOfTurnActorUuid as string;
+        const speakerUuid = effect.flags["samioli-module"]?.startOfTurnCasterUuid as string;
         const speaker = fromUuidSync(speakerUuid) as ActorPF2e;
         const spellUuid = effect.flags["samioli-module"]?.startOfTurnSpellUuid as string;
         const spell = fromUuidSync(spellUuid) as SpellPF2e;
@@ -148,10 +149,9 @@ export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateD
     }
 }
 
-function createStartOfTurnEffectSource(spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e) : EffectSource {
+function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e) : EffectSource {
 
     const effectName = `Within: ${spell.name}`;
-    const description = spell.system.description.value;
 
     const effectLevel = spell.system.level?.value ?? spell.parent?.level ?? 1;
     const image = spell.img;
@@ -179,7 +179,7 @@ function createStartOfTurnEffectSource(spell: SpellPF2e, template: MeasuredTempl
             "samioli-module": { 
                 startOfTurnSpellUuid: spell.uuid,
                 startOfTurnTemplateId: template.id,
-                startOfTurnActorUuid: spell.actor?.uuid
+                startOfTurnCasterUuid: spell.actor?.uuid
             }
         }
     };

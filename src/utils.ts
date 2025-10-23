@@ -72,11 +72,6 @@ export async function deleteTemplateById(templateId: string) {
         return;
     }
 
-    if (!templateId) {
-        console.log("No template ID provided for deletion.");
-        return;
-    }
-
     // Check if the template exists before attempting to delete
     const template = canvas.scene.templates.get(templateId);
     if (!template) {
