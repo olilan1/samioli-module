@@ -153,6 +153,7 @@ function createDamageRoll(formData: Record<string, unknown>) {
     const value = formData.damageAmount as string;
     const damageType = formData.damageType as string;
     const material = formData.preciousMaterial as string;
+    const isPersistent = formData.persistent as boolean;
     const damageTraits: DamageTrait[] = [];
     const damageModifiers: string[] = [];
     const damageAndMaterialTypes = [];
@@ -186,7 +187,13 @@ function createDamageRoll(formData: Record<string, unknown>) {
         formula = `{${value}[${damageAndMaterialTypes}]}`;
     }
 
-    const newFlavor = getFlavorHtml(damageType, damageTraits, material);
+    let newFlavor: string;
+
+    if (damageType === "bleed") {
+        newFlavor = getFlavorHtml(damageType, damageTraits, material, false);
+    } else {
+        newFlavor = getFlavorHtml(damageType, damageTraits, material, isPersistent);
+    }
 
     const myRoll = new DamageRoll(formula);
 
@@ -204,13 +211,14 @@ function createDamageRoll(formData: Record<string, unknown>) {
 }
 
 function getFlavorHtml(damageType: string, damageTraits: { key: string; label: string; 
-    group: string; value: string; hasTag: boolean; }[] , material: string): string {
+    group: string; value: string; hasTag: boolean; }[] , material: string, isPersistent: boolean):
+    string {
 
     const hasTagTraits = damageTraits.filter(trait => trait.hasTag);
     const noTagTraits = damageTraits.filter(trait => !trait.hasTag);
     const headerStart = `
         <h4 class="action">
-        <strong>Custom Damage Roll: 
+        <strong>Damage: 
     `;
     const traitLabels = noTagTraits.map(trait => trait.label);
     let headerNoTagTraitsString: string;
@@ -225,6 +233,11 @@ function getFlavorHtml(damageType: string, damageTraits: { key: string; label: s
         headerNoTagTraitsString = `with ${start} and ${end}`; 
     }
 
+    let headerDamagePersistent = ``;
+    if (isPersistent) {
+        headerDamagePersistent = `Persistent `;
+    }
+
     const headerDamageType = `${game.i18n.localize(damageType).capitalize()} `;
     const headerEnd = `</strong></h4>`;
     const outerTagsDiv = `<div class="tags" data-tooltip-class="pf2e">`;
@@ -234,6 +247,7 @@ function getFlavorHtml(damageType: string, damageTraits: { key: string; label: s
 
     const fullFlavorHtml = `
         ${headerStart}
+        ${headerDamagePersistent}
         ${headerDamageType}
         ${headerNoTagTraitsString}
         ${headerEnd}
