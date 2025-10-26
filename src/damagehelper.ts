@@ -228,7 +228,7 @@ function getFlavorHtml(damageType: string, damageTraits: { key: string; label: s
     }
 
     let headerDamagePersistent = ``;
-    if ((isPersistent && damageType !== "bleed")) {
+    if (isPersistent && damageType !== "bleed") {
         headerDamagePersistent = `Persistent `;
     }
 
