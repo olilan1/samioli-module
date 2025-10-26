@@ -59,7 +59,7 @@ async function addWithinEffectToTokenActor(token: TokenPF2e, spell: SpellPF2e, t
     await template.setFlag("samioli-module", 'startOfTurnEffectUuid', templateLinkedUuids);
 }
 
-async function removeSpellEffectFromTokenActor(token: TokenPF2e, spellEffect: ItemPF2e, 
+async function removeWithinEffectFromTokenActor(token: TokenPF2e, spellEffect: ItemPF2e, 
     template: MeasuredTemplateDocumentPF2e) {
     
     if (!token.actor) return;
@@ -113,7 +113,7 @@ export async function addOrRemoveWithinEffectIfNeeded(token: TokenPF2e, costInFe
             // token is not within the template
             if (effect) {
                 // remove effect if it exists as it's outside the template area.
-                await removeSpellEffectFromTokenActor(token, effect, template.document);
+                await removeWithinEffectFromTokenActor(token, effect, template.document);
             }
         }   
     }
