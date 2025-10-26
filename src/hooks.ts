@@ -12,6 +12,9 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
+import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
+import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
+import { getHtmlElement } from "./utils.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -106,6 +109,25 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
+});
+
+// V13 Only
+Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>, 
+        _data, _options) => {
+    hook(addDamageHelperButtonToChatUIv13, cssMappings)
+                .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
+                .ifGM()
+                .run();
+});
+
+Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement, 
+        _data: Record<string, unknown>, _options: Record<string, unknown>) => {
+    const html = getHtmlElement(htmlOrJQuery);
+    hook(addDamageHelperButtonToChatUIv12, html)
+                .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
+                .ifGM()
+                .ifV12()
+                .run();
 });
 
 function handleChatMessagePostRoll(message: ChatMessagePF2e) {
@@ -225,6 +247,13 @@ class HookRunner<T extends unknown[]> {
 
     ifUser(userId: string): this {
         if (game.user.id != userId) {
+            this.shouldRun = false;
+        }
+        return this;
+    }
+
+    ifV12(): this {
+        if (!game.version.startsWith("12.")) {
             this.shouldRun = false;
         }
         return this;
