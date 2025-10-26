@@ -1,17 +1,21 @@
-import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e } from "foundry-pf2e";
-import { deleteTemplateById, isEffect } from "./utils.ts";
+import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect } from "./utils.ts";
 import { runMatchingSustainFunction } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
-    const spell = message.item;
-    if (spell?.type === 'spell' && spell.system.duration.sustained) {
-        if (!message.actor) {
-            return;
+    const messageItem: ItemPF2e | null = message.item;
+    if (isSpellPF2e(messageItem)) {
+        if (messageItem.system.duration.sustained) {
+            if (!message.actor) return;
+            const effect = createEffect(messageItem);
+            await addOrUpdateEffectOnActor(message.actor, effect);
         }
-        const effect = createEffect(spell);
-        await addEffectToActor(message.actor, effect);
     }
+}
+
+function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
+    return !!item && item.type === "spell";
 }
 
 function createEffect(spell: SpellPF2e) {
@@ -24,7 +28,7 @@ function createEffect(spell: SpellPF2e) {
     const effectLevel = spell.system.level?.value ?? spell.parent?.level ?? 1;
     const image = spell.img;
 
-    return {
+    const effect = {
         type: 'effect',
         name: effectName,
         img: image,
@@ -42,25 +46,16 @@ function createEffect(spell: SpellPF2e) {
             },
             unidentified: false,
             level: { value: effectLevel },
-            source: spell.system.source,
             slug: `sustaining-effect-${spell.system.slug}`
         },
         flags: {
-            samioli: {
-                spellId: spell.id
+            "samioli-module": {
+                sustainedSpellId: spell.id
             }
         }
     };
-}
-
-async function addEffectToActor(actor: ActorPF2e, effectData: any) {
-    const existingEffect = actor.items.find(item => item.slug === effectData.system.slug
-        && item.type === 'effect');
-    if (existingEffect) {
-        await existingEffect.update(effectData);
-        return;
-    }
-    await actor.createEmbeddedDocuments('Item', [effectData]);
+    
+    return effect as DeepPartial<EffectSource> as EffectSource;
 }
 
 export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
@@ -70,6 +65,7 @@ export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
     }
 
     for (const effect of sustainedEffects) {
+        if (!effect.slug) continue;
         const spellSlug = effect.slug.replace('sustaining-effect-', '');
         const spell = getSpellBySlug(spellSlug, actor);
         if (spell) {
@@ -80,7 +76,7 @@ export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
 
 function getActorSustainedEffects(actor: ActorPF2e) {
     const sustainedEffects = actor.items.filter(item => item.type === 'effect' &&
-        item.slug?.startsWith('sustaining-effect-'));
+        (item.slug?.startsWith('sustaining-effect-') ?? false));
     if (sustainedEffects.length === 0) {
         return;
     }
@@ -115,22 +111,26 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
 
     await addSustainedSpellBackIntoChat(effect, actor);
 
-    runMatchingSustainFunction(getTemplateFromEffect(effect));
+    const template = getTemplateFromEffect(effect);
+    if (template) {
+        runMatchingSustainFunction(template);
+    }
 }
 
 function getTemplateFromEffect(effect: EffectPF2e) {
-    const templateId = effect.flags.samioli?.templateId;
-    if (!templateId) return;
+    const templateId = effect.getFlag("samioli-module", "sustainedTemplateId");
+    if (typeof templateId !== "string" || !templateId) return;
+    if (!canvas.scene) return;
     return canvas.scene.templates.get(templateId);
 }
 
 async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2e) {
-
-    const spellId = effect.flags.samioli.spellId;
+    const spellId = effect.getFlag("samioli-module", "sustainedSpellId");
+    if (typeof spellId !== "string" || !spellId) return;
     if (!spellId) return;
     const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
     const spell = fromUuidSync(spellUuid);
-    if (!spell) return;
+    if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
     await spell.toMessage();
 }
 
@@ -166,8 +166,8 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
 async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e,
     effect: EffectPF2e) {
     await effect.update({
-        'flags.samioli': {
-            templateId: template.id
+        'flags.samioli-module': {
+            sustainedTemplateId: template.id
         }
     });
 }
@@ -179,22 +179,24 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
     const sustainedEffectsOnActor = getActorSustainedEffects(template.actor);
     if (!sustainedEffectsOnActor) return;
 
-    const spellSlugFromTemplate = template.flags.pf2e.origin?.slug;
+    const spellSlugFromTemplate = template.item?.slug;
     if (!spellSlugFromTemplate) return;
 
     const matchingEffect = sustainedEffectsOnActor.find(effect =>
-        effect.slug.replace('sustaining-effect-', '') === spellSlugFromTemplate);
+        effect.slug?.replace('sustaining-effect-', '') === spellSlugFromTemplate);
 
     if (matchingEffect) {
-        await associateTemplateWithEffect(template, matchingEffect);
+        await associateTemplateWithEffect(template, matchingEffect as EffectPF2e);
     }
 }
 
 export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.flags.samioli?.templateId;
-    if (!templateId) return;
+    const templateId = item.getFlag("samioli-module", "sustainedTemplateId"); 
+    if (typeof templateId !== "string" || !templateId) {
+        return;
+    }
 
     await deleteTemplateById(templateId);
 

@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -68,19 +68,14 @@ export function postUINotification(message: string, type: "info" | "warn" | "err
 
 export async function deleteTemplateById(templateId: string) {
     if (!canvas.scene) {
-        ui.notifications.error("No active scene found.");
-        return;
-    }
-
-    if (!templateId) {
-        ui.notifications.warn("No template ID provided for deletion.");
+        console.log("No active scene found.");
         return;
     }
 
     // Check if the template exists before attempting to delete
     const template = canvas.scene.templates.get(templateId);
     if (!template) {
-        ui.notifications.warn(`Measured Template with ID ${templateId} not found on the current scene.`);
+        console.log(`Measured Template with ID ${templateId} not found on the current scene.`);
         return;
     }
 
@@ -152,12 +147,14 @@ export function isEffect(item: ItemPF2e) : item is EffectPF2e {
     return item.type === "effect";  
 }
 
-export async function sendBasicChatMessage(content: string, recipients: string[], speaker: ActorPF2e) {
-    await ChatMessage.create({
-        content: content,
-        whisper: recipients,
-        speaker: ChatMessage.getSpeaker({ actor: speaker }),
-    });
+export async function sendBasicChatMessage(content: string, speaker: ActorPF2e, 
+    recipients?: string[]) {
+    const isWhisper = recipients && recipients.length > 0;  
+    await ChatMessage.create({  
+        content: content,  
+        speaker: ChatMessage.getSpeaker({ actor: speaker }),  
+        ...(isWhisper ? { whisper: recipients } : {})  
+    }); 
 }
 
 export function returnStringOfNamesFromArray(names: string[]): string {
@@ -200,4 +197,18 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
         throw new Error("Failed to create template");
     }
     return template;
+}
+
+export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: EffectSource):
+    Promise<EffectPF2e | void> {
+    const existingEffect = actor.items.find(item => item.slug === effectSource.system.slug
+        && item.type === 'effect');
+    if (existingEffect) {
+        await existingEffect.update(effectSource);
+        return existingEffect as EffectPF2e;
+    }
+    await actor.createEmbeddedDocuments('Item', [effectSource]);
+    const newEffect = actor.items.find(item => item.slug === effectSource.system.slug
+        && item.type === 'effect');
+    return newEffect as EffectPF2e;
 }

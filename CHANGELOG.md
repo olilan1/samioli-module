@@ -4,6 +4,9 @@
 
 - Added Dazzling Display Animation and Automation
 - Tectonic Stomp Automation and Animation
+- Improved Wall of Flame Ring Logic
+- Start of Turn Spells Helper
+- General Type Clean up
 
 ## [0.56.0] - 2025-09-22
 
