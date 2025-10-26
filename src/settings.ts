@@ -9,6 +9,7 @@ export const SETTINGS = {
     AUTO_SUSTAIN_CHECK: "automatic_sustain_check_enable",
     AUTO_START_OF_TURN_SPELL_CHECK: "automatic_start_of_turn_spell_check_enable",
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
+    DAMAGE_HELPER_BUTTON: "damage_helper_button_enable",
     DEBUG_LOGGING: "debug_logging"
 } as const;
 
@@ -84,6 +85,16 @@ export function registerSettings() {
         scope: "world",
         config: true,
         default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.DAMAGE_HELPER_BUTTON, {
+        name: "Damage Helper Button",
+        hint: "Add a button to the chat UI that allows you to create damage rolls easily. (Requires a refresh after changing this setting)",
+        scope: "world",
+        config: true,
+        default: false,
+        requiresReload: true,
         type: Boolean
     });
 
