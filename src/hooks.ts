@@ -128,6 +128,8 @@ Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => 
     hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
                     .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
                     .run();
+});
+
 // V13 Only
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>, 
         _data, _options) => {
