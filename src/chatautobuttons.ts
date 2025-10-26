@@ -3,6 +3,8 @@ import { startDiveAndBreach } from "./spells/diveandbreach.ts";
 import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.ts";
 import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
 import { startSonicDash } from "./actions/sonicdash.ts";
+import { startDazzlingDisplay } from "./actions/dazzlingdisplay.ts";
+import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 
@@ -30,6 +32,14 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "sonic-dash": {
         label: "Start dashing!",
         function: startSonicDash
+    },
+    "dazzling-display": {
+        label: "Start dazzling!",
+        function: startDazzlingDisplay
+    },
+    "tectonic-stomp": {
+        label: "Start stomping!",
+        function: startTectonicStomp
     }
 }
 
