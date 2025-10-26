@@ -54,14 +54,14 @@ export function logd(message: unknown) {
 
 export function postUINotification(message: string, type: "info" | "warn" | "error") {
     switch (type) {
-        case "info": 
-            ui.notifications.info(message); 
+        case "info":
+            ui.notifications.info(message);
             break;
-        case "warn": 
+        case "warn":
             ui.notifications.warn(message);
             break;
-        case "error": 
-            ui.notifications.error(message); 
+        case "error":
+            ui.notifications.error(message);
             break;
     }
 }
@@ -89,29 +89,29 @@ export async function deleteTemplateById(templateId: string) {
     }
 }
 
-export function getTokenFromActor(actor: ActorPF2e | null) : TokenPF2e | null {
+export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
     return actor?.getActiveTokens()[0] ?? null;
 }
 
 /**
  * Returns the User(s) who have ownership or control over a given Actor.
  */
-export function getOwnersFromActor(actor: ActorPF2e) : User[] {
-  const controllingUsers = [];
-  for (const userId in actor.ownership) {
-    // Skip the "default" entry, which applies to all users unless overridden.
-    if (userId === "default") continue;
+export function getOwnersFromActor(actor: ActorPF2e): User[] {
+    const controllingUsers = [];
+    for (const userId in actor.ownership) {
+        // Skip the "default" entry, which applies to all users unless overridden.
+        if (userId === "default") continue;
 
-    const permissionLevel = actor.ownership[userId] ?? 0;
-    if (permissionLevel >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
-      const user = game.users.get(userId);
-      if (user) {
-        controllingUsers.push(user);
-      }
+        const permissionLevel = actor.ownership[userId] ?? 0;
+        if (permissionLevel >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
+            const user = game.users.get(userId);
+            if (user) {
+                controllingUsers.push(user);
+            }
+        }
     }
-  }
-  
-  return controllingUsers;
+
+    return controllingUsers;
 }
 
 /**
@@ -139,51 +139,53 @@ export async function deleteLightFromTemplate(template: MeasuredTemplateDocument
     }
 }
 
-export function isCondition(item: ItemPF2e) : item is ConditionPF2e {  
-    return item.type === "condition";  
+export function isCondition(item: ItemPF2e): item is ConditionPF2e {
+    return item.type === "condition";
 }
 
-export function isEffect(item: ItemPF2e) : item is EffectPF2e {  
-    return item.type === "effect";  
+export function isEffect(item: ItemPF2e): item is EffectPF2e {
+    return item.type === "effect";
 }
 
-export async function sendBasicChatMessage(content: string, speaker: ActorPF2e, 
+export async function sendBasicChatMessage(content: string, speaker: ActorPF2e,
     recipients?: string[]) {
-    const isWhisper = recipients && recipients.length > 0;  
-    await ChatMessage.create({  
-        content: content,  
-        speaker: ChatMessage.getSpeaker({ actor: speaker }),  
-        ...(isWhisper ? { whisper: recipients } : {})  
-    }); 
+    const isWhisper = recipients && recipients.length > 0;
+    await ChatMessage.create({
+        content: content,
+        speaker: ChatMessage.getSpeaker({ actor: speaker }),
+        ...(isWhisper ? { whisper: recipients } : {})
+    });
 }
 
 export function returnStringOfNamesFromArray(names: string[]): string {
-  if (names.length === 0) {
-    return "";
-  }
+    if (names.length === 0) {
+        return "";
+    }
 
-  if (names.length === 1) {
-    return names[0];
-  }
+    if (names.length === 1) {
+        return names[0];
+    }
 
-  const allButLast = names.slice(0, -1).join(", ");
-  const last = names[names.length - 1];
+    const allButLast = names.slice(0, -1).join(", ");
+    const last = names[names.length - 1];
 
-  return `${allButLast} and ${last}`;
+    return `${allButLast} and ${last}`;
 }
 
 export function getHtmlElement(htmlOrJquery: JQuery | HTMLElement) {
-  if (htmlOrJquery instanceof jQuery) {
-    return (htmlOrJquery as JQuery)[0] as HTMLElement;
-  }
-  // Otherwise, it's HTML, just return it
-  return htmlOrJquery as HTMLElement;
+    if (htmlOrJquery instanceof jQuery) {
+        return (htmlOrJquery as JQuery)[0] as HTMLElement;
+    }
+    // Otherwise, it's HTML, just return it
+    return htmlOrJquery as HTMLElement;
+}
+
 export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
     return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)
 }
 
 export async function createTemplateAtPoint(point: Point, userId: string, radius: number, shape: MeasuredTemplateType): Promise<MeasuredTemplateDocumentPF2e> {
-    
+
     const templateData = {
         t: shape,
         distance: radius,
