@@ -16,23 +16,42 @@ export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
     const frightenedValue = frightenedCondition.value;
     if (frightenedValue === null) return;
 
+    const despairEffects = getActorDespairEffects(actor);
+    const hasDespairEffects = despairEffects.length > 0;
+
     const antagonizedEffects = getActorAntagonizedEffects(actor);
     const hasAntagonizedEffects = antagonizedEffects.length > 0;
 
-    if (hasAntagonizedEffects) {  
+    if (hasAntagonizedEffects || hasDespairEffects) {
+        // if frightened value is greater than 1, decrement normally  
         if (frightenedValue > 1) {  
             await decrementFrightenedCondition(frightenedCondition);  
-            for (const effect of antagonizedEffects) {  
+            for (const effect of antagonizedEffects) {
+                // ask GM if they want to remove antagonize  
                 await createAntagonizeRemovalConfirmationChatMessage(token, effect);  
             }  
         } else {  
-            for (const effect of antagonizedEffects) {  
-                await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);  
-            }  
+            if (!hasDespairEffects) {
+                // if frightened value is 1 and no despair effects, ask if frightened and antagonize effects should be removed
+                for (const effect of antagonizedEffects) {  
+                    await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);  
+                }  
+            } else {
+                // if frightened value is 1 but has despair effects, just ask if antagonize should be removed
+                for (const effect of antagonizedEffects) {  
+                    await createAntagonizeRemovalConfirmationChatMessage(token, effect);  
+                } 
+            }
         }  
-    } else {  
+    } else {
+        // no antagonize or despair effects, decrement frightened  
         await decrementFrightenedCondition(frightenedCondition);  
     }  
+}
+
+function getActorDespairEffects(actor: ActorPF2e) {
+    return actor.items.filter(item => item.type === 'effect' && 
+        (item.slug === 'effect-despair') || (item.slug === 'effect-aura-of-despair')) as EffectPF2e[];
 }
 
 async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>) {
