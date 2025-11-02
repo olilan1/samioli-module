@@ -4,6 +4,7 @@ import { removeFrightenedAndAntagonize } from "./effects/frightened.ts";
 import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
 import { handleSustainSpell } from "./sustain.ts";
+import { extractActorAndRollUnstableCheckHomebrew } from "./unstablehomebrew.ts";
 
 // Mapping of slug to function description.
 // Slug must match what is provided in the MessageSpec when calling createChatMessageWithButton
@@ -12,7 +13,8 @@ const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonFunctionDescription> = {
     "remove-frightened-and-antagonize": { func: removeFrightenedAndAntagonize, takesMsg: false },
     "remove-antagonize": { func: removeAntagonizeEffect, takesMsg: false },
     "remove-panache": { func: onClearPanacheButtonClick, takesMsg: true },
-    "sustain-spell": { func: handleSustainSpell, takesMsg: false }
+    "sustain-spell": { func: handleSustainSpell, takesMsg: false },
+    "unstable-check-homebrew": { func: extractActorAndRollUnstableCheckHomebrew, takesMsg: true }
 };
 
 type StringOnlyFuncDescription = {

@@ -16,6 +16,7 @@ import { postMessagesForWithinEffects, deleteWithinEffectsForTemplate, addEffect
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
 import { getHtmlElement } from "./utils.ts";
+import { checkIfUnstableCheckHomebrewAndHandle, checkIfUnstableActionAndHandle, checkIfUnstableAttackAndHandle } from "./unstablehomebrew.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -27,6 +28,9 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
     hook(editEnjoyTheShowSkillRollIfNeeded, message, html)
         .run();
     hook(addButtonClickHandlersIfNeeded, message, html)
+        .run();
+    hook(checkIfUnstableActionAndHandle, message, html)
+        .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
         .run();
 });
 
@@ -164,6 +168,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifEnabled(SETTINGS.AUTO_PANACHE)
                     .ifGM()
                     .run();
+            hook(checkIfUnstableAttackAndHandle, message)
+                    .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+                    .ifGM()
+                    .run();
             break;
         case "damage-roll":
             hook(checkForFinisherDamage, message)
@@ -190,6 +198,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
         case "flat-check":
             hook(checkForUnstableCheck, message)
                     .ifEnabled(SETTINGS.AUTO_UNSTABLE_CHECK)
+                    .ifGM()
+                    .run();
+            hook(checkIfUnstableCheckHomebrewAndHandle, message)
+                    .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
                     .ifGM()
                     .run();
             break;
