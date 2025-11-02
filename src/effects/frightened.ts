@@ -16,13 +16,10 @@ export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
     const frightenedValue = frightenedCondition.value;
     if (frightenedValue === null) return;
 
-    const despairEffects = getActorDespairEffects(actor);
-    const hasDespairEffects = despairEffects.length > 0;
-
     const antagonizedEffects = getActorAntagonizedEffects(actor);
     const hasAntagonizedEffects = antagonizedEffects.length > 0;
 
-    if (hasAntagonizedEffects || hasDespairEffects) {
+    if (hasAntagonizedEffects || doesActorHaveDespairEffects(actor)) {
         // if frightened value is greater than 1, decrement normally  
         if (frightenedValue > 1) {  
             await decrementFrightenedCondition(frightenedCondition);  
@@ -31,7 +28,7 @@ export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
                 await createAntagonizeRemovalConfirmationChatMessage(token, effect);  
             }  
         } else {  
-            if (!hasDespairEffects) {
+            if (!doesActorHaveDespairEffects(actor)) {
                 // if frightened value is 1 and no despair effects, ask if frightened and antagonize effects should be removed
                 for (const effect of antagonizedEffects) {  
                     await createFrightenedAndAntagonizeRemovalConfirmationChatMessage(token, effect, frightenedCondition);  
@@ -49,9 +46,9 @@ export async function handleFrightenedAtTurnEnd(combatant: CombatantPF2e) {
     }  
 }
 
-function getActorDespairEffects(actor: ActorPF2e) {
-    return actor.items.filter(item => item.type === 'effect' && 
-        (item.slug === 'effect-despair') || (item.slug === 'effect-aura-of-despair')) as EffectPF2e[];
+function doesActorHaveDespairEffects(actor: ActorPF2e) {
+    return actor.items.some(item => item.type === 'effect' && 
+        (item.slug === 'effect-despair') || (item.slug === 'effect-aura-of-despair'));
 }
 
 async function decrementFrightenedCondition(condition: ConditionPF2e<ActorPF2e>) {
