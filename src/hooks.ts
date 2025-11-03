@@ -15,7 +15,8 @@ import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
 import { postMessagesForWithinEffects, deleteWithinEffectsForTemplate, addEffectsToTokensInStartOfTurnTemplates, addOrRemoveWithinEffectIfNeeded } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
-import { getHtmlElement } from "./utils.ts";
+import { getHtmlElement, MODULE_ID } from "./utils.ts";
+import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -210,11 +211,18 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifMessagePosterAndActorOwner()
                     .run();
             break;
+        case "custom":
+            hook(runDazzlingDisplayAutomationAsGM, message)
+                    .ifGM()
+                    .run();
+            break;
     }
 }
 
 function getMessageType(message: ChatMessagePF2e) {
-    return message.flags?.pf2e?.context?.type ?? message.flags?.pf2e?.origin?.type;
+    return message.flags?.pf2e?.context?.type 
+    ?? message.flags?.pf2e?.origin?.type 
+    ?? message.flags?.[MODULE_ID]?.type;
 }
 
 function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): HookRunner<T> {

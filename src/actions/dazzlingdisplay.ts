@@ -1,5 +1,5 @@
-import { TokenPF2e } from "foundry-pf2e";
-import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint } from "../utils.ts";
+import { ScenePF2e, TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
+import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint, MODULE_ID } from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
@@ -24,7 +24,8 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
     await template.delete();
 
     // add tokens to current player's target list
-    await replaceTargets(getTokenIdsFromTokens(finalTargets));
+    const finalTargetIds = getTokenIdsFromTokens(finalTargets);
+    await replaceTargets(finalTargetIds);
 
     // animate the dazzling display
     await animateDazzlingDisplay(token);
@@ -48,8 +49,41 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
         ui.notifications?.warn("Workbench Demoralize macro not found.");
         return;
     }
-    // apply the dazzling display immunity effect to the affected tokens
-    await applyDazzlingDisplayImmunityEffectToTokens(finalTargets);
+
+    // create chat message to trigger GM client to apply dazzling display immunity effect
+    createChatMessageToTriggerGameMasterClient(token, finalTargetIds);
+
+}
+
+function createChatMessageToTriggerGameMasterClient(token: TokenPF2e, targetTokenIds: string[]) {
+    const messageContent = `<div>Dazzling Display used by ${token.name}</div>`;
+    ChatMessage.create({
+        content: messageContent,
+        whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id),
+        speaker: ChatMessage.getSpeaker({ actor: token.actor }),
+        flags: {
+            [MODULE_ID]: {
+                dazzlingDisplayTargets: targetTokenIds, // passes the target token IDs to the GM client
+                type: "custom" // uses the "custom" message type to trigger the GM hook
+            }
+        }
+    });
+}
+
+export async function runDazzlingDisplayAutomationAsGM(message: ChatMessage) {
+
+    // Extract and validate the target IDs from the message flag
+    const flagValue = message.getFlag(MODULE_ID, "dazzlingDisplayTargets");
+    if (!flagValue) return;
+    const targetIds: string[] = Array.isArray(flagValue) ? flagValue : [];
+    if (targetIds.length === 0) return;
+    // create an array that can technically contain undefined tokens (this shouldn't happen)
+    const tokensWithUndefined = targetIds.map(id => canvas.tokens.get(id));
+    // filter out any undefined tokens
+    const tokens = tokensWithUndefined.filter((t): t is TokenPF2e<TokenDocumentPF2e<ScenePF2e>> => !!t);
+    if (tokens.length === 0) return;
+    // run apply dazzling display immunity effect to the tokens as the GM
+    await applyDazzlingDisplayImmunityEffectToTokens(tokens);
 }
 
 async function getDemoralizeMacro(): Promise<Macro | null> {
