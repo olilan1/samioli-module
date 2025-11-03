@@ -64,7 +64,7 @@ export function registerSettings() {
 
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_BOOST_EIDOLON, {
         name: "Boost Eidolon Automation",
-        hint: "Automatically add Boost Eidolon Effect and ask player if they want to extend boost",
+        hint: "Automatically add Boost Eidolon Effect and ask player if they want to extend boost. NOTE: this requires the pf2e-toolbelt module to be installed and the eidolon to be linked to the summoner via the Shared Data feature.",
         scope: "world",
         config: true,
         default: false,
