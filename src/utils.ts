@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -145,6 +145,10 @@ export function isCondition(item: ItemPF2e): item is ConditionPF2e {
 
 export function isEffect(item: ItemPF2e): item is EffectPF2e {
     return item.type === "effect";
+}
+
+export function isCharacter(actor: ActorPF2e): actor is CharacterPF2e {
+    return actor.type === "character";
 }
 
 export async function sendBasicChatMessage(content: string, speaker: ActorPF2e,

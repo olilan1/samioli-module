@@ -1,18 +1,20 @@
 import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e } from "foundry-pf2e";
-import { getLevelBasedDC, logd } from "../utils.ts";
+import { getLevelBasedDC, isCharacter, logd } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
+
+type Tradition = "arcane" | "divine" | "occult" | "primal";
+type MagicSkillCheck = "arcana" | "religion" | "occultism" | "nature";
 
 export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
 
     // Check if the spell is Boost Eidolon
     if (!chatMessage.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:slug:boost-eidolon")) return;
 
-    // Don't add button if summoner has no focus points remaining
     const summonerActor = chatMessage.actor;
-    if (!summonerActor) return;
-    if (summonerActor.type !== "character") return;
-    const summonerCharacterActor = summonerActor as CharacterPF2e;
-    const hasFocusPoints = summonerCharacterActor.system.resources.focus.value > 0;
+    if (!summonerActor || !isCharacter(summonerActor)) return;
+    
+    // Don't add button if summoner has no focus points remaining
+    const hasFocusPoints = summonerActor.system.resources.focus.value > 0;
     if (!hasFocusPoints) return;
 
     // Find eidolon actor associated with the summoner
@@ -24,11 +26,9 @@ export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
 
     // Calculate standard DC based on summoner level
     const standardDCByLevel = getLevelBasedDC(summonerActor.level);
-    if (!eidolonActor) return;
     const tradition = getSpellTraditionByEidolonType(eidolonActor);
     if (!tradition) return;
     const skillCheckRequired = getSkillCheckByTradition(tradition);
-    if (!skillCheckRequired) return;
 
     // Localise skill name for chat message
     type SkillSlug = keyof typeof CONFIG.PF2E.skills;
@@ -40,6 +40,10 @@ export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
         actor: summonerActor,
         content: `Do you want to attempt to extend Boost Eidolon?`,
         button_label: `<i class="fa-solid fa-dice-d20"></i> Roll ${localizedSkillName} DC: ${standardDCByLevel}`,
+        flags: {
+            "extend-boost-eidolon-dc": standardDCByLevel,
+            "extend-boost-eidolon-skill": skillCheckRequired
+        }
     });
 }
 
@@ -49,7 +53,7 @@ function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
     const sharedActors: Set<string> | undefined = (summonerActor.modules)?.["pf2e-toolbelt"]?.shareData?.slaves;
 
     if (!sharedActors || sharedActors.size === 0) {
-        ui.notifications.warn(`${summonerActor.name} does not have any shared actors.`);
+        logd(`${summonerActor.name} does not have any shared actors.`);
         return null;
     }
 
@@ -61,13 +65,13 @@ function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
         const eidolonActor = game.actors.get(eidolonId);
 
         if (!eidolonActor) {
-            ui.notifications.error(`Could not find an Actor with ID: ${eidolonId}`);
+            logd(`Could not find an Actor with ID: ${eidolonId}`);
             return null;
         }
         return eidolonActor;
     }
 
-    ui.notifications.error(`${summonerActor.name} has multiple shared actors (${sharedActors.size}). Unable to determine which is the Eidolon.`);
+    logd(`${summonerActor.name} has multiple shared actors (${sharedActors.size}). Unable to determine which is the Eidolon.`);
     return null;
 }
 
@@ -75,6 +79,14 @@ async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
 
     if (eidolonActor.items.some(item => item.type === "effect" 
         && item.slug === "spell-effect-boost-eidolon")) {
+        // Effect already exists on Eidolon, check if it's expired and refresh duration if so
+        const existingEffect = eidolonActor.items.find(item => item.type === "effect" 
+            && item.slug === "spell-effect-boost-eidolon") as EffectPF2e;
+        if (existingEffect && existingEffect.system.expired === true) {
+            // delete existing effect and re-add
+            await existingEffect.delete();
+            await createBoostEidolonEffectOnActor(eidolonActor);
+        }
         return;
     }
     
@@ -97,27 +109,23 @@ async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
 export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
 
     const summonerActor = chatMessage.actor;
-    if (!summonerActor) return;
+    if (!summonerActor || !isCharacter(summonerActor)) return;
 
-    if (summonerActor.type !== "character") return;
-    const summonerCharacterActor = summonerActor as CharacterPF2e;
+    const eidolonActor = getEidolonActor(summonerActor);
+    if (!eidolonActor) return;
 
     // Check if Summoner has focus points (technically should not be possible to reach here without focus points)
-    const hasFocusPoints = summonerCharacterActor.system.resources.focus.value > 0;
+    const hasFocusPoints = summonerActor.system.resources.focus.value > 0;
     if (!hasFocusPoints) {
         ui.notifications?.warn("Not enough Focus Points to extend Boost Eidolon.");
         return;
     }
 
-    const standardDCByLevel = getLevelBasedDC(summonerCharacterActor.level);
-    const eidolonActor = getEidolonActor(summonerActor);
-    if (!eidolonActor) return;
-    const tradition = getSpellTraditionByEidolonType(eidolonActor);
-    if (!tradition) return;
-    const skillCheckRequired = getSkillCheckByTradition(tradition);
-    if (!skillCheckRequired) return;
-    
-    const skill = summonerCharacterActor.skills[skillCheckRequired];
+    const standardDCByLevel = chatMessage.flags?.samioli?.["extend-boost-eidolon-dc"] as number;
+    const skillCheckRequired = chatMessage.flags?.samioli?.["extend-boost-eidolon-skill"] as MagicSkillCheck;
+    if (!standardDCByLevel || !skillCheckRequired) return;
+
+    const skill = summonerActor.skills[skillCheckRequired];
     if (!skill) return;
 
     await skill.roll({
@@ -126,13 +134,12 @@ export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
             label: `Extend Boost DC`
         },
         callback: async (roll) => {
-            if (!roll.options.degreeOfSuccess) return;
             if (roll.options.degreeOfSuccess === 2 ) {
                 // TODO: look to move this to a hook that triggers after the dice so nice roll is completed
-                await extendBoostEidolonEffectDuration(summonerCharacterActor, eidolonActor, "success");
+                await extendBoostEidolonEffectDuration(summonerActor, eidolonActor, "success");
             } else if (roll.options.degreeOfSuccess === 3) {
                 // TODO: look to move this to a hook that triggers after the dice so nice roll is completed
-                await extendBoostEidolonEffectDuration(summonerCharacterActor, eidolonActor, "criticalSuccess");
+                await extendBoostEidolonEffectDuration(summonerActor, eidolonActor, "criticalSuccess");
             } else {
                 return;
             }
@@ -168,7 +175,7 @@ async function reduceFocusPoints(summonerActor: CharacterPF2e) {
     }
 }
 
-function getSpellTraditionByEidolonType(eidolonActor: ActorPF2e): string | null {
+function getSpellTraditionByEidolonType(eidolonActor: ActorPF2e): Tradition | null {
 
     const rollOptionsObject = eidolonActor.flags.pf2e.rollOptions.all;
     const rollOptionKeys = Object.keys(rollOptionsObject);
@@ -209,7 +216,7 @@ function getSpellTraditionByEidolonType(eidolonActor: ActorPF2e): string | null 
     }
 }
 
-function getSkillCheckByTradition(tradition: string): string | null {
+function getSkillCheckByTradition(tradition: Tradition): MagicSkillCheck {
     switch (tradition) {
         case "arcane":
             return "arcana";
@@ -219,7 +226,5 @@ function getSkillCheckByTradition(tradition: string): string | null {
             return "occultism";
         case "primal":
             return "nature";
-        default:
-            return null;
     }
 }

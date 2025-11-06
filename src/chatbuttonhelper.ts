@@ -34,6 +34,7 @@ type MessageSpec = {
     actor: ActorPF2e,
     content: string,
     button_label: string,
+    flags?: Record<string, unknown>,
     params?: string[]
 }
 
@@ -54,7 +55,8 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
         speaker: ChatMessage.getSpeaker({ actor: spec.actor }),
         flags: {
             samioli: {
-                buttonSlug: spec.slug
+                buttonSlug: spec.slug,
+                ...spec.flags
             }
         }
     });

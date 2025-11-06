@@ -205,6 +205,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .run();
             break;
         case "spell":
+            hook(checkIfSpellInChatIsSustain, message)
+                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .ifMessagePosterAndActorOwner()
+                    .run();
             hook(runBoostEidolonAutomation, message)
                     .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
                     .ifMessagePosterAndActorOwner()
