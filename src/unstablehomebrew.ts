@@ -1,118 +1,79 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource } from "foundry-pf2e";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { addOrUpdateEffectOnActor, performFlatCheck } from "./utils.ts";
-import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
+import { replaceTargets } from "./templatetarget.ts";
 
-export function checkIfUnstableActionAndHandle(chatMessage: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    
-    const rollOptions = chatMessage.flags.pf2e?.origin?.rollOptions;
+export function replaceUnstableCheckWithStrainCheck(chatMessage: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+
+    const rollOptions = chatMessage.flags.pf2e?.context?.options 
+        ?? chatMessage.flags.pf2e?.origin?.rollOptions;
     if (!rollOptions) return;
-    if (rollOptions.includes("origin:item:trait:unstable") || 
-    rollOptions.includes("self:action:trait:unstable")) {
+
+    if (rollOptions.includes("origin:item:trait:unstable") 
+        || rollOptions.includes("self:action:trait:unstable")) {
 
         const flatCheckLink = html.find('a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]');
 
         if (!flatCheckLink.length) return;
+        const strainDC = getStrainDC(chatMessage.actor!);
 
-        const button = $(`<a class="inline-check unstable-action-button"><i class="fa-solid fa-screwdriver-wrench"></i> Strain Check</a>`);
+        const button = $(`<a class="inline-check unstable-action-button"><i class="fa-solid fa-screwdriver-wrench"></i> Strain Check DC ${strainDC}</a>`);
 
         button.on("click", async () => {
-            if (!chatMessage.actor) return;
-            calculateStrainValueAndRoll(chatMessage.actor);
+            rollAgainstStrainDC(chatMessage.actor!);
         });
 
         flatCheckLink.replaceWith(button);
-
     }
 }
 
-async function calculateStrainValueAndRoll(actor: ActorPF2e) {
-
-    if (actor.items.some(item => item.type === "effect" 
-    && item.system.slug === "effect-unstable-check-failure")) {
-        ui.notifications.info("You have already failed an Unstable Check. You cannot take Unstable Actions until you spend 10 minutes retuning your innovation.");
-        return;
-    }
-
+function getStrainDC(actor: ActorPF2e) : number {
     let dc = 7;
-    const hasStrainEffect = actor.items.some(item => 
-        item.type === "effect" && item.system.slug === "samioli-strain"
-    );
-
-    if (hasStrainEffect) {
-        const strainEffect = actor.items.find(item => item.type === "effect" 
-        && item.system.slug === "samioli-strain");
-        
-        if (strainEffect) {
-            const strainValue = strainEffect.system.level?.value;
-            if (strainValue) {
-                dc += (strainValue * 5);
-            }
-        }
-    }
-
-    await performFlatCheck(actor, dc, "Strain Check", ["samioli-unstable-check", "unstable-check"]);
-
+    const strainEffect = actor.items.find(item => 
+        item.type === "effect" && item.system.slug === "samioli-strain");  
+    dc += (strainEffect?.system.level?.value ?? 0) * 5;
+    return dc;  
 }
 
-export function extractActorAndRollUnstableCheckHomebrew(chatMessage: ChatMessagePF2e) {
-    if (!chatMessage.actor) return;
-    calculateStrainValueAndRoll(chatMessage.actor);
+async function rollAgainstStrainDC(actor: ActorPF2e) {
+    const strainDC = getStrainDC(actor);
+    await performFlatCheck(actor, strainDC, "Strain Check", ["samioli-unstable-check", "unstable-check"]);
 }
 
-export function checkIfUnstableCheckHomebrewAndHandle(chatMessage: ChatMessagePF2e) {
+export function handleHomebrewUnstableCheckResult(chatMessage: ChatMessagePF2e) {
 
     const rollOptions = chatMessage.flags.pf2e?.context?.options;
     if (!rollOptions || !rollOptions.includes("samioli-unstable-check")) return;
+    
+    const actor = chatMessage.actor!;
+    const outcome = chatMessage.flags.pf2e?.context?.outcome;
 
-    const actor = chatMessage.actor;
-    if (!actor) return;
-
-    if (chatMessage.flags?.pf2e?.context?.outcome === "failure" 
-    || chatMessage.flags?.pf2e?.context?.outcome === "criticalFailure" ) {
+    if (outcome === "failure" || outcome === "criticalFailure" ) {
         // Unstable effect logic is handled by unstable check automation in unstablecheck.ts
         const strainEffect = actor.items.find(item => item.type === "effect" 
-        && item.system.slug === "samioli-strain");
-        if (chatMessage.flags?.pf2e?.context?.outcome === "criticalFailure") {
-            createFireDamageChatMessage(actor);
+            && item.system.slug === "samioli-strain");  
+        if (strainEffect) {  
+            strainEffect.delete();  
+        }  
+        if (outcome === "criticalFailure") {  
+            createFireDamageChatMessage(actor);  
         }
-        if (!strainEffect) return;
-        strainEffect.delete();
     } else {
         const strainEffect = actor.items.find(item => item.type === "effect" 
-        && item.system.slug === "samioli-strain");
+            && item.system.slug === "samioli-strain");
         if (strainEffect) {
-            const currentLevel = strainEffect.system.level?.value || 1;
+            const currentLevel = strainEffect.system.level?.value ?? 1;
             const newLevel = currentLevel + 1;
             strainEffect.update({"system.level.value": newLevel });
             strainEffect.update({"name": `Strain ${newLevel}`});
         } else {
-            const strainEffectData = getStrainEffect();
+            const strainEffectData = buildStrainEffect();
             addOrUpdateEffectOnActor(actor, strainEffectData);
         }
     } 
 }
 
-export async function checkIfUnstableAttackAndHandle(chatMessage: ChatMessagePF2e) {
-
-    const context = chatMessage.flags.pf2e?.context;
-
-    if (context && "traits" in context && Array.isArray(context.traits)) {
-        if (context.traits.includes("unstable")) {
-            const actor = chatMessage.actor;
-            if (!actor) return;
-
-            await createChatMessageWithButton({
-                slug: "unstable-check-homebrew",
-                actor: actor,
-                content: `When you take an Unstable action, attempt an Unstable Check immediately after applying its effects.`,
-                button_label: "Roll Unstable Check"
-            });
-        }
-    }
-}
-
-function createFireDamageChatMessage(actor: ActorPF2e) {
+async function createFireDamageChatMessage(actor: ActorPF2e) {
     const actorLevel = actor.system.details.level.value;
     const damage = Math.floor(actorLevel / 2);
 
@@ -121,24 +82,35 @@ function createFireDamageChatMessage(actor: ActorPF2e) {
 
     const fireDamageRoll = new DamageRoll(`{${damage}[fire]}`);
 
-    fireDamageRoll.toMessage({
+    const currentTargets = [...game.user.targets];
+
+    await fireDamageRoll.toMessage({
         flavor: `On a critical failure for an unstable check, you take fire damage equal to half your level.`,
         speaker: ChatMessage.getSpeaker({ actor: actor }),
         flags: {
             pf2e: {
                 context: {
-                    type: "damage-roll",
-                    target: {
-                        actor: actor,
-                        token: actor.token
-                    }
+                    type: "damage-roll"
                 }
+            },
+            "samioli-module": {
+                unstableCheckCriticalFailure: true
             }
         }
     });
+
+    const hookFunction = async (chatMessage: ChatMessagePF2e) => {
+        if (chatMessage.flags["samioli-module"]?.unstableCheckCriticalFailure){
+            await replaceTargets([...currentTargets.map(t => t.id)]);
+            Hooks.off("renderChatMessage", hookFunction);
+        }
+    };
+
+    Hooks.on("renderChatMessage", hookFunction);
 }
 
-function getStrainEffect() {
+
+function buildStrainEffect() {
 
     const image = "icons/commodities/tech/metal-pipes.webp";
 
