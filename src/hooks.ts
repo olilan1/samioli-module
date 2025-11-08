@@ -205,18 +205,13 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .run();
             break;
         case "spell":
+        case "spell-cast":
             hook(checkIfSpellInChatIsSustain, message)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .ifMessagePosterAndActorOwner()
                     .run();
             hook(runBoostEidolonAutomation, message)
                     .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
-            break; 
-        case "spell-cast":
-            hook(checkIfSpellInChatIsSustain, message)
-                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
                     .ifMessagePosterAndActorOwner()
                     .run();
             break;

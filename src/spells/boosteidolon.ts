@@ -3,7 +3,7 @@ import { getLevelBasedDC, isCharacter, logd } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 type Tradition = "arcane" | "divine" | "occult" | "primal";
-type MagicSkillCheck = "arcana" | "religion" | "occultism" | "nature";
+type MagicSkill = "arcana" | "religion" | "occultism" | "nature";
 
 export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
 
@@ -77,18 +77,19 @@ function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
 
 async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
 
-    if (eidolonActor.items.some(item => item.type === "effect" 
-        && item.slug === "spell-effect-boost-eidolon")) {
-        // Effect already exists on Eidolon, check if it's expired and refresh duration if so
-        const existingEffect = eidolonActor.items.find(item => item.type === "effect" 
-            && item.slug === "spell-effect-boost-eidolon") as EffectPF2e;
-        if (existingEffect && existingEffect.system.expired === true) {
-            // delete existing effect and re-add
-            await existingEffect.delete();
-            await createBoostEidolonEffectOnActor(eidolonActor);
-        }
-        return;
-    }
+    const existingEffect = eidolonActor.items.find(item =>  
+        item.type === "effect" && item.slug === "spell-effect-boost-eidolon"  
+    ) as EffectPF2e | undefined;  
+
+    if (existingEffect) {  
+        if (existingEffect.system.expired === true) {  
+            // Effect exists but is expired, delete it and proceed to create a new one.  
+            await existingEffect.delete();  
+        } else {  
+            // Effect exists and is not expired, we don't need to do anything.  
+            return;  
+        }  
+    }  
     
     const boostEidolonSpellEffectId = "h0CKGrgjGNSg21BW";
     const compendiumPack = game?.packs?.get("pf2e.spell-effects");
@@ -122,7 +123,7 @@ export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
     }
 
     const standardDCByLevel = chatMessage.flags?.samioli?.["extend-boost-eidolon-dc"] as number;
-    const skillCheckRequired = chatMessage.flags?.samioli?.["extend-boost-eidolon-skill"] as MagicSkillCheck;
+    const skillCheckRequired = chatMessage.flags?.samioli?.["extend-boost-eidolon-skill"] as MagicSkill;
     if (!standardDCByLevel || !skillCheckRequired) return;
 
     const skill = summonerActor.skills[skillCheckRequired];
@@ -216,7 +217,7 @@ function getSpellTraditionByEidolonType(eidolonActor: ActorPF2e): Tradition | nu
     }
 }
 
-function getSkillCheckByTradition(tradition: Tradition): MagicSkillCheck {
+function getSkillCheckByTradition(tradition: Tradition): MagicSkill {
     switch (tradition) {
         case "arcane":
             return "arcana";
