@@ -1,30 +1,19 @@
-import { ChatMessagePF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { logd } from "../utils.ts";
-import { CrosshairUpdatable } from "../types.ts";
+import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
+import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
-type CustomTemplateData = {
-    t: MeasuredTemplateType;
-    x: number;
-    y: number;
-    width: number;
-    distance: number;
-    direction: number;
-    fillColor: `#${string}`;
-    borderColor: `#${string}`;
-    flags?: { [x: string]: { [x: string]: JSONValue } };
-    [key: string]: JSONValue | undefined; 
-};
+type RedistributePotentialType = "steal-heat" | "concentrate-heat";
 
-type RedistributePotentialTypes = "steal-heat" | "concentrate-heat";
+const STEAL_HEAT_COLOUR: `#${string}` = "#4134d4";
+const CONCENTRATE_HEAT_COLOUR: `#${string}` = "#f59042";
 
 export async function startRedistributePotential(token: TokenPF2e, message: ChatMessagePF2e) {
 
     // Check if spell is amped or not
-    if (!message.flags.pf2e?.context?.options) return;
-    const isAmped = message.flags.pf2e?.context?.options.includes("amp-spell");
+    if (!message.flags.pf2e.context?.options) return;
+    const isAmped = message.flags.pf2e.context.options.includes("amp-spell");
 
     // Select Steal Heat location
     const stealHeatLocation = await selectLocation("steal-heat", token, isAmped);
@@ -55,14 +44,45 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
     concentrateHeatTemplate.delete();
 
     // Capture additional context for the spell damage message
-    const redistributePotentialItem = getRedistributePotentialItemToken(token) as SpellPF2e;
-    if (!redistributePotentialItem) {
-        logd(`Could not find Redistribute Potential item on actor ${token.name}.`);
-        return;
-    }
+    const spell = message.item as SpellPF2e;
 
-    const spellRank = message.flags.pf2e.context.options.find((opt: string) => opt.startsWith("item:rank:"))?.replace("item:rank:", "") as "5" | "6" | "7" | "8" | "9" | "10";
+    const spellRank = spell.rank;
     const damageFormula = getDamageDiceFormula(spellRank, isAmped);
+
+    // Roll Steal Heat damage but don't send message yet
+    const stealHeatDamageRoll = createDamageRoll(damageFormula, "steal-heat");
+    const evaluatedStealHeatDamageRoll = await stealHeatDamageRoll.evaluate();
+    const stealHeatDamageTotal = evaluatedStealHeatDamageRoll.total;
+    const stealHeatFlavour = getFlavour("steal-heat", isAmped, damageFormula);
+
+    await sendRolledRollToChat(evaluatedStealHeatDamageRoll, stealHeatFlavour, spell, stealHeatTargetTokens);
+
+    // Roll Concentrate Heat damage but don't send message yet (use the same damage total as Steal Heat)
+    const concentrateHeatDamageRoll = createDamageRoll(stealHeatDamageTotal.toString(), "concentrate-heat");
+
+    const concentrateHeatFlavour = getFlavour("concentrate-heat", isAmped, damageFormula);
+    
+    if (game.modules.get('dice-so-nice')?.active) {
+        const hookFunctionDSN = async (id: string) => {
+            const message = game.messages.get(id)!;
+            if (message.flags["samioli-module"]?.isRedistributePotential) {
+                await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, spell, concentrateHeatTargetTokens);
+                Hooks.off("diceSoNiceRollComplete", hookFunctionDSN);
+            }
+        };
+        Hooks.on("diceSoNiceRollComplete", hookFunctionDSN);
+    } else {
+        const hookFunction = async (message: ChatMessagePF2e) => {
+            if (message.flags["samioli-module"]?.isRedistributePotential) {
+                await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, spell, concentrateHeatTargetTokens);
+                Hooks.off("createChatMessage", hookFunction);
+            }
+        };
+        Hooks.on("createChatMessage", hookFunction); 
+    }
+}
+
+function getFlavour(type: RedistributePotentialType, isAmped: boolean, damageFormula: string) : string {
     const isAmpedText = isAmped ? " (Amped)" : "";
 
     const stealHeatFlavour = `
@@ -85,43 +105,37 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
         </ul>
     `;
 
-    // Roll Steal Heat damage but don't send message yet
-    const stealHeatDamageRoll = rollDamage(damageFormula, "steal-heat");
-    if (!stealHeatDamageRoll) return;
-    const evaluatedStealHeatDamageRoll = await stealHeatDamageRoll.evaluate();
-    const stealHeatDamageTotal = evaluatedStealHeatDamageRoll.total;
-
-    await sendRolledRollToChat(evaluatedStealHeatDamageRoll, stealHeatFlavour, redistributePotentialItem, stealHeatTargetTokens);
-
-    // Roll Concentrate Heat damage but don't send message yet (use the same damage total as Steal Heat)
-    const concentrateHeatDamageRoll = rollDamage(stealHeatDamageTotal.toString(), "concentrate-heat");
-    if (!concentrateHeatDamageRoll) return;
-
-    await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, redistributePotentialItem, concentrateHeatTargetTokens);
-
+    if (type === "steal-heat") {
+        return stealHeatFlavour;
+    } else {
+        return concentrateHeatFlavour;
+    }
 }
 
-function getDamageDiceFormula(spellRank: "5" | "6" | "7" | "8" | "9" | "10", isAmped: boolean): string {
+function getDamageDiceFormula(spellRank: number, isAmped: boolean): string {
 
     if (isAmped) {
         switch (spellRank) {
-            case "5": return "6d6";
-            case "6": return "8d6";
-            case "7": return "10d6";
-            case "8": return "12d6";
-            case "9": return "14d6";
-            case "10": return "16d6";
+            case 5: return "6d6";
+            case 6: return "8d6";
+            case 7: return "10d6";
+            case 8: return "12d6";
+            case 9: return "14d6";
+            case 10: return "16d6";
         }
     } else {
         switch (spellRank) {
-            case "5": return "4d4";
-            case "6": return "5d4";
-            case "7": return "6d4";
-            case "8": return "7d4";
-            case "9": return "8d4";
-            case "10": return "9d4";
+            case 5: return "4d4";
+            case 6: return "5d4";
+            case 7: return "6d4";
+            case 8: return "7d4";
+            case 9: return "8d4";
+            case 10: return "9d4";
         }
-    }
+    } 
+    
+    throw new Error("Invalid spell rank");
+    
 }
 
 async function sendRolledRollToChat(roll: Roll, flavorText: string, spellItem: SpellPF2e, targetTokens: TokenPF2e[]) {
@@ -137,7 +151,6 @@ async function sendRolledRollToChat(roll: Roll, flavorText: string, spellItem: S
         {
             speaker: ChatMessage.getSpeaker(),
             flavor: flavorText,
-            content: `hello`,
             flags: {
                 pf2e: {
                     context: {
@@ -146,6 +159,9 @@ async function sendRolledRollToChat(roll: Roll, flavorText: string, spellItem: S
                     },
                     origin: originData,
                 },
+                "samioli-module": {
+                    isRedistributePotential: true
+                }
             },
         },
         { create: true }
@@ -153,7 +169,7 @@ async function sendRolledRollToChat(roll: Roll, flavorText: string, spellItem: S
 
 }
 
-async function selectLocation(redistributePotentialType: RedistributePotentialTypes, locationObject: Point | TokenPF2e, isAmped: boolean): Promise<Point | false> {
+async function selectLocation(redistributePotentialType: RedistributePotentialType, locationObject: Point, isAmped: boolean): Promise<Point | false> {
     
     let maxLimit: number;
     let minLimit: number;
@@ -161,7 +177,7 @@ async function selectLocation(redistributePotentialType: RedistributePotentialTy
     const crosshairWidth = isAmped ? 10 : 0;
     const snapPosition = isAmped ? CONST.GRID_SNAPPING_MODES.CORNER : CONST.GRID_SNAPPING_MODES.CENTER;
     const iconTexture = redistributePotentialType === "steal-heat" ? "icons/svg/frozen.svg" : "icons/svg/fire.svg";
-    const color = redistributePotentialType === "steal-heat" ? "#4134d4" : "#f59042";
+    const color = redistributePotentialType === "steal-heat" ? STEAL_HEAT_COLOUR : CONCENTRATE_HEAT_COLOUR;
     
     if (isAmped) {
         maxLimit = redistributePotentialType === "steal-heat" ? 60 : 20;
@@ -220,30 +236,26 @@ async function createTemplate(templateData: CustomTemplateData): Promise<Measure
     return myCustomTemplate as MeasuredTemplateDocumentPF2e;
 }
 
-function createCustomTemplateData(location: Point, type: RedistributePotentialTypes, isAmped: boolean): CustomTemplateData | null {
+function createCustomTemplateData(location: Point, type: RedistributePotentialType, isAmped: boolean): CustomTemplateData {
 
-    if (canvas.scene === undefined || canvas.scene === null) return null;
-    const offset = isAmped ? 0 : canvas.scene?.grid.size / 2;
-
-    const canvasGridSize = canvas.scene.grid.size;
-    if (!canvasGridSize) return null;
+    const offset = isAmped ? 0 : canvas.scene!.grid.size / 2;
 
     const templateShape = isAmped ? "circle" : "rect";
     const templateWidth = isAmped ? 0 : 5;
-    const templateDistance = isAmped ? 10 : 7.0710678118654755;
-    const templateDirection = isAmped ? 0 : 45;
+    const templateDistance = isAmped ? 10 : 7.0710678118654755; // Diagonal for rect template
+    const templateDirection = isAmped ? 0 : 45; // Rect templates work on diagonals for a square
 
     let flagName = "";
     let flagSlug = "";
-    let color = "";
+    let colour = "";
     if (type === "steal-heat") {
         flagName = "Redistribute Potential - Steal Heat";
         flagSlug = "redistribute-potential-steal-heat";
-        color = "#4134d4";
+        colour = STEAL_HEAT_COLOUR;
     } else if (type === "concentrate-heat") {
         flagName = "Redistribute Potential - Concentrate Heat";
         flagSlug = "redistribute-potential-concentrate-heat";
-        color = "#f59042";
+        colour = CONCENTRATE_HEAT_COLOUR;
     }
 
     const templateData: CustomTemplateData = {
@@ -253,8 +265,8 @@ function createCustomTemplateData(location: Point, type: RedistributePotentialTy
         width: templateWidth,
         distance: templateDistance,
         direction: templateDirection,
-        fillColor: color as `#${string}`,
-        borderColor: color as `#${string}`,
+        fillColor: colour as `#${string}`,
+        borderColor: colour as `#${string}`,
         flags: {
             pf2e: {
                 origin: {
@@ -270,20 +282,12 @@ function createCustomTemplateData(location: Point, type: RedistributePotentialTy
     return templateData;
 }
 
-function rollDamage(value: string, redistributePotentialType: RedistributePotentialTypes): Roll | null {
+function createDamageRoll(value: string, redistributePotentialType: RedistributePotentialType): Roll {
 
     const damageType = redistributePotentialType === "steal-heat" ? "cold" : "fire";
 
-    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll");
-    if (!DamageRoll) return null;
+    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll")!;
 
     const roll = new DamageRoll(`${value}[${damageType}]`);
     return roll;
-}
-
-function getRedistributePotentialItemToken(token: TokenPF2e): ItemPF2e | null {
-    if (!token.actor) return null;
-    const redistributePotentialItem = token.actor.items.find(i => i.slug === "redistribute-potential");
-    if (!redistributePotentialItem) return null;
-    return redistributePotentialItem;
 }
