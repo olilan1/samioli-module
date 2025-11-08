@@ -211,7 +211,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifMessagePosterAndActorOwner()
                     .run();
             break;
-        case "custom":
+        case "custom-dazzling-display":
             hook(runDazzlingDisplayAutomationAsGM, message)
                     .ifGM()
                     .run();

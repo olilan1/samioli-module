@@ -64,7 +64,7 @@ function createChatMessageToTriggerGameMasterClient(token: TokenPF2e, targetToke
         flags: {
             [MODULE_ID]: {
                 dazzlingDisplayTargets: targetTokenIds, // passes the target token IDs to the GM client
-                type: "custom" // uses the "custom" message type to trigger the GM hook
+                type: "custom-dazzling-display" // uses that message type to trigger the GM hook
             }
         }
     });
@@ -72,18 +72,15 @@ function createChatMessageToTriggerGameMasterClient(token: TokenPF2e, targetToke
 
 export async function runDazzlingDisplayAutomationAsGM(message: ChatMessage) {
 
-    // Extract and validate the target IDs from the message flag
-    const flagValue = message.getFlag(MODULE_ID, "dazzlingDisplayTargets");
-    if (!flagValue) return;
-    const targetIds: string[] = Array.isArray(flagValue) ? flagValue : [];
-    if (targetIds.length === 0) return;
-    // create an array that can technically contain undefined tokens (this shouldn't happen)
-    const tokensWithUndefined = targetIds.map(id => canvas.tokens.get(id));
-    // filter out any undefined tokens
-    const tokens = tokensWithUndefined.filter((t): t is TokenPF2e<TokenDocumentPF2e<ScenePF2e>> => !!t);
-    if (tokens.length === 0) return;
+    // Extract token IDs from the message flag
+    const targetIds = message.getFlag(MODULE_ID, "dazzlingDisplayTargets") as string[] | undefined;  
+    if (!targetIds || targetIds.length === 0) return;  
+
+    // create an array of tokens
+    const tokens = targetIds.flatMap(id => canvas.tokens.get(id) ?? []);  
+    if (tokens.length === 0) return;  
     // run apply dazzling display immunity effect to the tokens as the GM
-    await applyDazzlingDisplayImmunityEffectToTokens(tokens);
+    await applyDazzlingDisplayImmunityEffectToTokens(tokens);  
 }
 
 async function getDemoralizeMacro(): Promise<Macro | null> {
