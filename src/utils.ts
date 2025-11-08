@@ -241,7 +241,6 @@ export async function performFlatCheck(actor: ActorPF2e, dc: number, title: stri
 
     await game.pf2e.Check.roll(
         checkModifierInstance,
-        rollContextOptions,
-        null
+        rollContextOptions
     );
 }
