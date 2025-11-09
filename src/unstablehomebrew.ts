@@ -49,7 +49,7 @@ export function handleHomebrewUnstableCheckResult(chatMessage: ChatMessagePF2e) 
     const outcome = chatMessage.flags.pf2e?.context?.outcome;
 
     if (outcome === "failure" || outcome === "criticalFailure" ) {
-        // Unstable effect logic is handled by unstable check automation in unstablecheck.ts
+        // Note that unstable effect is applied by checkForUnstableCheck function in unstablecheck.ts
         const strainEffect = actor.items.find(item => item.type === "effect" 
             && item.system.slug === "samioli-strain");  
         if (strainEffect) {  
