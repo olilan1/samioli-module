@@ -1,5 +1,5 @@
 import { ChatMessagePF2e, FeatPF2e, RollOptionRuleElement, ActorPF2e, TokenPF2e } from "foundry-pf2e";
-import { logd } from "./utils.ts";
+import { logd, sendBasicChatMessage } from "./utils.ts";
 
 const SPELL_SLUGS = [
     `breathe-fire`,
@@ -76,12 +76,18 @@ export async function oscillateEnergy(message: ChatMessagePF2e) {
     // Animate energy switch for visual display of change
     if (!message.token || !message.token.object) return;
     await animateConservationOfEnerySwitch(message.token.object, newSelection);
+    
+    const energyString = newSelection === "fire" ? "add energy 🔥" : "remove energy ❄️";
+    const content = `${message.token.name} changes to ${energyString}.`
+    
+    await sendBasicChatMessage(content, psychicActor)
 
 }
 
 async function animateConservationOfEnerySwitch(token: TokenPF2e, energy: "fire" | "cold") {
     
     const animation = energy === "fire" ? "jb2a.token_border.circle.static.orange.012" : "jb2a.token_border.circle.static.blue.004";
+    const sound = energy === "fire" ? "sound/NWN2-Sounds/sff_firewhoosh02.WAV" : "sound/NWN2-Sounds/sfx_conj_Cold.WAV";
     
     new Sequence()
         .effect()
@@ -91,5 +97,7 @@ async function animateConservationOfEnerySwitch(token: TokenPF2e, energy: "fire"
             .fadeOut(1000)
             .duration(3000)
             .scaleToObject(2, { considerTokenScale: true })
+        .sound()
+            .file(sound)
         .play()
 }
