@@ -17,6 +17,8 @@ import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
 import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
+import { getHtmlElement } from "./utils.ts";
+import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -204,10 +206,14 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifMessagePoster()
                     .run();
             break;
-        case "spell": 
+        case "spell":
         case "spell-cast":
             hook(checkIfSpellInChatIsSustain, message)
                     .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                    .ifMessagePosterAndActorOwner()
+                    .run();
+            hook(runBoostEidolonAutomation, message)
+                    .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
                     .ifMessagePosterAndActorOwner()
                     .run();
             break;

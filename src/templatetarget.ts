@@ -139,10 +139,13 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
 }
 
  export function setTemplateColorToBlack(template: MeasuredTemplateDocumentPF2e): void {
-    template.updateSource({
-        fillColor: "#000000",
-        borderColor: "#000000"
-    });
+    
+    if (!template.getFlag('samioli-module', 'ignoreTemplateColourOverride')) {
+        template.updateSource({
+            fillColor: "#000000",
+            borderColor: "#000000"
+        });
+    }
  }
 
  export async function isTokenInTemplateArea(token: TokenPF2e, 
