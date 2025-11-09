@@ -219,6 +219,36 @@ export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: E
     return newEffect as EffectPF2e;
 }
 
+export async function performFlatCheck(actor: ActorPF2e, dc: number, title: string, rollOptions: string[] = []): Promise<void> {
+
+    const checkModifierInstance = new game.pf2e.CheckModifier(
+        title, 
+        { modifiers: [] }
+    );
+
+    const combinedRollOptions = [
+        'check',       
+        'flat-check',
+        ...rollOptions,
+    ];
+
+    const rollContextOptions = {
+        actor: actor,
+        dc: { 
+            value: dc,
+            slug: 'flat-check',
+        },
+        options: new Set(combinedRollOptions),
+        speaker: actor,
+        type: 'flat-check' as const,
+    };
+
+    await game.pf2e.Check.roll(
+        checkModifierInstance,
+        rollContextOptions
+    );
+}
+
 export function getLevelBasedDC(level: number): number {
     const DC_LOOKUP: Record<number, number> = {
         0: 14,

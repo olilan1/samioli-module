@@ -18,6 +18,7 @@ import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } fr
 import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { getHtmlElement } from "./utils.ts";
+import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 
 Hooks.on("init", () => {
@@ -30,6 +31,9 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
     hook(editEnjoyTheShowSkillRollIfNeeded, message, html)
         .run();
     hook(addButtonClickHandlersIfNeeded, message, html)
+        .run();
+    hook(replaceUnstableCheckWithStrainCheck, message, html)
+        .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
         .run();
 });
 
@@ -193,6 +197,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
         case "flat-check":
             hook(checkForUnstableCheck, message)
                     .ifEnabled(SETTINGS.AUTO_UNSTABLE_CHECK)
+                    .ifGM()
+                    .run();
+            hook(handleHomebrewUnstableCheckResult, message)
+                    .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
                     .ifGM()
                     .run();
             break;
