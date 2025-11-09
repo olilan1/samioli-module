@@ -13,6 +13,8 @@ export interface CustomTemplateData {
     direction: number,
     fillColor: `#${string}`,
     borderColor: `#${string}`,
+    flags?: { [x: string]: { [x: string]: JSONValue } };
+    [key: string]: JSONValue | undefined; 
 };
 
 /**
