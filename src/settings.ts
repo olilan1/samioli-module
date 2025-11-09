@@ -27,7 +27,7 @@ export function registerSettings() {
 
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.TEMPLATE_COLOUR_OVERRIDE, {
         name: "Template Colour Override",
-        hint: "Automatically set placed templates to black to look better with animations",
+        hint: "Automatically set placed templates to black to look better with animations. Some templates can override this setting.",
         scope: "world",
         config: true,
         default: false,
