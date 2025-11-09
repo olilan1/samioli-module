@@ -35,7 +35,6 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
 
     // Create Concentrate Heat template and get target tokens
     const concentrateHeatTemplateData = createCustomTemplateData(concentrateHeatLocation, "concentrate-heat", isAmped);
-    if (!concentrateHeatTemplateData) return;
     const concentrateHeatTemplate = await createTemplate(concentrateHeatTemplateData);
     const concentrateHeatTargetTokens = await getTemplateTokens(concentrateHeatTemplate);
 
