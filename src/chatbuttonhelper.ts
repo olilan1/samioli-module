@@ -4,6 +4,7 @@ import { removeFrightenedAndAntagonize } from "./effects/frightened.ts";
 import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
 import { handleSustainSpell } from "./sustain.ts";
+import { extendBoostEidolon } from "./spells/boosteidolon.ts";
 
 // Mapping of slug to function description.
 // Slug must match what is provided in the MessageSpec when calling createChatMessageWithButton
@@ -12,7 +13,8 @@ const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonFunctionDescription> = {
     "remove-frightened-and-antagonize": { func: removeFrightenedAndAntagonize, takesMsg: false },
     "remove-antagonize": { func: removeAntagonizeEffect, takesMsg: false },
     "remove-panache": { func: onClearPanacheButtonClick, takesMsg: true },
-    "sustain-spell": { func: handleSustainSpell, takesMsg: false }
+    "sustain-spell": { func: handleSustainSpell, takesMsg: false },
+    "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true }
 };
 
 type StringOnlyFuncDescription = {
@@ -32,6 +34,7 @@ type MessageSpec = {
     actor: ActorPF2e,
     content: string,
     button_label: string,
+    flags?: Record<string, unknown>,
     params?: string[]
 }
 
@@ -52,7 +55,8 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
         speaker: ChatMessage.getSpeaker({ actor: spec.actor }),
         flags: {
             samioli: {
-                buttonSlug: spec.slug
+                buttonSlug: spec.slug,
+                ...spec.flags
             }
         }
     });

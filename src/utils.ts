@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -147,6 +147,10 @@ export function isEffect(item: ItemPF2e): item is EffectPF2e {
     return item.type === "effect";
 }
 
+export function isCharacter(actor: ActorPF2e): actor is CharacterPF2e {
+    return actor.type === "character";
+}
+
 export async function sendBasicChatMessage(content: string, speaker: ActorPF2e,
     recipients?: string[]) {
     const isWhisper = recipients && recipients.length > 0;
@@ -213,4 +217,37 @@ export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: E
     const newEffect = actor.items.find(item => item.slug === effectSource.system.slug
         && item.type === 'effect');
     return newEffect as EffectPF2e;
+}
+
+export function getLevelBasedDC(level: number): number {
+    const DC_LOOKUP: Record<number, number> = {
+        0: 14,
+        1: 15,
+        2: 16,
+        3: 18,
+        4: 19,
+        5: 20,
+        6: 22,
+        7: 23,
+        8: 24,
+        9: 26,
+        10: 27,
+        11: 28,
+        12: 30,
+        13: 31,
+        14: 32,
+        15: 34,
+        16: 35,
+        17: 36,
+        18: 38,
+        19: 39,
+        20: 40,
+        21: 42,
+        22: 44,
+        23: 46,
+        24: 48,
+        25: 50
+    };
+    
+    return DC_LOOKUP[level];
 }
