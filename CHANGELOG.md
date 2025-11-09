@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.57.0] - 2025-11-09
+
 - Added Dazzling Display Animation and Automation
 - Tectonic Stomp Automation and Animation
 - Improved Wall of Flame Ring Logic
@@ -57,7 +59,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.56.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.57.0...HEAD
+
+[0.57.0]: https://github.com/olilan1/samioli-module/compare/v0.56.0...v0.57.0
 
 [0.56.0]: https://github.com/olilan1/samioli-module/compare/v0.55.1...v0.56.0
 
