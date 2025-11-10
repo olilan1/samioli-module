@@ -17,7 +17,6 @@ import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
 import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
-import { getHtmlElement } from "./utils.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 
