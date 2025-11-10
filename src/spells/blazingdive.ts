@@ -1,29 +1,90 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getTokenFromActor, getTokenIdsFromTokens } from "../utils.ts";
+import { TokenPF2e } from "foundry-pf2e";
+import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
+import { createTemplate, delay, getTokenIdsFromTokens } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
-export async function initiateBlazingDive(template: MeasuredTemplateDocumentPF2e) {
+export async function startBlazingDive(token: TokenPF2e) {
+
+    const locationOfTemplate = await getLocationForSpell(token);
+    if (!locationOfTemplate) return;
+
+    const templateData = createCustomTemplateData(locationOfTemplate);
+    const template = await createTemplate(templateData);
 
     // Store tokens from template
     const targetTokens = await getTemplateTokens(template);
     // Remove targets from caster
     await replaceTargets([]);
-    // get template location
-    const locationOfTemplate: Point = {x: template.x, y: template.y};
-    // get caster token
-    const casterToken = getTokenFromActor(template.actor);
-    
-    if (!casterToken) {
-        return;
-    }
+
     // delete template
     await template.delete();
 
     // run animation sequence
-    await animateBlazingDive(casterToken, locationOfTemplate);
+    await animateBlazingDive(token, locationOfTemplate);
     // add stored tokens as targets to caster
     replaceTargets(getTokenIdsFromTokens(targetTokens));
+}
+
+function createCustomTemplateData(location: Point): CustomTemplateData {
+
+    const templateData: CustomTemplateData = {
+        t: "circle",
+        x: location.x,
+        y: location.y,
+        width: 0,
+        distance: 10,
+        direction: 0,
+        fillColor: "#f59042",
+        borderColor: "#f59042",
+        flags: {
+            pf2e: {
+                origin: {
+                    name: "Blazing Dive",
+                    slug: "blazing-dive"
+                }
+            }
+        }
+    };
+    return templateData;
+}
+
+async function getLocationForSpell(token: TokenPF2e): Promise<Point | false> {
+    const selectedLocation = await Sequencer.Crosshair.show({
+            distance: 13, // Needed to have the highlight select the correct grids
+            fillColor: "#f59042",
+            location: {
+                obj: token,
+                limitMaxRange: 60,
+                limitMinRange: 0,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            },
+            snap: {
+                position: CONST.GRID_SNAPPING_MODES.CENTER
+            }, 
+            gridHighlight: true
+        }, {
+            [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
+                crosshair.updateCrosshair({
+                    "icon.texture": "icons/svg/cancel.svg"
+                })
+            },
+            [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
+                crosshair.updateCrosshair({
+                    "icon.texture": ""
+                })
+            },
+            [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
+                ui.notifications.warn("Blazing Dive cancelled.");
+                return false;
+            },
+            show: undefined,
+            move: undefined,
+            mouseMove: undefined,
+            invalidPlacement: undefined,
+            placed: undefined
+        });
+        return selectedLocation;
 }
 
 async function animateBlazingDive(caster: TokenPF2e, 

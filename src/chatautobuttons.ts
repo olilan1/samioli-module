@@ -6,6 +6,7 @@ import { startSonicDash } from "./actions/sonicdash.ts";
 import { startDazzlingDisplay } from "./actions/dazzlingdisplay.ts";
 import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 import { startRedistributePotential } from "./spells/redistributepotential.ts";
+import { startBlazingDive } from "./spells/blazingdive.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 
@@ -48,6 +49,10 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
     "redistribute-potential": {
         label: "Redistribute Potential!",
         function: startRedistributePotential
+    },
+    "blazing-dive": {
+        label: "Dive Blazingly!",
+        function: startBlazingDive
     }
 };
 

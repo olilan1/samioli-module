@@ -2,6 +2,7 @@ import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, Condition
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { CustomTemplateData } from "./types.ts";
 
 export const MODULE_ID = "samioli-module";
 
@@ -280,4 +281,13 @@ export function getLevelBasedDC(level: number): number {
     };
     
     return DC_LOOKUP[level];
+}
+
+export async function createTemplate(templateData: CustomTemplateData): Promise<MeasuredTemplateDocumentPF2e> {
+
+    const myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
+    if (!myCustomTemplate) {
+        throw new Error("Failed to create template");
+    }
+    return myCustomTemplate as MeasuredTemplateDocumentPF2e;
 }
