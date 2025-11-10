@@ -19,18 +19,22 @@ export async function oscillateEnergy(message: ChatMessagePF2e) {
     const options = message.flags.pf2e.context?.options;
     const psychicActor = message.actor as ActorPF2e;
 
-    if (!psychicActor || !options?.includes("class:psychic") || !options?.includes("feature:the-oscillating-wave")) {
+    if (!psychicActor || !options?.includes("class:psychic") 
+        || !options?.includes("feature:the-oscillating-wave")) {
         return;
     }
 
-    // Check if a relevant spell, or mindshift with add/remove energy
+    // Check if a relevant spell
     const prefix = "item:";
-    const relevantAction = options.some(o => o.startsWith(prefix) 
+    const isRelevantSpell = options.some(o => o.startsWith(prefix) 
         && SPELL_SLUGS.includes(o.substring(prefix.length))
-        || o.includes("mindshift:add-remove-energy")
     );
 
-    if (!relevantAction) return;
+    // Check if mind shift action with add remove energy enabled
+    const isMindShiftWithAddRemoveEnergy = options.includes("item:trait:mindshift") 
+        && options.includes("mindshift:add-remove-energy");
+
+    if (!isRelevantSpell && !isMindShiftWithAddRemoveEnergy) return;
 
     // Get Oscillating Wave Feat
     const oscillatingWaveFeat = psychicActor.items.find(
