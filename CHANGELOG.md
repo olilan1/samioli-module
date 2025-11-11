@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.58.0] - 2025-11-11
+
 - Redistribute Potential Automation
 - Unstable Check Homebrew
 - Boost Eidolon Automation
@@ -65,7 +67,11 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.56.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.58.0...HEAD
+
+[0.58.0]: https://github.com/olilan1/samioli-module/compare/v0.57.0...v0.58.0
+
+[0.57.0]: https://github.com/olilan1/samioli-module/compare/v0.56.0...v0.57.0
 
 [0.56.0]: https://github.com/olilan1/samioli-module/compare/v0.55.1...v0.56.0
 
