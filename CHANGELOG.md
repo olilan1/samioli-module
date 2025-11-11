@@ -7,14 +7,14 @@
 - Boost Eidolon Automation
 - Dazzing Display Bug Fix
 - Dread Effects considered in Frightened Automations
+- Improved Wall of Flame Ring Logic
+- Start of Turn Spells Helper
+- General Type Clean up
 
 ## [0.57.0] - 2025-10-06
 
 - Added Dazzling Display Animation and Automation
 - Tectonic Stomp Automation and Animation
-- Improved Wall of Flame Ring Logic
-- Start of Turn Spells Helper
-- General Type Clean up
 
 ## [0.56.0] - 2025-09-22
 
