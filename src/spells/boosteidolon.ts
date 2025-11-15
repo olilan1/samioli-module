@@ -1,5 +1,5 @@
 import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e } from "foundry-pf2e";
-import { getLevelBasedDC, isCharacter, logd } from "../utils.ts";
+import { getEidolonActor, getLevelBasedDC, isCharacter, logd } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 type Tradition = "arcane" | "divine" | "occult" | "primal";
@@ -45,34 +45,6 @@ export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
             "extend-boost-eidolon-skill": skillCheckRequired
         }
     });
-}
-
-function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
-
-    // @ts-expect-error modules exists when pf2e-toolbelt is installed and eidolon is linked with summoner
-    const sharedActors: Set<string> | undefined = (summonerActor.modules)?.["pf2e-toolbelt"]?.shareData?.slaves;
-
-    if (!sharedActors || sharedActors.size === 0) {
-        logd(`${summonerActor.name} does not have any shared actors.`);
-        return null;
-    }
-
-    if (sharedActors.size === 1) {
-        const uuid = sharedActors.values().next().value;
-        if (!uuid) return null;
-
-        const eidolonId = uuid.split(".")[1];
-        const eidolonActor = game.actors.get(eidolonId);
-
-        if (!eidolonActor) {
-            logd(`Could not find an Actor with ID: ${eidolonId}`);
-            return null;
-        }
-        return eidolonActor;
-    }
-
-    logd(`${summonerActor.name} has multiple shared actors (${sharedActors.size}). Unable to determine which is the Eidolon.`);
-    return null;
 }
 
 async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
