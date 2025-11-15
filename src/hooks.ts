@@ -19,6 +19,7 @@ import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
+import { demanifestEidolonAsGM, manifestEidolon, manifestEidolonAsGm } from "./actions/manifesteidolon.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -212,6 +213,9 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
                     .ifMessagePoster()
                     .run();
+            hook(manifestEidolon, message)
+                    .ifMessagePosterAndActorOwner()
+                    .run();
             break;
         case "spell":
         case "spell-cast":
@@ -226,6 +230,16 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             break;
         case "custom-dazzling-display":
             hook(runDazzlingDisplayAutomationAsGM, message)
+                    .ifGM()
+                    .run();
+            break;
+        case "custom-manifest-eidolon":
+            hook(manifestEidolonAsGm, message)
+                    .ifGM()
+                    .run();
+            break;
+        case "custom-demanifest-eidolon":
+            hook(demanifestEidolonAsGM, message)
                     .ifGM()
                     .run();
             break;
