@@ -1,4 +1,4 @@
-import { ChatMessagePF2e, RollOptionRuleElement, ActorPF2e, TokenPF2e, ItemPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, FeatPF2e, RollOptionRuleElement, ActorPF2e, TokenPF2e } from "foundry-pf2e";
 import { logd, sendBasicChatMessage } from "./utils.ts";
 
 const SPELL_SLUGS = [
@@ -16,72 +16,79 @@ const SPELL_SLUGS = [
 ]
 
 export async function oscillateEnergy(message: ChatMessagePF2e) {
-    const psychicActor = message.actor as ActorPF2e;
     const options = message.flags.pf2e.context?.options;
-    if (!options) return;
+    const psychicActor = message.actor as ActorPF2e;
 
-    if (!isOscillatingWavePsychic(psychicActor, options) || !isRelevantAction(options)) {
+    if (!psychicActor || !options?.includes("class:psychic") 
+        || !options?.includes("feature:the-oscillating-wave")) {
         return;
     }
 
-    const oscillatingWaveFeat = psychicActor.items.find(
-        (item) => item.type === "feat" && item.slug === "the-oscillating-wave"
+    // Check if a relevant spell
+    const prefix = "item:";
+    const isRelevantSpell = options.some(o => o.startsWith(prefix) 
+        && SPELL_SLUGS.includes(o.substring(prefix.length))
     );
 
-    if (!oscillatingWaveFeat) {
+    // Check if mind shift action with add remove energy enabled
+    const isMindShiftWithAddRemoveEnergy = options.includes("mindshift:add-remove-energy")
+        && options.includes("item:tag:mindshifted");
+
+    if (!isRelevantSpell && !isMindShiftWithAddRemoveEnergy) return;
+
+    // Get Oscillating Wave Feat
+    const oscillatingWaveFeat = psychicActor.items.find(
+        (item): item is FeatPF2e<ActorPF2e> =>
+            item.type === "feat" && item.slug === "the-oscillating-wave"
+    );
+    if (!oscillatingWaveFeat) return
+
+    // Find relevant rollOption Index, needed to update array later
+    const ruleIndex = oscillatingWaveFeat.rules.findIndex(
+        rule => rule.key === "RollOption" && rule.label === "Conservation of Energy"
+    );
+
+    if (ruleIndex === -1) {
         logd(`Conservation of Energy RollOption not found on Feat.`);
         return;
     }
 
-    const currentSelection = getEnergySelection(oscillatingWaveFeat);
-    if (!currentSelection) return;
-
+    // Determine current selection and new selection
+    const currentRuleData = oscillatingWaveFeat.rules[ruleIndex] as RollOptionRuleElement;
+    const currentSelection = currentRuleData.selection;
     const newSelection = currentSelection === "fire" ? "cold" : "fire";
 
-    await updateEnergySelection(oscillatingWaveFeat, newSelection);
+    // Clone the rules array as rules are immutable and we need to update the whole item instead
+    const clonedRulesArray = foundry.utils.deepClone(oscillatingWaveFeat.system.rules);
 
-    if (message.token?.object) {
-        await animateConservationOfEnerySwitch(message.token.object, newSelection);
-        const energyString = newSelection === "fire" ? "add energy 🔥" : "remove energy ❄️";
-        const content = `${message.token.name} changes to ${energyString}.`;
-        await sendBasicChatMessage(content, psychicActor);
+    // Update the cloned rules array with the new selection
+    if (clonedRulesArray[ruleIndex] && 'selection' in clonedRulesArray[ruleIndex]) {
+        (clonedRulesArray[ruleIndex]).selection = newSelection;
+    } else {
+        return;
     }
+
+    // Create the payload to update the item
+    const payload = {
+        _id: oscillatingWaveFeat.id,
+        "system.rules": clonedRulesArray,
+    };
+
+    // Update the item on the actor
+    await psychicActor.updateEmbeddedDocuments("Item", [payload]);
+
+    // Animate energy switch for visual display of change
+    if (!message.token?.object) return;
+    await animateConservationOfEnergySwitch(message.token.object, newSelection);
+    
+    const energyString = newSelection === "fire" ? "add energy 🔥" : "remove energy ❄️";
+    const content = `${message.token.name} changes to ${energyString}.`
+    
+    await sendBasicChatMessage(content, psychicActor)
+
 }
 
-function isOscillatingWavePsychic(actor: ActorPF2e, options: string[]): boolean {
-    return actor && options.includes("class:psychic") && options.includes("feature:the-oscillating-wave");
-}
-
-function isRelevantAction(options: string[]): boolean {
-    const isRelevantSpell = options.some(o => o.startsWith("item:") && SPELL_SLUGS.includes(o.substring("item:".length)));
-    const isMindShiftWithAddRemoveEnergy = options.includes("item:trait:mindshift") && options.includes("mindshift:add-remove-energy");
-    return isRelevantSpell || isMindShiftWithAddRemoveEnergy;
-}
-
-function getEnergySelection(item: ItemPF2e): "fire" | "cold" | null {
-    const rule = item.rules.find(
-        (rule): rule is RollOptionRuleElement => rule.key === "RollOption" && rule.label === "Conservation of Energy"
-    );
-    return (rule?.selection as "fire" | "cold") ?? null;
-}
-
-async function updateEnergySelection(item: ItemPF2e, newSelection: "fire" | "cold"): Promise<void> {
-    const ruleIndex = item.rules.findIndex(
-        rule => rule.key === "RollOption" && rule.label === "Conservation of Energy"
-    );
-
-    if (ruleIndex === -1) return;
-
-    const clonedRules = foundry.utils.deepClone(item.system.rules);
-    const ruleToUpdate = clonedRules[ruleIndex];
-
-    if (ruleToUpdate && 'selection' in ruleToUpdate) {
-        ruleToUpdate.selection = newSelection;
-        await item.update({ "system.rules": clonedRules });
-    }
-}
-
-async function animateConservationOfEnerySwitch(token: TokenPF2e, energy: "fire" | "cold") {
+async function animateConservationOfEnergySwitch(token: TokenPF2e, energy: "fire" | "cold") {
     
     const animation = energy === "fire" ? "jb2a.token_border.circle.static.orange.012" : "jb2a.token_border.circle.static.blue.004";
     const sound = energy === "fire" ? "sound/NWN2-Sounds/sff_firewhoosh02.WAV" : "sound/NWN2-Sounds/sfx_conj_Cold.WAV";
