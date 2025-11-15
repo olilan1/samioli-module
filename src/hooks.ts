@@ -19,6 +19,7 @@ import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
+import { oscillateEnergy } from "./conservationofenergy.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -174,6 +175,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
         case "damage-roll":
             hook(checkForFinisherDamage, message)
                     .ifEnabled(SETTINGS.AUTO_PANACHE)
+                    .ifGM()
+                    .run();
+            hook(oscillateEnergy, message)
+                    .ifEnabled(SETTINGS.AUTO_CONSERVATION_OF_ENERGY)
                     .ifGM()
                     .run();
             break;
