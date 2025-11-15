@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fixed errors in Inner Radiance Torrents
+
 ## [0.58.0] - 2025-11-11
 
 - Redistribute Potential Automation
