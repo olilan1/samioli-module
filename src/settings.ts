@@ -8,6 +8,7 @@ export const SETTINGS = {
     AUTO_UNSTABLE_CHECK: "automatic_unstable_check_enable",
     UNSTABLE_CHECK_HOMEBREW: "unstable_check_homebrew_enable",
     AUTO_BOOST_EIDOLON: "automatic_boost_eidolon_enable",
+    AUTO_MANIFEST_EIDOLON: "automatic_manifest_eidolon_enable",
     AUTO_SUSTAIN_CHECK: "automatic_sustain_check_enable",
     AUTO_START_OF_TURN_SPELL_CHECK: "automatic_start_of_turn_spell_check_enable",
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
@@ -75,6 +76,15 @@ export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_BOOST_EIDOLON, {
         name: "Boost Eidolon Automation",
         hint: "Automatically add Boost Eidolon Effect and ask player if they want to extend boost. NOTE: this requires the pf2e-toolbelt module to be installed and the eidolon to be linked to the summoner via the Shared Data feature.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_MANIFEST_EIDOLON, {
+        name: "Manifest Eidolon Automation",
+        hint: "Allows Summoners to Manifest and Demanifest Eidolons. NOTE: this requires the pf2e-toolbelt module to be installed and the eidolon to be linked to the summoner via the Shared Data feature.",
         scope: "world",
         config: true,
         default: false,

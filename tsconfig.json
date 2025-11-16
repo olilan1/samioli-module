@@ -11,6 +11,7 @@
             "vite/client",
             "foundry-pf2e",
             "foundry-pf2e/lib-wrapper",
+            "foundry-pf2e/socketlib",
             "jquery",
             "sequencer"
         ],

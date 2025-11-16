@@ -19,10 +19,15 @@ import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
-import { demanifestEidolonAsGM, manifestEidolon, manifestEidolonAsGm } from "./actions/manifesteidolon.ts";
+import { manifestEidolon } from "./actions/manifesteidolon.ts";
+import { registerSocket } from "./sockets.ts";
 
 Hooks.on("init", () => {
     registerSettings();
+});
+
+Hooks.once('socketlib.ready', () => {
+    registerSocket();
 });
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
@@ -214,6 +219,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .ifMessagePoster()
                     .run();
             hook(manifestEidolon, message)
+                    .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
                     .ifMessagePosterAndActorOwner()
                     .run();
             break;
@@ -230,16 +236,6 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             break;
         case "custom-dazzling-display":
             hook(runDazzlingDisplayAutomationAsGM, message)
-                    .ifGM()
-                    .run();
-            break;
-        case "custom-manifest-eidolon":
-            hook(manifestEidolonAsGm, message)
-                    .ifGM()
-                    .run();
-            break;
-        case "custom-demanifest-eidolon":
-            hook(demanifestEidolonAsGM, message)
                     .ifGM()
                     .run();
             break;

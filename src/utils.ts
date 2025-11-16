@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -308,4 +308,12 @@ export function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
 
     logd(`${summonerActor.name} has multiple shared actors (${sharedActors.size}). Unable to determine which is the Eidolon.`);
     return null;
+}
+
+export function getTokensOnCurrentSceneForActor(actor: ActorPF2e): TokenDocumentPF2e[] {
+
+    const currentScene = canvas.scene!;
+    const tokens = currentScene.tokens.filter(t => t.actorId === actor.id);
+
+    return tokens;
 }

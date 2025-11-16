@@ -1,11 +1,11 @@
 import { ActorPF2e, ChatMessagePF2e, TokenDocumentPF2e } from "foundry-pf2e";
-import { getEidolonActor, isCharacter, MODULE_ID } from "../utils.ts";
+import { getEidolonActor, getTokensOnCurrentSceneForActor, isCharacter } from "../utils.ts";
 import { CrosshairUpdatable } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { DEMANIFEST_EIDOLON, getSocket, MANIFEST_EIDOLON } from "../sockets.ts";
 
 export async function manifestEidolon(message: ChatMessagePF2e) {
 
-    // Find summoner's associated eidolon actor
     const summonerActor = message.actor;
     const summonerToken = message.token;
     if (!summonerActor || !isCharacter(summonerActor) || !summonerToken) return;
@@ -15,35 +15,22 @@ export async function manifestEidolon(message: ChatMessagePF2e) {
     if (!eidolonActor) return;
 
     // Check if that eidolon already has a token on the current scene
-    const eidolonTokens = getEidolonTokenOnCurrentScene(eidolonActor);
-    if (!eidolonTokens) {
+    const eidolonTokens = getTokensOnCurrentSceneForActor(eidolonActor);
+    if (eidolonTokens.length === 0) {
         const selectedEidolonManifestLocation = await selectEidolonManifestLocation(summonerToken, eidolonActor);
         if (!selectedEidolonManifestLocation) return;
-        createChatMessageForGMClientDeManifest(summonerToken, eidolonActor, selectedEidolonManifestLocation);
-        return;
+        getSocket().executeAsGM(MANIFEST_EIDOLON, summonerToken, eidolonActor, selectedEidolonManifestLocation);
     } else {
         for (const eidolonToken of eidolonTokens) {
-            createChatMessageForGMClientDemanifest(summonerToken, eidolonToken);
+            getSocket().executeAsGM(DEMANIFEST_EIDOLON, eidolonToken);
         }
     }
 }
 
-function getEidolonTokenOnCurrentScene(eidolonActor: ActorPF2e): TokenDocumentPF2e[] | null {
+export async function manifestEidolonAsGM(summonerToken: TokenDocumentPF2e, 
+    eidolonActor: ActorPF2e, manifestLocationCenter: Point) {
 
-    const currentScene = canvas.scene!;
-    const tokens = currentScene.tokens.filter(t => t.actorId === eidolonActor.id);
-
-    if (tokens.length === 0) return null;
-
-    return tokens;
-}
-
-export async function manifestEidolonAsGm(message: ChatMessagePF2e) {
-
-    const eidolonActor = game.actors.get(message.flags[MODULE_ID].eidolonActorId as string);
-    if (!eidolonActor) return;
-    const manifestLocationCenter = message.flags[MODULE_ID].manifestLocation as Point;
-    if (!manifestLocationCenter) return;
+    // TODO: Take eidolon's size into consideration for anim
 
     const offset = canvas.grid.size / 2;
 
@@ -51,19 +38,6 @@ export async function manifestEidolonAsGm(message: ChatMessagePF2e) {
         x: manifestLocationCenter.x - offset,
         y: manifestLocationCenter.y - offset
     } as Point
-
-    await animateManifesting(message.token!, eidolonActor, manifestLocationCenter, manifestLocationTopLeft);
-
-}
-
-export async function demanifestEidolonAsGM(message: ChatMessagePF2e) {
-    const eidolonToken = canvas.tokens.get(message.flags[MODULE_ID].eidolonTokenId as string);
-    if (!eidolonToken) return;
-    await animateDemanifesting(eidolonToken.document);
-}
-
-async function animateManifesting(summonerToken: TokenDocumentPF2e, eidolonActor: ActorPF2e,
-    animationLocation: Point, eidolonPlacementLocation: Point) {
 
     const castingAnimation = "jb2a.sacred_flame.source.blue"
     const manifestAnimation = "jb2a.sacred_flame.target.blue"
@@ -77,19 +51,19 @@ async function animateManifesting(summonerToken: TokenDocumentPF2e, eidolonActor
         .sound()
             .file(castingSound)
         .effect()
-            .atLocation(animationLocation)
+            .atLocation(manifestLocationCenter)
             .file(manifestAnimation)
             .delay(1000)
             .fadeIn(1000)
             .waitUntilFinished(-3000)
         .sound()
             .file(manifestSound)
-        .thenDo(async () => await createTokenForActorAtPosition(eidolonActor, eidolonPlacementLocation))
+        .thenDo(async () => await createTokenForActorAtPosition(eidolonActor, manifestLocationTopLeft))
     sequence.play();
+
 }
 
-async function animateDemanifesting(eidolonToken: TokenDocumentPF2e) {
-
+export async function demanifestEidolonAsGM(eidolonToken: TokenDocumentPF2e) {
     const demanifestAnimation = "jb2a.particle_burst.01.circle.green"
     const demanifestSound1 = "sound/NWN2-Sounds/sff_howlodd.WAV"
     const demanifestSound2 = "sound/NWN2-Sounds/sfx_Implosion.WAV"
@@ -117,12 +91,8 @@ async function animateDemanifesting(eidolonToken: TokenDocumentPF2e) {
             .on(eidolonToken)
             .fadeOut(50)
             .waitUntilFinished()
-        .thenDo(async () => await deleteToken(eidolonToken))
+        .thenDo(async () => { await eidolonToken.delete(); })
     sequence.play();
-}
-
-async function deleteToken(token: TokenDocumentPF2e) {
-    await token.delete();
 }
 
 async function createTokenForActorAtPosition(actor: ActorPF2e, location: Point) {
@@ -137,10 +107,10 @@ async function createTokenForActorAtPosition(actor: ActorPF2e, location: Point) 
     await currentScene.createEmbeddedDocuments('Token', [tokenData.toObject()]);
 }
 
-async function selectEidolonManifestLocation(summonerToken: TokenDocumentPF2e, eidolonActor: ActorPF2e): Promise<Point | undefined> {
+async function selectEidolonManifestLocation(summonerToken: TokenDocumentPF2e, eidolonActor: ActorPF2e): Promise<Point | false> {
 
     const eidolonImg = eidolonActor.prototypeToken.texture.src;
-    if (!eidolonImg) return;
+    if (!eidolonImg) return false;
     const centrePoint = await Sequencer.Crosshair.show({
         location: {
             obj: summonerToken,
@@ -182,35 +152,4 @@ async function selectEidolonManifestLocation(summonerToken: TokenDocumentPF2e, e
         placed: undefined
     });
     return centrePoint;
-}
-
-function createChatMessageForGMClientDeManifest(summonerToken: TokenDocumentPF2e, eidolonActor: ActorPF2e, manifestLocation: Point) {
-    const messageContent = `<div>${summonerToken.name} is manifesting ${eidolonActor.name}</div>`;
-    ChatMessage.create({
-        content: messageContent,
-        whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id),
-        speaker: ChatMessage.getSpeaker({ actor: summonerToken.actor }),
-        flags: {
-            [MODULE_ID]: {
-                manifestLocation: manifestLocation,
-                eidolonActorId: eidolonActor.id,
-                type: "custom-manifest-eidolon"
-            }
-        }
-    });
-}
-
-function createChatMessageForGMClientDemanifest(summonerToken: TokenDocumentPF2e, eidolonToken: TokenDocumentPF2e) {
-    const messageContent = `<div>${summonerToken.name} is demanifesting ${eidolonToken.name}</div>`;
-    ChatMessage.create({
-        content: messageContent,
-        whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id),
-        speaker: ChatMessage.getSpeaker({ actor: summonerToken.actor }),
-        flags: {
-            [MODULE_ID]: {
-                eidolonTokenId: eidolonToken.id,
-                type: "custom-demanifest-eidolon"
-            }
-        }
-    });
 }
