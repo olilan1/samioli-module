@@ -5,15 +5,14 @@ const SPELL_SLUGS = [
     `breathe-fire`,
     `heat-metal`,
     `fireball`,
-    `fire-shield`,
     `cone-of-cold`,
-    `flame-vortex`,
-    `fiery-body`,
     `polar-ray`,
     `falling-stars`,
     `ignition`,
     `frostbite`
 ]
+
+// TODO: Flame Vortex, Fiery Body, Flame Shield to be custom functionality
 
 export async function oscillateEnergy(message: ChatMessagePF2e) {
     const options = message.flags.pf2e.context?.options;
