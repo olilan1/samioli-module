@@ -12,6 +12,7 @@ export const SETTINGS = {
     AUTO_SUSTAIN_CHECK: "automatic_sustain_check_enable",
     AUTO_START_OF_TURN_SPELL_CHECK: "automatic_start_of_turn_spell_check_enable",
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
+    AUTO_CONSERVATION_OF_ENERGY: "automatic_conservation_of_energy_enable",
     DAMAGE_HELPER_BUTTON: "damage_helper_button_enable",
     DEBUG_LOGGING: "debug_logging"
 } as const;
@@ -112,6 +113,15 @@ export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK, {
         name: "Frightened & Antagonize Automation",
         hint: "Automatically reduce Frightened at the end of actors turn. Automatically applies Antagonize effect when relevant.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_CONSERVATION_OF_ENERGY, {
+        name: "Conservation of Energy Automation",
+        hint: "Automatically toggle Conservation of Energy for Oscillating Wave Psychics when relevant spells are cast.",
         scope: "world",
         config: true,
         default: false,

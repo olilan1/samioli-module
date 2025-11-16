@@ -21,6 +21,7 @@ import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck 
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
+import { oscillateEnergy } from "./conservationofenergy.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -180,6 +181,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
         case "damage-roll":
             hook(checkForFinisherDamage, message)
                     .ifEnabled(SETTINGS.AUTO_PANACHE)
+                    .ifGM()
+                    .run();
+            hook(oscillateEnergy, message)
+                    .ifEnabled(SETTINGS.AUTO_CONSERVATION_OF_ENERGY)
                     .ifGM()
                     .run();
             break;

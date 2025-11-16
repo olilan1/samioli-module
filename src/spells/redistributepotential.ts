@@ -38,10 +38,6 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
     const concentrateHeatTemplate = await createTemplate(concentrateHeatTemplateData);
     const concentrateHeatTargetTokens = await getTemplateTokens(concentrateHeatTemplate);
 
-    // Clean up templates
-    stealHeatTemplate.delete();
-    concentrateHeatTemplate.delete();
-
     // Capture additional context for the spell damage message
     const spell = message.item as SpellPF2e;
 
@@ -79,6 +75,13 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
         };
         Hooks.on("createChatMessage", hookFunction); 
     }
+
+    await animateRedistributePotential(token, stealHeatTemplate, concentrateHeatTemplate, isAmped);
+
+    // Clean up templates
+    stealHeatTemplate.delete();
+    concentrateHeatTemplate.delete();
+
 }
 
 function getFlavour(type: RedistributePotentialType, isAmped: boolean, damageFormula: string) : string {
@@ -289,4 +292,91 @@ function createDamageRoll(value: string, redistributePotentialType: Redistribute
 
     const roll = new DamageRoll(`${value}[${damageType}]`);
     return roll;
+}
+
+async function animateRedistributePotential(token: TokenPF2e, 
+    stealHeatTemplate: MeasuredTemplateDocumentPF2e, 
+    concentrateHeatTemplate: MeasuredTemplateDocumentPF2e,
+    isAmped: boolean
+) {
+
+    const stealHeatAnimation =  "jb2a.impact.frost.white.01";
+    const concentrateHeatAnimation = "jb2a.eruption.orange.01";
+    const energyStrandsAnimation = isAmped ? "jb2a.energy_strands.range.multiple.orange.01.15ft" : "jb2a.energy_strands.range.multiple.orange.01.05ft";
+    const casterAnimation = "jb2a.template_circle.aura.01.loop.large.bluepurple";
+
+    const castSound = "sound/NWN2-Sounds/sdr_mindhelp.WAV";
+    const stealHeatSound = "sound/NWN2-Sounds/sfx_conj_Cold.WAV"
+    const concentrateHeatSound = "sound/NWN2-Sounds/al_na_firesmldr1.WAV"
+
+    const energyStrandsDelay = 1000;
+    const stealHeatDelay = 2000;
+    const concentrateHeatDelay = 3000;
+    const stealHeatSize = isAmped ? 4.5 : 1.5;
+    const concentrateHeatSize = isAmped ? 7 : 2;
+
+    const offset = isAmped ? 0 : canvas.scene!.grid.size / 2;
+
+    const stealHeatLocation = { x: stealHeatTemplate.x + offset, y: stealHeatTemplate.y + offset };
+    const concentrateHeatLocation = { x: concentrateHeatTemplate.x + offset, y: concentrateHeatTemplate.y + offset };
+    
+    new Sequence()
+        // caster animation
+        .effect()
+            .atLocation(token)
+            .file(casterAnimation)
+            .duration(7000)
+            .opacity(0.7)
+            .fadeOut(1500)
+            .scaleToObject(3, { considerTokenScale: true })
+        .sound()
+            .file(castSound)
+            .fadeInAudio(200)
+            .fadeOutAudio(200)
+            .volume(0.7)
+        // strands moving from stealHeat to concentrateHeat
+        .effect()
+            .atLocation(stealHeatLocation)
+            .file(energyStrandsAnimation)
+            .stretchTo(concentrateHeatLocation)
+            .fadeIn(200)
+            .fadeOut(1000)
+            .duration(7000)
+            .delay(energyStrandsDelay)
+        // freeze effect on stealHeat template
+        .effect()
+            .atLocation(stealHeatLocation)
+            .file(stealHeatAnimation)
+            .fadeIn(500)
+            .fadeOut(1000)
+            .duration(5000)
+            .opacity(0.3)
+            .size(stealHeatSize, {gridUnits: true})
+            .delay(stealHeatDelay)
+            .playbackRate(0.5)
+        .sound()
+            .file(stealHeatSound)
+            .fadeInAudio(200)
+            .fadeOutAudio(200)
+            .delay(stealHeatDelay)
+            .volume(0.5)
+            .repeats(2)
+        // burning effect on concentrateHeatTemplate
+        .effect()
+            .atLocation(concentrateHeatLocation)
+            .file(concentrateHeatAnimation)
+            .fadeIn(2000)
+            .fadeOut(1500)
+            .duration(9000)
+            .opacity(0.4)
+            .size(concentrateHeatSize, {gridUnits: true})
+            .delay(concentrateHeatDelay)
+        .sound()
+            .file(concentrateHeatSound)
+            .fadeInAudio(200)
+            .fadeOutAudio(1000)
+            .delay(concentrateHeatDelay)
+            .volume(0.4)
+            .duration(5000)
+        .play()
 }
