@@ -19,10 +19,16 @@ import { getHtmlElement, MODULE_ID } from "./utils.ts";
 import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
+import { manifestEidolon } from "./actions/manifesteidolon.ts";
+import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 
 Hooks.on("init", () => {
     registerSettings();
+});
+
+Hooks.once('socketlib.ready', () => {
+    registerSocket();
 });
 
 Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
@@ -216,6 +222,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             hook(checkForHuntPreyPlayer, message)
                     .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
                     .ifMessagePoster()
+                    .run();
+            hook(manifestEidolon, message)
+                    .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
+                    .ifMessagePosterAndActorOwner()
                     .run();
             break;
         case "spell":

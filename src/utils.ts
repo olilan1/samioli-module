@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -280,4 +280,40 @@ export function getLevelBasedDC(level: number): number {
     };
     
     return DC_LOOKUP[level];
+}
+
+export function getEidolonActor(summonerActor: ActorPF2e): ActorPF2e | null {
+
+    // @ts-expect-error modules exists when pf2e-toolbelt is installed and eidolon is linked with summoner
+    const sharedActors: Set<string> | undefined = (summonerActor.modules)?.["pf2e-toolbelt"]?.shareData?.slaves;
+
+    if (!sharedActors || sharedActors.size === 0) {
+        logd(`${summonerActor.name} does not have any shared actors.`);
+        return null;
+    }
+
+    if (sharedActors.size === 1) {
+        const uuid = sharedActors.values().next().value;
+        if (!uuid) return null;
+
+        const eidolonId = uuid.split(".")[1];
+        const eidolonActor = game.actors.get(eidolonId);
+
+        if (!eidolonActor) {
+            logd(`Could not find an Actor with ID: ${eidolonId}`);
+            return null;
+        }
+        return eidolonActor;
+    }
+
+    logd(`${summonerActor.name} has multiple shared actors (${sharedActors.size}). Unable to determine which is the Eidolon.`);
+    return null;
+}
+
+export function getTokensOnCurrentSceneForActor(actor: ActorPF2e): TokenDocumentPF2e[] {
+
+    const currentScene = canvas.scene!;
+    const tokens = currentScene.tokens.filter(t => t.actorId === actor.id);
+
+    return tokens;
 }
