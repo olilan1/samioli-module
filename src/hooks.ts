@@ -22,6 +22,7 @@ import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
+import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -86,6 +87,7 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
 });
 
 Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => {
+    handleChatMessageWithRoll(message);
     if (game.modules.get('dice-so-nice')?.active
             && message.isRoll 
             && message.rolls.some(roll => roll.dice.length > 0)) {
@@ -161,6 +163,27 @@ Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement,
                 .ifV12()
                 .run();
 });
+
+function handleChatMessageWithRoll(message: ChatMessagePF2e){
+    switch (getMessageType(message)) {
+        case "attack-roll":
+            hook(startImaginaryWeapon, message)
+                    .ifMessagePosterAndActorOwner()
+                    .run();
+            break;
+        case "damage-roll":
+            break;
+        case "skill-check":
+            break;
+        case "flat-check":
+            break;
+        case "action":
+            break;
+        case "spell":
+        case "spell-cast":
+            break;
+    }
+}
 
 function handleChatMessagePostRoll(message: ChatMessagePF2e) {
     switch (getMessageType(message)) {
