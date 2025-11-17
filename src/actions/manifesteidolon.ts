@@ -19,19 +19,20 @@ export async function manifestEidolon(message: ChatMessagePF2e) {
     if (eidolonTokens.length === 0) {
         const selectedEidolonManifestLocation = await selectEidolonManifestLocation(summonerToken, eidolonActor);
         if (!selectedEidolonManifestLocation) return;
-        getSocket().executeAsGM(MANIFEST_EIDOLON, summonerToken.id, eidolonActor.id, selectedEidolonManifestLocation);
+        getSocket().executeAsGM(MANIFEST_EIDOLON, summonerToken.uuid, eidolonActor.uuid, selectedEidolonManifestLocation);
     } else {
         for (const eidolonToken of eidolonTokens) {
-            getSocket().executeAsGM(DEMANIFEST_EIDOLON, eidolonToken.id);
+            getSocket().executeAsGM(DEMANIFEST_EIDOLON, eidolonToken.uuid);
         }
     }
 }
 
 export async function manifestEidolonAsGM(summonerTokenid: string, 
-    eidolonActorId: string, manifestLocationCenter: Point) {
+    eidolonActorUuid: string, manifestLocationCenter: Point) {
 
-    const summonerToken = canvas.tokens.get(summonerTokenid)!;
-    const eidolonActor = game.actors.get(eidolonActorId)!;
+    const summonerToken : TokenDocumentPF2e | null = await fromUuid(summonerTokenid);
+    const eidolonActor: ActorPF2e | null = await fromUuid(eidolonActorUuid);
+    if (!summonerToken || !eidolonActor) return;
 
     // TODO: Take eidolon's size into consideration for anim
 
@@ -66,9 +67,9 @@ export async function manifestEidolonAsGM(summonerTokenid: string,
 
 }
 
-export async function demanifestEidolonAsGM(eidolonTokenId: string) {
-    
-    const eidolonToken = canvas.tokens.get(eidolonTokenId)?.document;
+export async function demanifestEidolonAsGM(eidolonTokenUuid: string) {
+
+    const eidolonToken : TokenDocumentPF2e | null = await fromUuid(eidolonTokenUuid);
     if (!eidolonToken) return;
 
     const demanifestAnimation = "jb2a.particle_burst.01.circle.green"
