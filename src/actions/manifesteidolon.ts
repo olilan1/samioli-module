@@ -19,16 +19,20 @@ export async function manifestEidolon(message: ChatMessagePF2e) {
     if (eidolonTokens.length === 0) {
         const selectedEidolonManifestLocation = await selectEidolonManifestLocation(summonerToken, eidolonActor);
         if (!selectedEidolonManifestLocation) return;
-        getSocket().executeAsGM(MANIFEST_EIDOLON, summonerToken, eidolonActor, selectedEidolonManifestLocation);
+        getSocket().executeAsGM(MANIFEST_EIDOLON, summonerToken.uuid, eidolonActor.uuid, selectedEidolonManifestLocation);
     } else {
         for (const eidolonToken of eidolonTokens) {
-            getSocket().executeAsGM(DEMANIFEST_EIDOLON, eidolonToken);
+            getSocket().executeAsGM(DEMANIFEST_EIDOLON, eidolonToken.uuid);
         }
     }
 }
 
-export async function manifestEidolonAsGM(summonerToken: TokenDocumentPF2e, 
-    eidolonActor: ActorPF2e, manifestLocationCenter: Point) {
+export async function manifestEidolonAsGM(summonerTokenid: string, 
+    eidolonActorUuid: string, manifestLocationCenter: Point) {
+
+    const summonerToken = await fromUuid<TokenDocumentPF2e>(summonerTokenid);
+    const eidolonActor = await fromUuid<ActorPF2e>(eidolonActorUuid);
+    if (!summonerToken || !eidolonActor) return;
 
     // TODO: Take eidolon's size into consideration for anim
 
@@ -63,7 +67,11 @@ export async function manifestEidolonAsGM(summonerToken: TokenDocumentPF2e,
 
 }
 
-export async function demanifestEidolonAsGM(eidolonToken: TokenDocumentPF2e) {
+export async function demanifestEidolonAsGM(eidolonTokenUuid: string) {
+
+    const eidolonToken : TokenDocumentPF2e | null = await fromUuid(eidolonTokenUuid);
+    if (!eidolonToken) return;
+
     const demanifestAnimation = "jb2a.particle_burst.01.circle.green"
     const demanifestSound1 = "sound/NWN2-Sounds/sff_howlodd.WAV"
     const demanifestSound2 = "sound/NWN2-Sounds/sfx_Implosion.WAV"
@@ -93,7 +101,9 @@ export async function demanifestEidolonAsGM(eidolonToken: TokenDocumentPF2e) {
             .waitUntilFinished()
         .thenDo(async () => { await eidolonToken.delete(); })
     sequence.play();
+
 }
+
 
 async function createTokenForActorAtPosition(actor: ActorPF2e, location: Point) {
 
