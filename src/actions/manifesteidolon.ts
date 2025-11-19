@@ -30,8 +30,8 @@ export async function manifestEidolon(message: ChatMessagePF2e) {
 export async function manifestEidolonAsGM(summonerTokenid: string, 
     eidolonActorUuid: string, manifestLocationCenter: Point) {
 
-    const summonerToken : TokenDocumentPF2e | null = await fromUuid(summonerTokenid);
-    const eidolonActor: ActorPF2e | null = await fromUuid(eidolonActorUuid);
+    const summonerToken = await fromUuid<TokenDocumentPF2e>(summonerTokenid);
+    const eidolonActor = await fromUuid<ActorPF2e>(eidolonActorUuid);
     if (!summonerToken || !eidolonActor) return;
 
     // TODO: Take eidolon's size into consideration for anim
