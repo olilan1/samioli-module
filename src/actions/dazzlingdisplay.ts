@@ -58,7 +58,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
 export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
     
     const image = "icons/skills/melee/maneuver-sword-katana-yellow.webp"
-    const targets = await Promise.all(targetsUuids.map(async (uuid) => await fromUuid<TokenDocumentPF2e>(uuid)));
+    const targets = targetsUuids.map( uuid => fromUuidSync<TokenDocumentPF2e>(uuid)!);
 
     const dazzingDisplayImmunityEffectData = {
         name: `Immunity to Dazzling Display`,
@@ -80,7 +80,7 @@ export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
     };
     
     for (const target of targets) {
-        await target!.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+        await target.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
     }
 }
 
