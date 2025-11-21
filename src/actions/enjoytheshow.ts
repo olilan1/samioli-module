@@ -1,15 +1,11 @@
-import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, DegreeOfSuccessString } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
 import { delay } from "../utils.ts";
-
-type OUTCOMES = "criticalSuccess" | "success" | "criticalFailure" | "failure";
 
 export function editEnjoyTheShowSkillRollIfNeeded(
     chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const rollOptions = chatMessagePF2e.flags.pf2e.origin?.rollOptions;
-    if (!rollOptions) return;
-    if (!rollOptions.includes("origin:item:slug:enjoy-the-show")) return;
-
+    if (!rollOptions?.includes("origin:item:slug:enjoy-the-show")) return;
     editSkillRoll(html, chatMessagePF2e.actor!);
 }
 
@@ -32,7 +28,7 @@ export async function startEnjoyTheShow(message: ChatMessagePF2e) {
     }
 }
 
-function randomRetort(outcome: OUTCOMES): string {
+function randomRetort(outcome: DegreeOfSuccessString): string {
 
     const successfulRetorts = [
         "Get used to disappointment...",
@@ -62,7 +58,7 @@ function randomRetort(outcome: OUTCOMES): string {
 
 }
 
-function checkIfSuccess(outcome: OUTCOMES): boolean {
+function checkIfSuccess(outcome: DegreeOfSuccessString): boolean {
     if (outcome === "criticalSuccess"
         || outcome === "success") {
             return true

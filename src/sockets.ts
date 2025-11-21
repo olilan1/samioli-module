@@ -1,4 +1,4 @@
-import { runHuntPreyAsGM } from "./actions/huntprey.ts";
+import { removeAndApplyHuntPreyAsGM } from "./actions/huntprey.ts";
 import { demanifestEidolonAsGM, manifestEidolonAsGM } from "./actions/manifesteidolon.ts";
 import { MODULE_ID } from "./utils.ts";
 
@@ -18,5 +18,5 @@ export function registerSocket() {
     // Register the name of the function that you want to run as the GM
     socket.register(MANIFEST_EIDOLON, manifestEidolonAsGM);
     socket.register(DEMANIFEST_EIDOLON, demanifestEidolonAsGM);
-    socket.register(AUTO_HUNT_PREY, runHuntPreyAsGM);
+    socket.register(AUTO_HUNT_PREY, removeAndApplyHuntPreyAsGM);
 }

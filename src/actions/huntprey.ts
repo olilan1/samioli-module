@@ -1,10 +1,11 @@
 import { ActorPF2e, ChatMessagePF2e, ScenePF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
-import { AUTO_HUNT_PREY, getSocket } from "../sockets.ts";
+import { REMOVE_AND_APPLY_HUNT_PREY, getSocket } from "../sockets.ts";
 
-export async function runHuntPreyAsGM(rangerUuid: string, targetUuids: string[]) {
+export async function removeAndApplyHuntPreyAsGM(rangerUuid: string, targetUuids: string[]) {
 
-    const ranger = fromUuidSync(rangerUuid) as ActorPF2e;
+    const ranger = fromUuidSync<ActorPF2e>(rangerUuid);
+    if (!ranger) return;
     const targets: TokenDocumentPF2e[] = [];
     for (const uuid of targetUuids) {
         const token = fromUuidSync<TokenDocumentPF2e>(uuid);
@@ -19,6 +20,7 @@ export async function runHuntPreyAsGM(rangerUuid: string, targetUuids: string[])
 
 export async function startHuntPrey(message: ChatMessagePF2e) {
     const ranger = message.actor;
+    if (!ranger) return;
 
     if (!message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:hunt-prey")) {
         return;
@@ -31,13 +33,13 @@ export async function startHuntPrey(message: ChatMessagePF2e) {
         return;
     }
 
-    const allowedNumberOfTargets = getNumberOfTargetsRangerCanHunt(ranger!);
+    const allowedNumberOfTargets = getNumberOfTargetsRangerCanHunt(ranger);
     if (targets.size > allowedNumberOfTargets) {
         ui.notifications.error(`Please select a maximum of ${allowedNumberOfTargets} creature(s) to hunt`);
         return;
     }
 
-    getSocket().executeAsGM(AUTO_HUNT_PREY, ranger?.uuid, Array.from(targets).map(t => t.document.uuid));
+    getSocket().executeAsGM(REMOVE_AND_APPLY_HUNT_PREY, ranger.uuid, Array.from(targets).map(t => t.document.uuid));
 }
 
 async function applyHuntPrey(rangerActor: ActorPF2e, targetTokens: TokenDocumentPF2e<ScenePF2e | null>[]) {
@@ -85,11 +87,11 @@ function getNumberOfTargetsRangerCanHunt(actor: ActorPF2e): number {
 }
 
 async function removeHuntPreyFromOtherTokens(hunterActor: ActorPF2e) {
-    const oldHuntedPreyTokenUuids = await hunterActor.getFlag("samioli-module", "huntedPreyTokenUuids")
-    if (!oldHuntedPreyTokenUuids) return
+    const oldHuntedPreyTokenUuids = await hunterActor.getFlag("samioli-module", "huntedPreyTokenUuids");
     if (!Array.isArray(oldHuntedPreyTokenUuids)) return;
     for (const uuid of oldHuntedPreyTokenUuids) {
-        const huntedTokenDocument = fromUuidSync(uuid) as TokenDocumentPF2e;
+        const huntedTokenDocument = fromUuidSync<TokenDocumentPF2e>(uuid);
+        if (!huntedTokenDocument) continue;
         const huntedActor = huntedTokenDocument.actor;
         if (!huntedActor) continue; 
         const items = huntedActor.items.contents;
@@ -97,8 +99,6 @@ async function removeHuntPreyFromOtherTokens(hunterActor: ActorPF2e) {
             item.type === "effect" && 
             item.system.slug === `samioli-hunt-prey` 
         );
-
-        if (huntPreyEffects.length === 0) continue;
         
         for (const huntPreyEffect of huntPreyEffects) {
             if (huntPreyEffect.flags?.samioli?.hunterActorId === hunterActor.id) {
