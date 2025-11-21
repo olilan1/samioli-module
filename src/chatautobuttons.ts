@@ -15,7 +15,9 @@ const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]'
 type ButtonSpec = {
     label: string;
     function: (token: TokenPF2e, message: ChatMessagePF2e) => void;
-    buttonToReplace?: string;
+}
+interface ButtonSwapSpec extends ButtonSpec {
+    buttonToReplace: string;
 }
 
 const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
@@ -48,7 +50,7 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     }
 }
 
-const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
+const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     "redistribute-potential": {
         label: "Redistribute Potential!",
         function: startRedistributePotential,
@@ -91,7 +93,7 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
     }
 }
 
-function swapButtons(slug: string, mappings: Record<string, ButtonSpec>,
+function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
         divLookup: string, token: TokenPF2e,  
         message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {

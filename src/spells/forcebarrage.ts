@@ -1,14 +1,10 @@
-import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay } from "../utils.ts";
-import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
+import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
+import { delay, getTokensAtLocation } from "../utils.ts";
+import { CrosshairUpdatable } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { getTemplateTokens } from "../templatetarget.ts";
+import { rollSpellDamage } from "../spelldamageroll.ts";
 
 const { DialogV2 } = foundry.applications.api;
-
-type Tradition = "arcane" | "occult";
-type BonusDamageSource = "sorcerous-potency" | "unleash-psyche-damage";
 
 export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatMessagePF2e) {
 
@@ -19,30 +15,37 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
     // determine how many missiles the caster will have based on casting rank
     const castRank = message.flags.pf2e.origin?.castRank;
     if (!castRank) return;
-    const numberOfShards = numberOfActions * Math.ceil(castRank / 2)
+    const numberOfShards = numberOfActions * Math.ceil(castRank / 2);
 
     // Ask player to designate shards to the tokens on the board
     const targets = [];
     let remainingShards = numberOfShards;
     do  {
-        const templateData = await startCrosshairsTargetSelection(token, remainingShards);
-        if (!templateData && targets.length === 0) {
-            ui.notifications.error("Force barrage selection cancelled.");
-            return;
-        } else if (!templateData && targets.length > 0) {
+        const selectedLocation = await startCrosshairsTargetSelection(token, remainingShards) as Point;
+        
+        if (!selectedLocation) {
+            if (targets.length < 1) {
+                ui.notifications.error("Force barrage selection cancelled.");
+                return;
+            }
             targets.pop();
             remainingShards++;
             ui.notifications.warn("Last selected target removed.");
             continue;
         }
 
-        const target = await getTokenAtLocation(templateData);
+        const targetTokens = await getTokensAtLocation(selectedLocation);
 
-        if (!target) {
+        if (targetTokens.length === 0) {
             ui.notifications.error("Please select a valid target.");
             continue;
+        } else if (targetTokens.length > 1) {
+            ui.notifications.error("There are two tokens at this location.");
+            continue;
         } else {
-            targets.push(target);
+            console.log("targetTokens", targetTokens)
+            targets.push(targetTokens[0]);
+            console.log(targets, "targets");
             remainingShards--;
         }
     } while (remainingShards > 0);
@@ -54,36 +57,25 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
     await delay(500);
     await animateForceBarrage(token, targets);
 
-    // Extract additional spell context for damage roll and chat message
-    const rollOptions = message.flags.pf2e.origin?.rollOptions;
-    let tradition : Tradition;
-    let bonusDamageSource : BonusDamageSource | undefined;
-    let additionalDamage = 0;
-
-    if (rollOptions?.includes("origin:item:trait:arcane")) {
-        tradition = "arcane";
-    } else {
-        tradition = "occult";
-    }
-
-    if (message.actor?.getRollOptions()?.includes("sorcerous-potency")) {
-        bonusDamageSource = "sorcerous-potency";
-        additionalDamage = castRank;
-    } else if (message.actor?.itemTypes.effect.some(effect => effect.slug === "effect-unleash-psyche")) {
-        bonusDamageSource = "unleash-psyche-damage";
-        additionalDamage = castRank * 2;
-    }
-
     // Another small delay before rolling all the dice
-    await delay(500);
+    await delay(1000);
+
+    const spellItem = message.item as SpellPF2e;
+    const spellDamage = await spellItem.getDamage();
+
+    const spellRollFormula = spellDamage?.template.damage.roll._formula;
+    if (!spellRollFormula) return;
 
     // Roll damage for each target, increasing the damage dice based on the number of shards
-    targetMap.forEach((shards, target) => {
-        const damageRoll = createDamageRollPerTarget(shards, additionalDamage);
-        const flavor = getFlavor(tradition, shards, additionalDamage, bonusDamageSource);
-        sendRollToChat(damageRoll, message.item as SpellPF2e, target, flavor);
+    targetMap.forEach(async (shards, target) => {
+        const modifiedFormula = getModifyFormulasBasedOnShards(spellRollFormula, shards)
+        rollSpellDamage(spellItem, target, token, 
+            {
+                _formula: modifiedFormula._formula, 
+                formula: modifiedFormula.formula, 
+                originalFormula: `1d4 + 1 Force`
+            });
     });
-    
 }
 
 async function selectNumberOfActionsDialog(): Promise<number | undefined> {
@@ -170,47 +162,6 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards:
 
 }
 
-async function getTokenAtLocation(location: Point) : Promise<TokenPF2e | undefined> {
-    const myTemplateData = createCustomTemplateData(location);
-    const myTemplate = await createTemplate(myTemplateData);
-    const targets = await getTemplateTokens(myTemplate);
-    const target = targets[0]
-    await myTemplate.delete();
-    if (!target) return;
-    return target;
-}
-
-async function createTemplate(templateData: CustomTemplateData): Promise<MeasuredTemplateDocumentPF2e> {
-
-    const myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
-    if (!myCustomTemplate) {
-        throw new Error("Failed to create template");
-    }
-    return myCustomTemplate as MeasuredTemplateDocumentPF2e;
-}
-
-function createCustomTemplateData(location: Point): CustomTemplateData {
-
-    const offset = canvas.scene!.grid.size / 2;
-
-    const templateShape = "rect";
-    const templateWidth = 5;
-    const templateDistance = 7.0710678118654755; // Diagonal for rect template
-    const templateDirection = 45; // Rect templates work on diagonals for a square
-
-    const templateData: CustomTemplateData = {
-        t: templateShape as MeasuredTemplateType,
-        x: location.x - (offset),
-        y: location.y - (offset),
-        width: templateWidth,
-        distance: templateDistance,
-        direction: templateDirection,
-        fillColor: "#000000ff",
-        borderColor: "#000000ff"
-    };
-    return templateData;
-}
-
 function translateTargetsArrayToMap(targets: TokenPF2e[]) {
     // Create a map of targets and the number of times they were targetted
     const targetMap = new Map<TokenPF2e, number>();
@@ -249,89 +200,18 @@ async function animateForceBarrage(caster: TokenPF2e, targets: TokenPF2e[]){
     }
 }
 
-function createDamageRollPerTarget(numberOfShards: number, additionalDamage: number): Roll {
+function getModifyFormulasBasedOnShards(_formula: string, numberOfShards: number)
+    : {_formula: string, formula: string} {
 
-    const combinedDamage = numberOfShards + additionalDamage;
+    const regex = /\{?\(?(\d+)d4 \+ (\d+)\)?\}?\[([a-zA-Z\s]+)\]/;
+    const match = _formula.match(regex)!;
 
-    const value = `${numberOfShards}d4 + ${combinedDamage}`
+    const originalBonus = parseInt(match[2], 10);
+    
+    const newBonus = numberOfShards + originalBonus - 1;
 
-    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll")!;
-
-    const roll = new DamageRoll(`(${value})[force]`);
-    return roll;
-}
-
-async function sendRollToChat(roll: Roll, spellItem: SpellPF2e, targetToken: TokenPF2e, 
-    flavor: string) {
-
-    const originData = spellItem.getOriginData();
-
-    const spellDamage = await spellItem.getDamage();
-    if (!spellDamage) return;
-
-    roll.toMessage(
-        {
-            speaker: ChatMessage.getSpeaker(),
-            flavor: flavor,
-            flags: {
-                pf2e: {
-                    context: {
-                        ...spellDamage.context,
-                        options: Array.from(spellDamage.context.options ?? []),
-                    },
-                    origin: originData,
-                },
-                "pf2e-toolbelt": {
-                    targetHelper: {
-                        targets: [targetToken.document.uuid]
-                    }
-                }
-                
-            },
-        },
-        { create: true }
-    );
-
-}
-
-function getFlavor(tradition: Tradition, numberOfShards: number, additionalDamage: number, 
-    bonusDamageSource?: BonusDamageSource){
-
-    const value = `${numberOfShards}d4 + ${numberOfShards}`
-
-    const header = `
-        <h4 class="action">
-        <strong>Force Barrage</strong>
-        </h4>
-    `;
-
-    const traitsHeader = `<div class="tags" data-tooltip-class="pf2e">`
-    const traditionTrait = tradition === `occult` ? `<span class="tag" data-tooltip="PF2E.TraitDescriptionOccult" data-trait="occult">Occult</span>` : `<span class="tag" data-tooltip="PF2E.TraitDescriptionArcane" data-trait="arcane">Arcane</span>`;
-    const remainingTraits = `
-        <span class="tag" data-tooltip="PF2E.TraitDescriptionConcentrate" data-trait="concentrate">Concentrate</span>
-        <span class="tag" data-tooltip="PF2E.TraitDescriptionForce" data-trait="force">Force</span>
-        <span class="tag" data-tooltip="PF2E.TraitDescriptionManipulate" data-trait="manipulate">Manipulate</span>
-        </div>
-    `;
-    const modifiers = `
-        <hr />
-        <div class="tags modifiers">
-        <span class="tag tag_transparent">${value} Force</span>
-    `;
-
-    let bonusModifiers = ``;
-
-    if (bonusDamageSource === "sorcerous-potency") {
-        bonusModifiers = `
-        <span class="tag tag_transparent">Sorcerous Potency +${additionalDamage}</span>
-        `;
-    } else if (bonusDamageSource === "unleash-psyche-damage") {
-        bonusModifiers = `
-            <span class="tag tag_transparent">Unleash Psyche +${additionalDamage}</span>
-        `;
-    }
-
-    const closingDiv = `</div>`;
-
-    return header + traitsHeader + traditionTrait + remainingTraits + modifiers + bonusModifiers + closingDiv;
+    const rollFormula = `{(${numberOfShards}d4 + ${newBonus})[force]}`;
+    const tagFormula = `${numberOfShards}d4 + ${numberOfShards} Force`;
+    
+    return {_formula: rollFormula, formula: tagFormula};
 }
