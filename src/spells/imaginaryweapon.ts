@@ -1,6 +1,6 @@
 import { ChatMessagePF2e, TokenDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 
-type DAMAGE_TYPE = "bludgeoning" | "slashing";
+type DamageType = "bludgeoning" | "slashing";
 
 export async function startImaginaryWeapon(message: ChatMessagePF2e) {
 
@@ -10,7 +10,7 @@ export async function startImaginaryWeapon(message: ChatMessagePF2e) {
 
     // determine what type of Imaginary Weapon has been cast
     const isAmped = contextOptions.includes("item:tag:amped");
-    let damageType: DAMAGE_TYPE;
+    let damageType: DamageType;
     if (contextOptions.includes("item:damage:bludgeoning")) {
         damageType = "bludgeoning";
     } else if (contextOptions.includes("item:damage:slashing")) {
@@ -32,7 +32,7 @@ export async function startImaginaryWeapon(message: ChatMessagePF2e) {
 
 }
 
-async function animateImaginaryWeapon(caster: TokenDocumentPF2e, spellDeliverer: TokenPF2e, targets: TokenPF2e[], damageType: DAMAGE_TYPE, isAmped: boolean) {
+async function animateImaginaryWeapon(caster: TokenDocumentPF2e, spellDeliverer: TokenPF2e, targets: TokenPF2e[], damageType: DamageType, isAmped: boolean) {
     
     let attackAnimation: string;
 
