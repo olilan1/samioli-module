@@ -16,7 +16,6 @@ import { postMessagesForWithinEffects, deleteWithinEffectsForTemplate, addEffect
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
 import { getHtmlElement, MODULE_ID } from "./utils.ts";
-import { runDazzlingDisplayAutomationAsGM } from "./actions/dazzlingdisplay.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
@@ -237,11 +236,6 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             hook(runBoostEidolonAutomation, message)
                     .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
                     .ifMessagePosterAndActorOwner()
-                    .run();
-            break;
-        case "custom-dazzling-display":
-            hook(runDazzlingDisplayAutomationAsGM, message)
-                    .ifGM()
                     .run();
             break;
     }
