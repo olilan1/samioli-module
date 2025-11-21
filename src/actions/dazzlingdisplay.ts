@@ -1,7 +1,8 @@
-import { ScenePF2e, TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
-import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint, MODULE_ID } from "../utils.ts";
+import { TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
+import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint } from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { DAZZLING_DISPLAY, getSocket } from "../sockets.ts";
 
 export async function startDazzlingDisplay(token: TokenPF2e) {
     // Create a 30 ft radius template at the token's position
@@ -50,52 +51,14 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
         return;
     }
 
-    // create chat message to trigger GM client to apply dazzling display immunity effect
-    createChatMessageToTriggerGameMasterClient(token, finalTargetIds);
+    getSocket().executeAsGM(DAZZLING_DISPLAY, finalTargets.map(token => token.document.uuid));
 
 }
 
-function createChatMessageToTriggerGameMasterClient(token: TokenPF2e, targetTokenIds: string[]) {
-    const messageContent = `<div>Dazzling Display used by ${token.name}</div>`;
-    ChatMessage.create({
-        content: messageContent,
-        whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id),
-        speaker: ChatMessage.getSpeaker({ actor: token.actor }),
-        flags: {
-            [MODULE_ID]: {
-                dazzlingDisplayTargets: targetTokenIds, // passes the target token IDs to the GM client
-                type: "custom-dazzling-display" // uses that message type to trigger the GM hook
-            }
-        }
-    });
-}
-
-export async function runDazzlingDisplayAutomationAsGM(message: ChatMessage) {
-
-    // Extract token IDs from the message flag
-    const targetIds = message.getFlag(MODULE_ID, "dazzlingDisplayTargets") as string[] | undefined;  
-    if (!targetIds || targetIds.length === 0) return;  
-
-    // create an array of tokens
-    const tokens = targetIds.flatMap(id => canvas.tokens.get(id) ?? []);  
-    if (tokens.length === 0) return;  
-    // run apply dazzling display immunity effect to the tokens as the GM
-    await applyDazzlingDisplayImmunityEffectToTokens(tokens);  
-}
-
-async function getDemoralizeMacro(): Promise<Macro | null> {
-    const compendiumName = "xdy-pf2e-workbench.asymonous-benefactor-macros-internal";
-    const macroName = "XDY DO_NOT_IMPORT Demoralize";
-    const pack = game.packs.get(compendiumName);
-    if (!pack) return null;
-    const macro = await pack.getDocuments({name: macroName}) as Macro[];
-    if (macro.length === 0) return null;
-    return macro[0];
-}
-
-async function applyDazzlingDisplayImmunityEffectToTokens(tokens: TokenPF2e[]) {
-
-    const image = "icons/skills/melee/maneuver-sword-katana-yellow.webp";
+export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
+    
+    const image = "icons/skills/melee/maneuver-sword-katana-yellow.webp"
+    const targets = targetsUuids.map( uuid => fromUuidSync<TokenDocumentPF2e>(uuid)!);
 
     const dazzingDisplayImmunityEffectData = {
         name: `Immunity to Dazzling Display`,
@@ -116,9 +79,19 @@ async function applyDazzlingDisplayImmunityEffectToTokens(tokens: TokenPF2e[]) {
         }
     };
     
-    for (const token of tokens) {
-        await token.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+    for (const target of targets) {
+        await target.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
     }
+}
+
+async function getDemoralizeMacro(): Promise<Macro | null> {
+    const compendiumName = "xdy-pf2e-workbench.asymonous-benefactor-macros-internal";
+    const macroName = "XDY DO_NOT_IMPORT Demoralize";
+    const pack = game.packs.get(compendiumName);
+    if (!pack) return null;
+    const macro = await pack.getDocuments({name: macroName}) as Macro[];
+    if (macro.length === 0) return null;
+    return macro[0];
 }
 
 async function animateDazzlingDisplay(token: TokenPF2e) {
@@ -134,7 +107,6 @@ async function animateDazzlingDisplay(token: TokenPF2e) {
         "jb2a.melee_attack.01.trail.02.blueyellow.2",
         "jb2a.melee_attack.01.trail.02.blueyellow.3"
     ]
-
 
     const rotations = [0, 90, 180, 270];
 
