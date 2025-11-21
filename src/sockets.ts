@@ -6,7 +6,7 @@ let socket: SocketlibSocket | undefined;
 
 export const MANIFEST_EIDOLON = "manifestEidolon";
 export const DEMANIFEST_EIDOLON = "demanifestEidolon";
-export const AUTO_HUNT_PREY = "autoHuntPrey";
+export const  REMOVE_AND_APPLY_HUNT_PREY = "removeAndApplyHuntPrey";
 
 export const getSocket = () => {
     if (!socket) throw new Error("Socket not registered");
@@ -18,5 +18,5 @@ export function registerSocket() {
     // Register the name of the function that you want to run as the GM
     socket.register(MANIFEST_EIDOLON, manifestEidolonAsGM);
     socket.register(DEMANIFEST_EIDOLON, demanifestEidolonAsGM);
-    socket.register(AUTO_HUNT_PREY, removeAndApplyHuntPreyAsGM);
+    socket.register( REMOVE_AND_APPLY_HUNT_PREY, removeAndApplyHuntPreyAsGM);
 }
