@@ -90,6 +90,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
         .effect()
             .file(puffSideAnimation)
             .atLocation(token)
+            // @ts-expect-error rotationOffset is correct
             .rotateTowards(target, { rotationOffset: 180 })
             .scale(0.7)
             .delay(rollOutAnimTime / 2.2)
@@ -218,6 +219,7 @@ async function animateSuccessfulTumble(token: TokenPF2e, target: TokenPF2e, rota
         .effect()
             .file(puffSideAnimation)
             .atLocation(token)
+            // @ts-expect-error rotationOffset is correct
             .rotateTowards(target, { rotationOffset: 180 })
             .scale(0.7)
             .delay(600)
