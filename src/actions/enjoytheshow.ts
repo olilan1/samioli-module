@@ -1,22 +1,20 @@
-import { ChatMessagePF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, DegreeOfSuccessString } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
 import { delay } from "../utils.ts";
 
 export function editEnjoyTheShowSkillRollIfNeeded(
     chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const rollOptions = chatMessagePF2e.flags.pf2e.origin?.rollOptions;
-    if (!rollOptions) return;
-    if (!rollOptions.includes("origin:item:slug:enjoy-the-show")) return;
-
-    editSkillRoll(html, chatMessagePF2e.actor);
+    if (!rollOptions?.includes("origin:item:slug:enjoy-the-show")) return;
+    editSkillRoll(html, chatMessagePF2e.actor!);
 }
 
-function editSkillRoll(html, actor) {
+function editSkillRoll(html: JQuery<HTMLElement>, actor: ActorPF2e) {
     html.find('.inline-check.with-repost').attr('data-against', 'will');
     
     if (actor.items.find(entry => (entry.system.slug === "acrobatic-performer" && entry.type === "feat"))){
-        let elementToClone = html.find('.inline-check.with-repost');
-        let clonedElement = elementToClone.clone();
+        const elementToClone = html.find('.inline-check.with-repost');
+        const clonedElement = elementToClone.clone();
         clonedElement.attr('data-pf2-check', 'acrobatics');
         clonedElement.find('.label').text('Perform with Acrobatics');
         elementToClone.after(clonedElement)
@@ -24,13 +22,13 @@ function editSkillRoll(html, actor) {
     }
 }
 
-export async function startEnjoyTheShow(ChatMessagePF2e) {
-    if (ChatMessagePF2e.flags.pf2e.context.options.includes("item:slug:enjoy-the-show")) {
-        animateEnjoyTheShow(ChatMessagePF2e);
+export async function startEnjoyTheShow(message: ChatMessagePF2e) {
+    if (message.flags.pf2e.context?.options?.includes("item:slug:enjoy-the-show")) {
+        animateEnjoyTheShow(message);
     }
 }
 
-function randomRetort(outcome) {
+function randomRetort(outcome: DegreeOfSuccessString): string {
 
     const successfulRetorts = [
         "Get used to disappointment...",
@@ -60,7 +58,7 @@ function randomRetort(outcome) {
 
 }
 
-function checkIfSuccess(outcome) {
+function checkIfSuccess(outcome: DegreeOfSuccessString): boolean {
     if (outcome === "criticalSuccess"
         || outcome === "success") {
             return true
@@ -69,10 +67,12 @@ function checkIfSuccess(outcome) {
         }
 }
 
-async function animateEnjoyTheShow(ChatMessagePF2e) {
-    const tokenId = ChatMessagePF2e.speaker.token;
+async function animateEnjoyTheShow(message: ChatMessagePF2e) {
+    const tokenId = message.speaker.token;
     const token = canvas.tokens.placeables.find(t => t.id === tokenId);
-
+    const outcome = message.flags.pf2e.context?.outcome;
+    if (!outcome) return;
+ 
     const targetTokens = Array.from(game.user.targets)
     if (targetTokens.length === 0) return;
 
@@ -96,12 +96,13 @@ async function animateEnjoyTheShow(ChatMessagePF2e) {
 
     const animationTime = 4000;
 
-    let sequence = new Sequence({moduleName: "PF2e Animations", softFail: true})
+    const sequence = new Sequence()
 
     .effect()
+        // @ts-expect-error offset is valid
         .atLocation(token, {offset: {x:0, y:-100}})
         .fadeIn(500)
-        .text(randomRetort(ChatMessagePF2e.flags.pf2e.context.outcome), style)
+        .text(randomRetort(outcome), style)
         .duration(animationTime)
         .fadeOut(500)
         .animateProperty("sprite", "scale.x", {
@@ -127,8 +128,8 @@ async function animateEnjoyTheShow(ChatMessagePF2e) {
         .fadeOut(200)
         .scale(0.4)
         .opacity(0.5)
-        .playIf(checkIfSuccess(ChatMessagePF2e.flags.pf2e.context.outcome))
+        .playIf(checkIfSuccess(outcome))
     sequence.play()
     await delay(animationTime);
-    checkIfProvidesPanache(ChatMessagePF2e);
+    checkIfProvidesPanache(message);
 }

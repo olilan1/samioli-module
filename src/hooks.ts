@@ -3,7 +3,7 @@ import { addAutoButtonIfNeeded } from "./chatautobuttons.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
 import { editEnjoyTheShowSkillRollIfNeeded, startEnjoyTheShow } from "./actions/enjoytheshow.ts";
 import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFinisherAttack, checkForFinisherDamage } from "./effects/panache.ts";
-import { checkForHuntPreyGM, checkForHuntPreyPlayer } from "./actions/huntprey.ts";
+import { startHuntPrey } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
@@ -237,13 +237,9 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                     .run();
             break;
         case "action":
-            hook(checkForHuntPreyGM, message)
+            hook(startHuntPrey, message)
                     .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
-                    .ifGM()
-                    .run();
-            hook(checkForHuntPreyPlayer, message)
-                    .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
-                    .ifMessagePoster()
+                    .ifMessagePosterAndActorOwner()
                     .run();
             hook(manifestEidolon, message)
                     .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
