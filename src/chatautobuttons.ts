@@ -6,12 +6,18 @@ import { startSonicDash } from "./actions/sonicdash.ts";
 import { startDazzlingDisplay } from "./actions/dazzlingdisplay.ts";
 import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 import { startRedistributePotential } from "./spells/redistributepotential.ts";
+import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
+const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]'
+const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]'
 
 type ButtonSpec = {
     label: string;
     function: (token: TokenPF2e, message: ChatMessagePF2e) => void;
+}
+interface ButtonSwapSpec extends ButtonSpec {
+    buttonToReplace: string;
 }
 
 const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
@@ -44,10 +50,16 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     }
 }
 
-const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
+const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     "redistribute-potential": {
         label: "Redistribute Potential!",
-        function: startRedistributePotential
+        function: startRedistributePotential,
+        buttonToReplace: TEMPLATE_BUTTON_SPELL
+    },
+    "force-barrage": {
+        label: "Select Targets",
+        function: selectForceBarrageTargets,
+        buttonToReplace: DAMAGE_BUTTON_SPELL
     }
 };
 
@@ -64,7 +76,7 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
 
     addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, message, html);
     addMatchingButtons(slug, AUTO_BUTTONS_ACTIONS, '.card-content', token, message, html);
-    swapTemplateButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', 'button[data-action="spell-template"]', token, message, html);
+    swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
 }
 
 function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
@@ -81,11 +93,12 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
     }
 }
 
-function swapTemplateButtons(slug: string, mappings: Record<string, ButtonSpec>,
-        divLookup: string, buttonDataAction: string, token: TokenPF2e,  
+function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
+        divLookup: string, token: TokenPF2e,  
         message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         if (slug === key) {
+            const buttonDataAction = buttonSpec.buttonToReplace!;
             const templateButton = html.find(buttonDataAction);
             const parentDiv = templateButton.closest(`div${divLookup}`);
             const button = $('<button type="button">' + buttonSpec.label + '</button>');

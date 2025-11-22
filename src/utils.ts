@@ -3,6 +3,8 @@ import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
+export type Tradition = "occult" | "arcane" | "divine" | "primal";
+
 export const MODULE_ID = "samioli-module";
 
 export function delay(ms: number) {
@@ -316,4 +318,31 @@ export function getTokensOnCurrentSceneForActor(actor: ActorPF2e): TokenDocument
     const tokens = currentScene.tokens.filter(t => t.actorId === actor.id);
 
     return tokens;
+}
+
+export async function getTokensAtLocation(location: Point, includeHidden?: boolean): Promise<TokenPF2e[]> {
+
+    const locationGridOffset = canvas.grid.getOffset(location);
+    const allTokensOnScene = canvas.tokens.placeables;
+    
+    const validTokens = allTokensOnScene.filter(token => {
+        
+        const actorType = token.actor?.type;
+        if (actorType === "loot" || actorType === "party") {
+            return false;
+        }
+        return token.footprint.some(footprint => {
+            return footprint.i === locationGridOffset.i && footprint.j === locationGridOffset.j;
+        });
+    }) as TokenPF2e[];
+
+    if (includeHidden) {
+        return validTokens;
+    }
+
+    const visibleTokens = validTokens.filter(token => { 
+        return token.document.hidden === false;
+    });
+
+    return visibleTokens;
 }
