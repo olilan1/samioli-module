@@ -34,7 +34,7 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
             continue;
         }
 
-        const targetTokens = await getTokensAtLocation(selectedLocation);
+        const targetTokens = getTokensAtLocation(selectedLocation);
 
         if (targetTokens.length === 0) {
             ui.notifications.error("Please select a valid target.");
@@ -43,9 +43,7 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
             ui.notifications.error("There are two tokens at this location.");
             continue;
         } else {
-            console.log("targetTokens", targetTokens)
             targets.push(targetTokens[0]);
-            console.log(targets, "targets");
             remainingShards--;
         }
     } while (remainingShards > 0);
@@ -61,20 +59,15 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
     await delay(1000);
 
     const spellItem = message.item as SpellPF2e;
-    const spellDamage = await spellItem.getDamage();
-
-    const spellRollFormula = spellDamage?.template.damage.roll._formula;
-    if (!spellRollFormula) return;
 
     // Roll damage for each target, increasing the damage dice based on the number of shards
     targetMap.forEach(async (shards, target) => {
-        const modifiedFormula = getModifyFormulasBasedOnShards(spellRollFormula, shards)
-        rollSpellDamage(spellItem, target, token, 
-            {
-                _formula: modifiedFormula._formula, 
-                formula: modifiedFormula.formula, 
-                originalFormula: `1d4 + 1 Force`
-            });
+
+        const modifiedSpell = spellItem.clone();
+        modifiedSpell.system.damage[0].formula = `${shards}d4+${shards}`;
+        const targets = [target];
+
+        rollSpellDamage(modifiedSpell, targets);
     });
 }
 
@@ -198,20 +191,4 @@ async function animateForceBarrage(caster: TokenPF2e, targets: TokenPF2e[]){
             .file("sound/NWN2-Sounds/sfx_hit_Magic.WAV")
         missileSequence.play();
     }
-}
-
-function getModifyFormulasBasedOnShards(_formula: string, numberOfShards: number)
-    : {_formula: string, formula: string} {
-
-    const regex = /\{?\(?(\d+)d4 \+ (\d+)\)?\}?\[([a-zA-Z\s]+)\]/;
-    const match = _formula.match(regex)!;
-
-    const originalBonus = parseInt(match[2], 10);
-    
-    const newBonus = numberOfShards + originalBonus - 1;
-
-    const rollFormula = `{(${numberOfShards}d4 + ${newBonus})[force]}`;
-    const tagFormula = `${numberOfShards}d4 + ${numberOfShards} Force`;
-    
-    return {_formula: rollFormula, formula: tagFormula};
 }

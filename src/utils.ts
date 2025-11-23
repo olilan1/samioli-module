@@ -320,7 +320,10 @@ export function getTokensOnCurrentSceneForActor(actor: ActorPF2e): TokenDocument
     return tokens;
 }
 
-export async function getTokensAtLocation(location: Point, includeHidden?: boolean): Promise<TokenPF2e[]> {
+/**
+ * Returns all tokens at a given location, except for loot and party tokens.
+ */
+export function getTokensAtLocation(location: Point, includeHidden?: boolean): TokenPF2e[] {
 
     const locationGridOffset = canvas.grid.getOffset(location);
     const allTokensOnScene = canvas.tokens.placeables;
