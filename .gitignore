@@ -1,3 +1,6 @@
 packs/macros
 node_modules
 dist
+**/LOCK
+**/LOG
+**.log
