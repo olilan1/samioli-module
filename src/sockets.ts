@@ -1,3 +1,4 @@
+import { removeAndApplyHuntPreyAsGM } from "./actions/huntprey.ts";
 import { startDazzlingDisplayAsGM } from "./actions/dazzlingdisplay.ts";
 import { demanifestEidolonAsGM, manifestEidolonAsGM } from "./actions/manifesteidolon.ts";
 import { deleteGhostlyCarrierTokenAsGM, summonGhostlyCarrierAsGM } from "./spells/ghostlycarrier.ts";
@@ -7,6 +8,7 @@ let socket: SocketlibSocket | undefined;
 
 export const MANIFEST_EIDOLON = "manifestEidolon";
 export const DEMANIFEST_EIDOLON = "demanifestEidolon";
+export const REMOVE_AND_APPLY_HUNT_PREY = "removeAndApplyHuntPrey";
 export const DAZZLING_DISPLAY = "dazzlingDisplay";
 export const GHOSTLY_CARRIER_SUMMON = "summonGhostlyCarrier";
 export const GHOSTLY_CARRIER_DELETE = "deleteGhostlyCarrier";
@@ -22,6 +24,7 @@ export function registerSocket() {
     // Requires a full restart of Foundry before this will work
     socket.register(MANIFEST_EIDOLON, manifestEidolonAsGM);
     socket.register(DEMANIFEST_EIDOLON, demanifestEidolonAsGM);
+    socket.register(REMOVE_AND_APPLY_HUNT_PREY, removeAndApplyHuntPreyAsGM);
     socket.register(DAZZLING_DISPLAY, startDazzlingDisplayAsGM);
     socket.register(GHOSTLY_CARRIER_SUMMON, summonGhostlyCarrierAsGM);
     socket.register(GHOSTLY_CARRIER_DELETE, deleteGhostlyCarrierTokenAsGM);

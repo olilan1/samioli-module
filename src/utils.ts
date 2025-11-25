@@ -4,6 +4,8 @@ import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs"
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenMovementMethod } from "foundry-pf2e/foundry/client/_types.mjs";
 
+export type Tradition = "occult" | "arcane" | "divine" | "primal";
+
 export const MODULE_ID = "samioli-module";
 
 export function delay(ms: number) {
@@ -337,4 +339,34 @@ export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWal
     };
 
     await token.document.move(waypoints, moveOptions);
+}
+
+/**
+ * Returns all tokens at a given location, except for loot and party tokens.
+ */
+export function getTokensAtLocation(location: Point, includeHidden?: boolean): TokenPF2e[] {
+
+    const locationGridOffset = canvas.grid.getOffset(location);
+    const allTokensOnScene = canvas.tokens.placeables;
+    
+    const validTokens = allTokensOnScene.filter(token => {
+        
+        const actorType = token.actor?.type;
+        if (actorType === "loot" || actorType === "party") {
+            return false;
+        }
+        return token.footprint.some(footprint => {
+            return footprint.i === locationGridOffset.i && footprint.j === locationGridOffset.j;
+        });
+    }) as TokenPF2e[];
+
+    if (includeHidden) {
+        return validTokens;
+    }
+
+    const visibleTokens = validTokens.filter(token => { 
+        return token.document.hidden === false;
+    });
+
+    return visibleTokens;
 }
