@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 - Fixed errors in Inner Radiance Torrents
+- Imaginary Weapon
+- Manifest Eidolon
+- Changed certain actions to use SocketLib
 
 ## [0.58.0] - 2025-11-11
 
