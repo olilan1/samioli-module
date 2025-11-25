@@ -22,7 +22,7 @@ import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
-import { deleteGhostlyCarrierEffectFromToken, deleteGhostlyCarrierTokenFromEffect, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
+import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -137,12 +137,12 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
-    hook(deleteGhostlyCarrierTokenFromEffect, item)
+    hook(deleteGhostlyCarrierTokenOnEffectDeletion, item)
                     .run();
 });
 
 Hooks.on('preDeleteToken', async (token: TokenDocumentPF2e, _action, _id) => {
-    hook(deleteGhostlyCarrierEffectFromToken, token)
+    hook(deleteGhostlyCarrierEffectFromCaster, token)
                     .ifGM()
                     .run();
 });

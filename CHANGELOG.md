@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fixed errors in Inner Radiance Torrents
+- Ghostly Carrier
 
 ## [0.58.0] - 2025-11-11
 

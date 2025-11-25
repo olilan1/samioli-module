@@ -4,7 +4,7 @@ import { addOrUpdateEffectOnActor, delay, moveTokenToPoint } from "../utils.ts";
 
 export async function summonGhostlyCarrier(token: TokenPF2e) {
 
-    if (getGhostlyCarrierItemFromToken(token)) {
+    if (getGhostlyCarrierItemFromCasterToken(token)) {
         ui.notifications?.warn("Ghostly Carrier is already summoned by this actor.");
         return;
     }
@@ -25,7 +25,8 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     const pack = game.packs.get(packName)!;
     await pack.getIndex();
     const entry = pack.index.find((i) => i.name === actorName)!;
-    const actorData = await fromUuid(entry.uuid) as ActorPF2e<null>;
+    const actorData = await fromUuid<ActorPF2e<null>>(entry.uuid);
+    if (!actorData) return;
     const actorToCreate = game.actors.fromCompendium(actorData);
     
     const folderName = "SamiOli-Module Actors";
@@ -42,12 +43,12 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
 
     actorToCreate.folder = folder!.id;
 
-    const createdActor = await Actor.create(actorToCreate)!;
+    const createdActor = await Actor.create(actorToCreate);
     if (!createdActor) return;
 
     const updateData = {
         // Update Attributes and Saves to match caster
-        "system.attributes.ac.value": casterActor.attributes?.ac?.value ?? 10,
+        "system.attributes.ac.value": casterActor.attributes.ac?.value ?? 10,
         "system.saves.fortitude.value": casterActor.saves?.fortitude?.mod ?? 0,
         "system.saves.reflex.value": casterActor.saves?.reflex?.mod ?? 0,
         "system.saves.will.value": casterActor.saves?.will?.mod ?? 0,
@@ -57,7 +58,7 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
 
     await createdActor.update(updateData);
 
-    // Get caster location and add it Ghostly Carrier TokenDocument
+    // Get caster location and add it Ghostly Carrier's TokenDocument
     const x = casterTokenDocument.x;
     const y = casterTokenDocument.y;
     const tokenDocument = await createdActor.getTokenDocument({ x, y }) as TokenDocumentPF2e;
@@ -66,8 +67,7 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     const ghostlyCarrierTokenData = tokenDocument.toObject();
 
     // So that the Ghostly Carrier token doesn't appear below the caster
-    const sort = casterTokenDocument.sort
-    ghostlyCarrierTokenData.sort = sort + 1;
+    ghostlyCarrierTokenData.sort = casterTokenDocument.sort + 1;
     // Default the token's movement action to fly
     ghostlyCarrierTokenData.movementAction = "fly";
     // Set token to hidden so it will be revealed by the animation
@@ -79,12 +79,13 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     // Create the Ghostly Carrier Effect and add UUID to Ghostly Carrier Token
     const ghostlyCarrierEffect = await createAndApplyGhostlyCarrierEffect(casterActor, ghostlyCarrierTokenDocument);
     if (!ghostlyCarrierEffect) return;
-    await ghostlyCarrierTokenDocument.setFlag("samioli-module", "ghostlyCarrierEffectUUID", ghostlyCarrierEffect.uuid)
+    await ghostlyCarrierTokenDocument.setFlag("samioli-module", "ghostlyCarrierEffectUUID", ghostlyCarrierEffect.uuid);
 
-    animateSummoningOfGhostlyCarrier(casterTokenDocument, ghostlyCarrierTokenDocument)
+    animateSummoningOfGhostlyCarrier(casterTokenDocument, ghostlyCarrierTokenDocument);
 }
 
-async function createAndApplyGhostlyCarrierEffect(casterActor: ActorPF2e, ghostlyCarrierTokenDocument: TokenDocumentPF2e) {
+async function createAndApplyGhostlyCarrierEffect(casterActor: ActorPF2e, 
+    ghostlyCarrierTokenDocument: TokenDocumentPF2e) {
 
     const ghostlyCarrierSpell = casterActor.items.find(item => item.type === "spell"
         && item.system.slug === "ghostly-carrier") as SpellPF2e;
@@ -117,13 +118,13 @@ async function createAndApplyGhostlyCarrierEffect(casterActor: ActorPF2e, ghostl
 
 }
 
-export async function deleteGhostlyCarrierTokenFromEffect(item: ItemPF2e) {
+export async function deleteGhostlyCarrierTokenOnEffectDeletion(item: ItemPF2e) {
     
     if (item.system.slug !== "samioli-ghostly-carrier") return;
-    const tokenDocument = await getGhostlyCarrierTokenDocumentFromItem(item);
-    if (!tokenDocument) return;
+    const tokenUuid = await getGhostlyCarrierTokenUuidFromItem(item);
+    if (!tokenUuid) return;
 
-    getSocket().executeAsGM(GHOSTLY_CARRIER_DELETE, tokenDocument.uuid);
+    getSocket().executeAsGM(GHOSTLY_CARRIER_DELETE, tokenUuid);
 
 }
 
@@ -137,13 +138,13 @@ export async function deleteGhostlyCarrierTokenAsGM(tokenUuid: string) {
 
 }
 
-export async function deleteGhostlyCarrierEffectFromToken(token: TokenDocumentPF2e) {
+export async function deleteGhostlyCarrierEffectFromCaster(ghostlyCarrierTokenDocument: TokenDocumentPF2e) {
     
-    const ghostlyCarrierEffectUuid = token.getFlag("samioli-module", "ghostlyCarrierEffectUUID") as string;
+    const ghostlyCarrierEffectUuid = ghostlyCarrierTokenDocument.getFlag("samioli-module", "ghostlyCarrierEffectUUID") as string;
     if (!ghostlyCarrierEffectUuid) return;
-    const effect = fromUuidSync(ghostlyCarrierEffectUuid);
+    const effect = await fromUuid<ItemPF2e>(ghostlyCarrierEffectUuid);
     if (!effect) return;
-    await cleanUpGhostlyCarrierActor(token);
+    await cleanUpGhostlyCarrierActor(ghostlyCarrierTokenDocument);
     await effect.setFlag("samioli-module", "ghostlyCarrierEffectUUID", "");
     await effect.delete();
 }
@@ -158,55 +159,55 @@ async function cleanUpGhostlyCarrierActor(ghostlyCarrierTokenDocument: TokenDocu
 export async function moveGhostlyCarrierToCaster(casterToken: TokenPF2e, 
     destinationX: number, destinationY: number) {
 
-    const effect = getGhostlyCarrierItemFromToken(casterToken);
+    const effect = getGhostlyCarrierItemFromCasterToken(casterToken);
     if (!effect) return;
-    const ghostlyCarrierToken = (await getGhostlyCarrierTokenDocumentFromItem(effect))!.object;
+    const ghostlyCarrierTokenUuuid = await getGhostlyCarrierTokenUuidFromItem(effect)!;
+    const ghostlyCarrierToken = (await fromUuid<TokenDocumentPF2e>(ghostlyCarrierTokenUuuid));
     if (!ghostlyCarrierToken) return;
 
     await delay(300); // simulate a slight lag
-    moveTokenToPoint(ghostlyCarrierToken, { x: destinationX, y: destinationY });
+    moveTokenToPoint(ghostlyCarrierToken.object!, { x: destinationX, y: destinationY });
 }
 
-async function getGhostlyCarrierTokenDocumentFromItem(item: ItemPF2e) {
+async function getGhostlyCarrierTokenUuidFromItem(item: ItemPF2e) {
 
     const tokenDocumentUUID = await item.getFlag("samioli-module", "ghostlyCarrierTokenDocumentUUID") as string;
-    if (!tokenDocumentUUID) return;
-    const tokenDocument = await fromUuid(tokenDocumentUUID) as TokenDocumentPF2e;
-    return tokenDocument;
+    return tokenDocumentUUID;
 }
 
-function getGhostlyCarrierItemFromToken(casterToken: TokenPF2e) {
+function getGhostlyCarrierItemFromCasterToken(casterToken: TokenPF2e) {
     
     return casterToken.actor?.items.find(item => item.slug === "samioli-ghostly-carrier")
 }
 
-async function animateSummoningOfGhostlyCarrier(casterToken: TokenDocumentPF2e, ghostlyCarrierToken: TokenDocumentPF2e) {
+async function animateSummoningOfGhostlyCarrier(casterTokenDocument: TokenDocumentPF2e, 
+    ghostlyCarrierTokenDocument: TokenDocumentPF2e) {
     
     const castingAnimation = `jb2a.magic_signs.circle.02.conjuration.intro.pink`
 
     const sequence = new Sequence()
         .effect()
-            .atLocation(casterToken)
+            .atLocation(casterTokenDocument)
             .file(castingAnimation)
             .scale(0.5)
         .animation()
             .delay(2700)
-            .on(ghostlyCarrierToken)
+            .on(ghostlyCarrierTokenDocument)
             .show()
     sequence.play();
 }
 
-async function animateAndDeleteGhostlyCarrierToken(ghostlyCarrierToken: TokenDocumentPF2e) {
+async function animateAndDeleteGhostlyCarrierToken(ghostlyCarrierTokenDocument: TokenDocumentPF2e) {
 
     const desummonAnimation = `jb2a.impact.002.pinkpurple`
     const sequence = new Sequence()
         .effect()
-            .atLocation(ghostlyCarrierToken)
+            .atLocation(ghostlyCarrierTokenDocument)
             .file(desummonAnimation)
             .scaleToObject(1.5)
             .waitUntilFinished()
         .thenDo(() => {
-            ghostlyCarrierToken.delete();
+            ghostlyCarrierTokenDocument.delete();
         })
     sequence.play();
 

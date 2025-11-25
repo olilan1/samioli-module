@@ -4,3 +4,5 @@ dist
 **/LOCK
 **/LOG
 **.log
+**/LOG.old
+packs/actors/lost/
