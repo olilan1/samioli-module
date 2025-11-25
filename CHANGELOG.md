@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fixed errors in Inner Radiance Torrents
+- BG3 Style Force Barrage
 
 ## [0.58.0] - 2025-11-11
 
