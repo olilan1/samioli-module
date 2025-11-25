@@ -185,6 +185,7 @@ async function animateForceBarrage(caster: TokenPF2e, targets: TokenPF2e[]){
             .file(`jb2a.magic_missile.purple`)
             .atLocation(caster)
             .stretchTo(target)
+            .randomizeMirrorY()
             .delay(100, 1000)
             .waitUntilFinished(-1000)
         .sound()

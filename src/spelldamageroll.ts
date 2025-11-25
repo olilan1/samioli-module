@@ -1,6 +1,11 @@
-import { SpellPF2e, TokenPF2e } from "foundry-pf2e";
+import { DamageDamageContext, SpellDamageTemplate, SpellPF2e, TokenPF2e } from "foundry-pf2e";
 
 type PF2ETraitKey = keyof typeof CONFIG.PF2E.traitsDescriptions;
+
+interface SpellDamage {  
+    template: SpellDamageTemplate;  
+    context: DamageDamageContext;  
+}  
 
 export async function rollSpellDamage(spellItem: SpellPF2e, targetTokens: TokenPF2e[]) {
 
@@ -8,7 +13,7 @@ export async function rollSpellDamage(spellItem: SpellPF2e, targetTokens: TokenP
     if (!spellDamage) return;
 
     const spellDamageRoll = spellDamage?.template.damage.roll;
-    const flavor = await getSpellDamageFlavor(spellItem);
+    const flavor = await getSpellDamageFlavor(spellDamage);
 
     spellDamageRoll.toMessage(
         {
@@ -26,10 +31,7 @@ export async function rollSpellDamage(spellItem: SpellPF2e, targetTokens: TokenP
     )
 }
 
-async function getSpellDamageFlavor(spellItem: SpellPF2e): Promise<string> {
-
-    const spellDamage = await spellItem.getDamage();
-    if (!spellDamage) return ``;
+async function getSpellDamageFlavor(spellDamage: SpellDamage): Promise<string> {
 
     const header = `
         <h4 class="action">
