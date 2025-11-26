@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
+- Ghostly Carrier Automation
+- BG3 Style Force Barrage
+- Imaginary Weapon Animation
+- Manifest Eidolon Automation and Animation
 - Fixed errors in Inner Radiance Torrents
-- Imaginary Weapon
-- Manifest Eidolon
 - Changed certain actions to use SocketLib
 - TS Error Clean up
 
