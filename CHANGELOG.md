@@ -6,6 +6,7 @@
 - Imaginary Weapon
 - Manifest Eidolon
 - Changed certain actions to use SocketLib
+- TS Error Clean up
 
 ## [0.58.0] - 2025-11-11
 
