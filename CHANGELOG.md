@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.59.0] - 2025-11-26
+
 - Ghostly Carrier Automation
 - BG3 Style Force Barrage
 - Imaginary Weapon Animation
@@ -75,7 +77,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.58.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.59.0...HEAD
+
+[0.59.0]: https://github.com/olilan1/samioli-module/compare/v0.58.0...v0.59.0
 
 [0.58.0]: https://github.com/olilan1/samioli-module/compare/v0.57.0...v0.58.0
 
