@@ -2,6 +2,7 @@ import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, Condition
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { TokenMovementMethod } from "foundry-pf2e/foundry/client/_types.mjs";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -318,6 +319,26 @@ export function getTokensOnCurrentSceneForActor(actor: ActorPF2e): TokenDocument
     const tokens = currentScene.tokens.filter(t => t.actorId === actor.id);
 
     return tokens;
+}
+
+export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWalls?: boolean, ignoreCost?: boolean) {
+
+    const waypoints = [{
+        x: point.x,
+        y: point.y
+    }];
+
+    const moveOptions = {
+        method: "api" as TokenMovementMethod, 
+        autoRotate: false,
+        showRuler: false,
+        constrainOptions: {
+            ignoreWalls: ignoreWalls,
+            ignoreCost: ignoreCost
+        }
+    };
+
+    await token.document.move(waypoints, moveOptions);
 }
 
 /**

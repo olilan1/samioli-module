@@ -6,7 +6,7 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { startHuntPrey } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage } from "./sustain.ts";
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
@@ -22,6 +22,7 @@ import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
+import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -136,11 +137,22 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
                     .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
                     .run();
+    hook(deleteGhostlyCarrierTokenOnEffectDeletion, item)
+                    .run();
+});
+
+Hooks.on('preDeleteToken', async (token: TokenDocumentPF2e, _action, _id) => {
+    hook(deleteGhostlyCarrierEffectFromCaster, token)
+                    .ifGM()
+                    .run();
 });
 
 Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
     hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
                     .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+                    .run();
+    hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
+                    .ifGM()
                     .run();
 });
 

@@ -6,6 +6,7 @@ import { startSonicDash } from "./actions/sonicdash.ts";
 import { startDazzlingDisplay } from "./actions/dazzlingdisplay.ts";
 import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 import { startRedistributePotential } from "./spells/redistributepotential.ts";
+import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
@@ -47,6 +48,10 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "tectonic-stomp": {
         label: "Start stomping!",
         function: startTectonicStomp
+    },
+    "ghostly-carrier": {
+        label: "Summon a ghostly carrier!",
+        function: summonGhostlyCarrier
     }
 }
 
