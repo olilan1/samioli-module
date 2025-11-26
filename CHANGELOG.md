@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
-- Fixed errors in Inner Radiance Torrents
-- Ghostly Carrier
+- Ghostly Carrier Automation
 - BG3 Style Force Barrage
+- Imaginary Weapon Animation
+- Manifest Eidolon Automation and Animation
+- Fixed errors in Inner Radiance Torrents
+- Changed certain actions to use SocketLib
+- TS Error Clean up
 
 ## [0.58.0] - 2025-11-11
 
