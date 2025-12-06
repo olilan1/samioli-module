@@ -44,6 +44,9 @@
       "flags": {}
       }
     ],
+    "styles": [
+      "styles/shifting-weapon.css"
+    ],
     "compatibility": {
       "minimum": "12",
       "verified": "13"

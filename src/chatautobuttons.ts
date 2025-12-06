@@ -8,6 +8,7 @@ import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 import { startRedistributePotential } from "./spells/redistributepotential.ts";
 import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
+import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]'
@@ -52,6 +53,10 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "ghostly-carrier": {
         label: "Summon a ghostly carrier!",
         function: summonGhostlyCarrier
+    },
+    "activation-shift-weapon": {
+        label: "Shift weapon!",
+        function: displayShiftingWeaponDialog
     }
 }
 
@@ -85,12 +90,12 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
 }
 
 function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
-        divLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    divLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         if (slug === key) {
             const div = html.find(divLookup);
             const button = $('<button type="button">' + buttonSpec.label + '</button>');
-            button.on("click", function() {
+            button.on("click", function () {
                 buttonSpec.function(token, message);
             });
             div.after(button);
@@ -99,15 +104,15 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
 }
 
 function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
-        divLookup: string, token: TokenPF2e,  
-        message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    divLookup: string, token: TokenPF2e,
+    message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         if (slug === key) {
             const buttonDataAction = buttonSpec.buttonToReplace!;
             const templateButton = html.find(buttonDataAction);
             const parentDiv = templateButton.closest(`div${divLookup}`);
             const button = $('<button type="button">' + buttonSpec.label + '</button>');
-            button.on("click", function() {
+            button.on("click", function () {
                 buttonSpec.function(token, message);
             });
             parentDiv.after(button);

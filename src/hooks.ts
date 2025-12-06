@@ -23,6 +23,7 @@ import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
+import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -48,7 +49,7 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
     // Check for matching origin and run matching function if found (see triggers.ts)
     let ranTemplateTrigger = hook(runMatchingTemplateFunctionAsGm, template).ifGM().run();
     ranTemplateTrigger ||= hook(runMatchingTemplateFunctionAsCreator, template).ifUser(userId).run();
-            
+
     if (!ranTemplateTrigger) {
         // If no matching origin, target tokens if that feature is enabled
         hook(targetTokensUnderTemplate, template, userId)
@@ -57,40 +58,40 @@ Hooks.on("createMeasuredTemplate", async (template: MeasuredTemplateDocumentPF2e
     }
 
     hook(checkIfTemplatePlacedHasSustainEffect, template)
-            .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
-            .ifGM()
-            .run();
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .ifGM()
+        .run();
 
     hook(addEffectsToTokensInStartOfTurnTemplates, template)
-            .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-            .ifGM()
-            .run();
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+        .ifGM()
+        .run();
 });
 
 Hooks.on("preCreateMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e, _data, _context, _userId) => {
     hook(setTemplateColorToBlack, template)
-            .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
-            .run();
+        .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
+        .run();
 });
 
 Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
     hook(runMatchingTemplateDeletionFunction, template)
-            .ifGM()
-            .run();
+        .ifGM()
+        .run();
     hook(deleteTemplateTargets, template)
-            .ifEnabled(SETTINGS.TEMPLATE_TARGET)
-            .run();
+        .ifEnabled(SETTINGS.TEMPLATE_TARGET)
+        .run();
     hook(deleteWithinEffectsForTemplate, template)
-            .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-            .ifGM()
-            .run();
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+        .ifGM()
+        .run();
 });
 
 Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => {
     handleChatMessageWithRoll(message);
     if (game.modules.get('dice-so-nice')?.active
-            && message.isRoll 
-            && message.rolls.some(roll => roll.dice.length > 0)) {
+        && message.isRoll
+        && message.rolls.some(roll => roll.dice.length > 0)) {
         // Includes a roll, message will be posted by DiceSoNice
         return;
     }
@@ -100,7 +101,7 @@ Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => 
 Hooks.on('diceSoNiceRollComplete', (id: string) => {
     const message = game.messages.get(id);
     if (message) {
-      handleChatMessagePostRoll(message);
+        handleChatMessagePostRoll(message);
     };
 });
 
@@ -110,77 +111,77 @@ Hooks.on('pf2e.startTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e,
         return;
     }
     hook(ifActorHasSustainEffectCreateMessage, combatant.actor)
-                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .run();
     hook(createChatMessageOnTurnStartIfTokenIsAntagonized, combatant)
-                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
     hook(postMessagesForWithinEffects, combatant)
-                    .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+        .run();
 });
 
 //pf2e.endTurn only runs for the GM
 Hooks.on('pf2e.endTurn', (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
     hook(handleFrightenedAtTurnEnd, combatant)
-                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
 });
 
 Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(createSpellNotSustainedChatMessage, item)
-                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .run();
     hook(deleteTemplateLinkedToSustainedEffect, item)
-                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .run();
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)
-                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+        .run();
     hook(deleteGhostlyCarrierTokenOnEffectDeletion, item)
-                    .run();
+        .run();
 });
 
 Hooks.on('preDeleteToken', async (token: TokenDocumentPF2e, _action, _id) => {
     hook(deleteGhostlyCarrierEffectFromCaster, token)
-                    .ifGM()
-                    .run();
+        .ifGM()
+        .run();
 });
 
 Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
     hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
-                    .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-                    .run();
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+        .run();
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
-                    .ifGM()
-                    .run();
+        .ifGM()
+        .run();
 });
 
 // V13 Only
-Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>, 
-        _data, _options) => {
+Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
+    _data, _options) => {
     hook(addDamageHelperButtonToChatUIv13, cssMappings)
-                .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
-                .ifGM()
-                .run();
+        .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
+        .ifGM()
+        .run();
 });
 
-Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement, 
-        _data: Record<string, unknown>, _options: Record<string, unknown>) => {
+Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement,
+    _data: Record<string, unknown>, _options: Record<string, unknown>) => {
     const html = getHtmlElement(htmlOrJQuery);
     hook(addDamageHelperButtonToChatUIv12, html)
-                .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
-                .ifGM()
-                .ifV12()
-                .run();
+        .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
+        .ifGM()
+        .ifV12()
+        .run();
 });
 
-function handleChatMessageWithRoll(message: ChatMessagePF2e){
+function handleChatMessageWithRoll(message: ChatMessagePF2e) {
     switch (getMessageType(message)) {
         case "attack-roll":
             hook(startImaginaryWeapon, message)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
+                .ifMessagePosterAndActorOwner()
+                .run();
             break;
         case "damage-roll":
             break;
@@ -200,82 +201,82 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
     switch (getMessageType(message)) {
         case "attack-roll":
             hook(checkForExtravagantParryOrElegantBuckler, message)
-                    .ifEnabled(SETTINGS.AUTO_PANACHE)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
             hook(checkForFinisherAttack, message)
-                    .ifEnabled(SETTINGS.AUTO_PANACHE)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
             hook(checkForBravado, message)
-                    .ifEnabled(SETTINGS.AUTO_PANACHE)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
             break;
         case "damage-roll":
             hook(checkForFinisherDamage, message)
-                    .ifEnabled(SETTINGS.AUTO_PANACHE)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
             hook(oscillateEnergy, message)
-                    .ifEnabled(SETTINGS.AUTO_CONSERVATION_OF_ENERGY)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_CONSERVATION_OF_ENERGY)
+                .ifGM()
+                .run();
             break;
         case "skill-check":
             hook(startTumbleThrough, message)
-                    .ifMessagePoster()
-                    .run();
+                .ifMessagePoster()
+                .run();
             hook(startEnjoyTheShow, message)
-                    .ifMessagePoster()
-                    .run();
+                .ifMessagePoster()
+                .run();
             hook(checkForBravado, message)
-                    .ifEnabled(SETTINGS.AUTO_PANACHE)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
             hook(applyAntagonizeIfValid, message)
-                    .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
+                .ifGM()
+                .run();
             break;
         case "flat-check":
             hook(checkForUnstableCheck, message)
-                    .ifEnabled(SETTINGS.AUTO_UNSTABLE_CHECK)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_UNSTABLE_CHECK)
+                .ifGM()
+                .run();
             hook(handleHomebrewUnstableCheckResult, message)
-                    .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
-                    .ifGM()
-                    .run();
+                .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+                .ifGM()
+                .run();
             break;
         case "action":
             hook(startHuntPrey, message)
-                    .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
+                .ifMessagePosterAndActorOwner()
+                .run();
             hook(manifestEidolon, message)
-                    .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
+                .ifMessagePosterAndActorOwner()
+                .run();
             break;
         case "spell":
         case "spell-cast":
             hook(checkIfSpellInChatIsSustain, message)
-                    .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+                .ifMessagePosterAndActorOwner()
+                .run();
             hook(runBoostEidolonAutomation, message)
-                    .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
-                    .ifMessagePosterAndActorOwner()
-                    .run();
+                .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
+                .ifMessagePosterAndActorOwner()
+                .run();
             break;
     }
 }
 
 function getMessageType(message: ChatMessagePF2e) {
-    return message.flags?.pf2e?.context?.type 
-    ?? message.flags?.pf2e?.origin?.type 
-    ?? message.flags?.[MODULE_ID]?.type;
+    return message.flags?.pf2e?.context?.type
+        ?? message.flags?.pf2e?.origin?.type
+        ?? message.flags?.[MODULE_ID]?.type;
 }
 
 function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): HookRunner<T> {

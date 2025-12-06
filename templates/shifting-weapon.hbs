@@ -1,0 +1,47 @@
+<div class="shifting-content">
+    <p class="notes">Select the form the weapon will take:</p>
+
+    <div class="table-container">
+        <table class="pf2e-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;"></th>
+                    <th>Weapon Form</th>
+                    <th>Category</th>
+                    <th>Group</th>
+                    <th>Damage</th>
+                    <th>Hands</th>
+                    <th>Bulk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each weapons}}
+                <tr>
+                    <td style="text-align: center;">
+                        <input type="radio" name="weaponId" value="{{this.id}}">
+                    </td>
+                    <td class="weapon-name">
+                        <strong>{{this.name}}</strong>
+                        <div class="tags paizo-style" data-tooltip-class="pf2e">
+                            {{#each this.traits}}
+                            <span class="tag" data-tooltip="{{this.tooltip}}">{{this.label}}</span>
+                            {{/each}}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">{{this.category}}</td>
+                    <td style="text-align: center;">{{this.group}}</td>
+                    <td style="text-align: center;">{{this.damage}}</td>
+                    <td style="text-align: center;">{{this.hands}}</td>
+                    <td style="text-align: center;">{{this.bulk}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="sheet-footer flexrow" style="margin-top: 1rem; justify-content: flex-end;">
+        <button type="submit" name="confirm" class="save-button">
+            <i class="fa-solid fa-check"></i> Shift Weapon
+        </button>
+    </footer>
+</div>
