@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Shifting Rune Automation
+
 ## [0.59.0] - 2025-11-26
 
 - Ghostly Carrier Automation
