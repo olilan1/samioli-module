@@ -5,11 +5,6 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export async function displayShiftingWeaponDialog(token: TokenPF2e, message: ChatMessagePF2e) {
 
-    // Check for slug: "origin:item:activation-shift-weapon"
-    const rollOptions = message.flags.pf2e.origin?.rollOptions;
-
-    if (!rollOptions?.includes("origin:item:activation-shift-weapon")) return;
-
     // Get the item from the message content
     const currentWeapon = extractWeaponFromContent(message.content);
     if (!currentWeapon) {
@@ -24,14 +19,13 @@ export async function displayShiftingWeaponDialog(token: TokenPF2e, message: Cha
     }
 
     // Check how many hands the item is (this determines what it can shift into)
-
-    const baseWeaponUsage = currentWeapon.getFlag("samioli-module", "originalBaseWeaponUsage");
+    const baseWeaponHands = currentWeapon.getFlag("samioli-module", "originalBaseWeaponHands");
 
     let isTwoHanded = false;
-    if (baseWeaponUsage) {
-        isTwoHanded = baseWeaponUsage === "held-in-two-hands";
+    if (baseWeaponHands) {
+        isTwoHanded = baseWeaponHands === 2;
     } else {
-        isTwoHanded = currentWeapon.system.usage.value === "held-in-two-hands";
+        isTwoHanded = currentWeapon.system.usage.hands === 2;
     }
 
     // Open the weapon selection window and wait for a selection
@@ -43,7 +37,6 @@ export async function displayShiftingWeaponDialog(token: TokenPF2e, message: Cha
         return;
     }
 
-    // TODO shorten name
     const content = `${token.name} shifts their ${removeShiftingSuffix(currentWeapon.name)} into a ${selectedWeapon.name}.`;
 
     // Update the existing weapon to match stats of the selected weapon form
@@ -56,7 +49,7 @@ function getOriginalBaseWeapon(currentWeapon: WeaponPF2e): string {
     const originalBaseWeapon = currentWeapon.getFlag("samioli-module", "originalBaseWeapon");
     if (!originalBaseWeapon) {
         currentWeapon.setFlag("samioli-module", "originalBaseWeapon", currentWeapon.system.baseItem);
-        currentWeapon.setFlag("samioli-module", "originalBaseWeaponUsage", currentWeapon.system.usage.value);
+        currentWeapon.setFlag("samioli-module", "originalBaseWeaponHands", currentWeapon.system.usage.hands);
     }
     return originalBaseWeapon as string;
 }
@@ -81,9 +74,10 @@ async function updateWeaponStats(currentWeapon: WeaponPF2e, selectedWeapon: Weap
         "system.damage": selectedWeapon.system.damage,
         "system.baseItem": selectedWeapon.system.baseItem,
         "system.category": selectedWeapon.system.category,
+        "system.group": selectedWeapon.system.group,
         "system.traits": selectedWeapon.system.traits,
         "system.bulk": selectedWeapon.system.bulk,
-        "system.usage.value": selectedWeapon.system.usage.value,
+        "system.usage": selectedWeapon.system.usage,
         "name": newName
     });
 }
@@ -107,9 +101,9 @@ function hasShiftingRune(item: WeaponPF2e): boolean {
 /**
  * Extracts the weapon from the pf2e-activations message content.
  */
-function extractWeaponFromContent(content: string): WeaponPF2e | undefined {
+function extractWeaponFromContent(content: string): WeaponPF2e | null {
     const uuidMatch = content.match(/data-uuid="([^"]+)"/);
-    if (!uuidMatch) return undefined;
+    if (!uuidMatch) return null;
 
     const uuid = uuidMatch[1];
 
@@ -119,12 +113,12 @@ function extractWeaponFromContent(content: string): WeaponPF2e | undefined {
         return item as WeaponPF2e;
     }
 
-    return undefined;
+    return null;
 }
 
 export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
-    private requiresTwoHands: boolean;
+    private isTwoHanded: boolean;
     private resolve?: (value: WeaponPF2e | null) => void;
 
     static override DEFAULT_OPTIONS = {
@@ -154,7 +148,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     constructor(isTwoHanded: boolean, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
         super(options);
-        this.requiresTwoHands = isTwoHanded;
+        this.isTwoHanded = isTwoHanded;
 
         if (this.options.form) {
             this.options.form.handler = this.formHandler.bind(this);
@@ -228,8 +222,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         const index = await pack.getIndex({ fields: indexFields });
 
         const baseWeapons = CONFIG.PF2E.baseWeaponTypes;
-        // Get if the original weapon is two handed
-        const isTwoHanded = this.requiresTwoHands;
 
         // Filter and Map Data
         const weapons = index
@@ -240,7 +232,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 if (item.type !== "weapon") return false;
 
                 // Filter to exclude two-handed weapons if original weapon is one handed
-                if (!isTwoHanded) {
+                if (!this.isTwoHanded) {
                     if (item.system.usage?.value === "held-in-two-hands") return false;
                 }
 
