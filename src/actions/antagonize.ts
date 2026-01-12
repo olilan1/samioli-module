@@ -25,10 +25,18 @@ export async function applyAntagonizeIfValid(chatMessage: ChatMessagePF2e) {
 }
 
 async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: TokenPF2e) {
-    const image = "icons/skills/social/intimidation-impressing.webp";
+
     const target = targetToken.actor;
     const antagonizer = antagonizerToken.actor;
     if (!target || !antagonizer) return;
+    
+    if (checkIfAntagonizedByDemoralizer(targetToken, antagonizerToken)) {
+        return;
+    }
+    
+    const image = "icons/skills/social/intimidation-impressing.webp";
+    
+    
     const antagonizedEffectData = {
         name: `Antagonized by ${antagonizerToken.name}`,
         type: "effect",
@@ -58,6 +66,15 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
 
     await target.createEmbeddedDocuments("Item", [antagonizedEffectData]);
     
+}
+
+function checkIfAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: TokenPF2e) {
+    const antagonizedEffects = getActorAntagonizedEffects(actorToken.actor!);
+    if (antagonizedEffects.length === 0) return false;
+    if (antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id)) {
+        return true;
+    }
+    return false;
 }
 
 export async function createChatMessageOnTurnStartIfTokenIsAntagonized(combatant: CombatantPF2e) {
