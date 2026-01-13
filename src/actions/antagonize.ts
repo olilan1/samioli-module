@@ -30,7 +30,7 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
     const antagonizer = antagonizerToken.actor;
     if (!target || !antagonizer) return;
     
-    if (checkIfAntagonizedByDemoralizer(targetToken, antagonizerToken)) {
+    if (isAntagonizedByDemoralizer(targetToken, antagonizerToken)) {
         return;
     }
     
@@ -68,13 +68,9 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
     
 }
 
-function checkIfAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: TokenPF2e) {
+function isAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: TokenPF2e) {
     const antagonizedEffects = getActorAntagonizedEffects(actorToken.actor!);
-    if (antagonizedEffects.length === 0) return false;
-    if (antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id)) {
-        return true;
-    }
-    return false;
+    return antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id);
 }
 
 export async function createChatMessageOnTurnStartIfTokenIsAntagonized(combatant: CombatantPF2e) {
