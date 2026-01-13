@@ -20,13 +20,7 @@ export async function displayShiftingWeaponDialog(token: TokenPF2e, message: Cha
 
     // Check how many hands the item is (this determines what it can shift into)
     const baseWeaponHands = currentWeapon.getFlag("samioli-module", "originalBaseWeaponHands");
-
-    let isTwoHanded = false;
-    if (baseWeaponHands) {
-        isTwoHanded = baseWeaponHands === 2;
-    } else {
-        isTwoHanded = currentWeapon.system.usage.hands === 2;
-    }
+    const isTwoHanded = (baseWeaponHands ?? currentWeapon.system.usage.hands) === 2;
 
     // Open the weapon selection window and wait for a selection
     const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded);
