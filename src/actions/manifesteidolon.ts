@@ -6,6 +6,8 @@ import { DEMANIFEST_EIDOLON, getSocket, MANIFEST_EIDOLON } from "../sockets.ts";
 
 export async function manifestEidolon(message: ChatMessagePF2e) {
 
+    if (!message.flags.pf2e.origin?.rollOptions?.includes("origin:item:slug:manifest-eidolon")) return;
+
     const summonerActor = message.actor;
     const summonerToken = message.token;
     if (!summonerActor || !isCharacter(summonerActor) || !summonerToken) return;
@@ -27,7 +29,7 @@ export async function manifestEidolon(message: ChatMessagePF2e) {
     }
 }
 
-export async function manifestEidolonAsGM(summonerTokenid: string, 
+export async function manifestEidolonAsGM(summonerTokenid: string,
     eidolonActorUuid: string, manifestLocationCenter: Point) {
 
     const summonerToken = await fromUuid<TokenDocumentPF2e>(summonerTokenid);
@@ -69,7 +71,7 @@ export async function manifestEidolonAsGM(summonerTokenid: string,
 
 export async function demanifestEidolonAsGM(eidolonTokenUuid: string) {
 
-    const eidolonToken : TokenDocumentPF2e | null = await fromUuid(eidolonTokenUuid);
+    const eidolonToken: TokenDocumentPF2e | null = await fromUuid(eidolonTokenUuid);
     if (!eidolonToken) return;
 
     const demanifestAnimation = "jb2a.particle_burst.01.circle.green"
@@ -87,9 +89,9 @@ export async function demanifestEidolonAsGM(eidolonTokenUuid: string) {
             .delay(1000)
             .copySprite(eidolonToken)
             .zIndex(50)
-            .animateProperty("sprite", "rotation", { from: 0, to: -360, duration: 600, delay: 400, ease: "easeInOutCubic"})
-            .animateProperty("sprite", "scale.x", { from: 1, to: 0, duration: 600, delay: 400, ease: "easeInOutCubic"})
-            .animateProperty("sprite", "scale.y", { from: 1, to: 0, duration: 600, delay: 400, ease: "easeInOutCubic"})
+            .animateProperty("sprite", "rotation", { from: 0, to: -360, duration: 600, delay: 400, ease: "easeInOutCubic" })
+            .animateProperty("sprite", "scale.x", { from: 1, to: 0, duration: 600, delay: 400, ease: "easeInOutCubic" })
+            .animateProperty("sprite", "scale.y", { from: 1, to: 0, duration: 600, delay: 400, ease: "easeInOutCubic" })
         .sound()
             .file(demanifestSound2)
             .delay(1000)
