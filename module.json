@@ -19,8 +19,7 @@
             "sorting": "a",
             "color": "#16241b",
             "packs": [
-                "Macros",
-                "Actors"
+                "Macros"
             ]
         }
     ],
@@ -33,15 +32,6 @@
         "type": "Macro",
         "private": false,
         "flags": {}
-      },
-      {
-      "label": "SamiOli Actors",
-      "name": "Actors",
-      "path": "packs/actors",
-      "system": "pf2e",
-      "type": "Actor",
-      "private": false,
-      "flags": {}
       }
     ],
     "styles": [

@@ -2,6 +2,71 @@ import { ActorPF2e, EffectSource, ItemPF2e, SpellPF2e, TokenDocumentPF2e, TokenP
 import { getSocket, GHOSTLY_CARRIER_DELETE, GHOSTLY_CARRIER_SUMMON } from "../sockets.ts";
 import { addOrUpdateEffectOnActor, delay, moveTokenToPoint } from "../utils.ts";
 
+const GHOSTLY_CARRIER_DATA = {
+    name: "Ghostly Carrier",
+    type: "npc" as const,
+    img: "modules/jb2a_patreon/Library/5th_Level/Arcane_Hand/ArcaneHand_Human_01_Idle_Purple_Thumb.webp" as const,
+    folder: "",
+    system: {
+        attributes: {
+            hp: { value: 1, temp: 0, max: 1, details: "" },
+            ac: { value: 0, details: "" },
+            allSaves: { value: "" },
+            speed: {
+                value: 120,
+                otherSpeeds: [{ type: "fly", value: 120 }],
+                details: ""
+            }
+        },
+        initiative: { statistic: "perception" },
+        details: {
+            level: { value: 1 },
+            alliance: "party",
+            publication: { title: "", authors: "", license: "OGL", remaster: false }
+        },
+        abilities: {
+            str: { mod: 0 },
+            dex: { mod: 0 },
+            con: { mod: 0 },
+            int: { mod: 0 },
+            wis: { mod: 0 },
+            cha: { mod: 0 }
+        },
+        perception: { details: "", mod: 0, senses: [], vision: true },
+        saves: {
+            fortitude: { value: 0 },
+            reflex: { value: 0 },
+            will: { value: 0 }
+        },
+        traits: {
+            value: [],
+            rarity: "common" as const,
+            size: { value: "tiny" as const }
+        }
+    },
+    prototypeToken: {
+        name: "Ghostly Carrier",
+        height: 0.5,
+        width: 0.5,
+        actorLink: true,
+        texture: {
+            src: "modules/jb2a_patreon/Library/5th_Level/Arcane_Hand/ArcaneHand_Human_01_Idle_Purple_400x400.webm" as const,
+            scaleX: 1,
+            scaleY: 1
+        },
+        disposition: -1 as const,
+        displayBars: 20 as const,
+        bar1: { attribute: "attributes.hp" }
+    },
+    items: [],
+    flags: {
+        pf2e: { lootable: false }
+    },
+    ownership: {
+    }
+};
+
+
 export async function summonGhostlyCarrier(token: TokenPF2e) {
 
     if (getGhostlyCarrierItemFromCasterToken(token)) {
@@ -18,45 +83,20 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     if (!casterTokenDocument) return;
 
     const casterActor = casterTokenDocument.actor!;
-
-    const actorName = "Ghostly Carrier";
-    const packName = "samioli-module.Actors";
-
-    const pack = game.packs.get(packName)!;
-    await pack.getIndex();
-    const entry = pack.index.find((i) => i.name === actorName)!;
-    const actorData = await fromUuid<ActorPF2e<null>>(entry.uuid);
-    if (!actorData) return;
-    const actorToCreate = game.actors.fromCompendium(actorData);
     
     const folderName = "SamiOli-Module Actors";
-
     let folder = game.folders.find(f => f.name === folderName && f.type === "Actor");
-
     if (!folder) {
-        // @ts-expect-error Folder.create is valid
         folder = await foundry.documents.Folder.create({
             name: folderName,
             type: "Actor"
         });
     }
 
-    actorToCreate.folder = folder!.id;
+    const updatedActorData = updateGhostlyCarrierActorData(casterActor, folder!);
 
-    const createdActor = await Actor.create(actorToCreate);
+    const createdActor = await Actor.create(updatedActorData) as ActorPF2e;
     if (!createdActor) return;
-
-    const updateData = {
-        // Update Attributes and Saves to match caster
-        "system.attributes.ac.value": casterActor.attributes.ac?.value ?? 10,
-        "system.saves.fortitude.value": casterActor.saves?.fortitude?.mod ?? 0,
-        "system.saves.reflex.value": casterActor.saves?.reflex?.mod ?? 0,
-        "system.saves.will.value": casterActor.saves?.will?.mod ?? 0,
-        // set ownership to match caster
-        ownership: casterActor.ownership
-    };
-
-    await createdActor.update(updateData);
 
     // Get caster location and add it Ghostly Carrier's TokenDocument
     const x = casterTokenDocument.x;
@@ -82,6 +122,20 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     await ghostlyCarrierTokenDocument.setFlag("samioli-module", "ghostlyCarrierEffectUUID", ghostlyCarrierEffect.uuid);
 
     animateSummoningOfGhostlyCarrier(casterTokenDocument, ghostlyCarrierTokenDocument);
+}
+
+function updateGhostlyCarrierActorData(casterActor: ActorPF2e, folder: Folder) {
+
+    let actorDataToUpdate = GHOSTLY_CARRIER_DATA;
+
+    actorDataToUpdate.system.attributes.ac.value = casterActor.attributes.ac?.value ?? 10;
+    actorDataToUpdate.system.saves.fortitude.value = casterActor.saves?.fortitude?.mod ?? 0;
+    actorDataToUpdate.system.saves.reflex.value = casterActor.saves?.reflex?.mod ?? 0;
+    actorDataToUpdate.system.saves.will.value = casterActor.saves?.will?.mod ?? 0;
+    actorDataToUpdate.ownership = casterActor.ownership;
+    actorDataToUpdate.folder = folder!.id;
+
+    return actorDataToUpdate;
 }
 
 async function createAndApplyGhostlyCarrierEffect(casterActor: ActorPF2e, 
@@ -153,7 +207,14 @@ async function cleanUpGhostlyCarrierActor(ghostlyCarrierTokenDocument: TokenDocu
     
     const actor = ghostlyCarrierTokenDocument.actor;
     if (!actor) return;
-    actor.delete();
+    await actor.delete();
+    // If no actors remain in the folder, delete the folder
+    const folderName = "SamiOli-Module Actors";
+    const folder = game.folders.find(f => f.name === folderName && f.type === "Actor");
+    if (!folder) return;
+    if (folder.contents.length === 0) {
+        await folder.delete();
+    }
 }
 
 export async function moveGhostlyCarrierToCaster(casterToken: TokenPF2e, 
