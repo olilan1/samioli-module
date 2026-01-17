@@ -6,6 +6,7 @@ const GHOSTLY_CARRIER_DATA = {
     name: "Ghostly Carrier",
     type: "npc" as const,
     img: "modules/jb2a_patreon/Library/5th_Level/Arcane_Hand/ArcaneHand_Human_01_Idle_Purple_Thumb.webp" as const,
+    folder: "",
     system: {
         attributes: {
             hp: { value: 1, temp: 0, max: 1, details: "" },
@@ -60,6 +61,8 @@ const GHOSTLY_CARRIER_DATA = {
     items: [],
     flags: {
         pf2e: { lootable: false }
+    },
+    ownership: {
     }
 };
 
@@ -90,22 +93,10 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
         });
     }
 
-    const createdActor = await Actor.create(GHOSTLY_CARRIER_DATA);
+    const updatedActorData = updateGhostlyCarrierActorData(casterActor, folder!);
+
+    const createdActor = await Actor.create(updatedActorData) as ActorPF2e;
     if (!createdActor) return;
-
-    const updateData = {
-        // Update Attributes and Saves to match caster
-        "system.attributes.ac.value": casterActor.attributes.ac?.value ?? 10,
-        "system.saves.fortitude.value": casterActor.saves?.fortitude?.mod ?? 0,
-        "system.saves.reflex.value": casterActor.saves?.reflex?.mod ?? 0,
-        "system.saves.will.value": casterActor.saves?.will?.mod ?? 0,
-        // set ownership to match caster
-        ownership: casterActor.ownership,
-        // put the actor into the folder we created earlier
-        folder: folder!.id
-    };
-
-    await createdActor.update(updateData);
 
     // Get caster location and add it Ghostly Carrier's TokenDocument
     const x = casterTokenDocument.x;
@@ -131,6 +122,20 @@ export async function summonGhostlyCarrierAsGM(casterTokenUuid: string) {
     await ghostlyCarrierTokenDocument.setFlag("samioli-module", "ghostlyCarrierEffectUUID", ghostlyCarrierEffect.uuid);
 
     animateSummoningOfGhostlyCarrier(casterTokenDocument, ghostlyCarrierTokenDocument);
+}
+
+function updateGhostlyCarrierActorData(casterActor: ActorPF2e, folder: Folder) {
+
+    let actorDataToUpdate = GHOSTLY_CARRIER_DATA;
+
+    actorDataToUpdate.system.attributes.ac.value = casterActor.attributes.ac?.value ?? 10;
+    actorDataToUpdate.system.saves.fortitude.value = casterActor.saves?.fortitude?.mod ?? 0;
+    actorDataToUpdate.system.saves.reflex.value = casterActor.saves?.reflex?.mod ?? 0;
+    actorDataToUpdate.system.saves.will.value = casterActor.saves?.will?.mod ?? 0;
+    actorDataToUpdate.ownership = casterActor.ownership;
+    actorDataToUpdate.folder = folder!.id;
+
+    return actorDataToUpdate;
 }
 
 async function createAndApplyGhostlyCarrierEffect(casterActor: ActorPF2e, 
