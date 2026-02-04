@@ -24,9 +24,14 @@ import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
+import { samiOliModuleAPI } from "./api.ts";
 
 Hooks.on("init", () => {
     registerSettings();
+    const module = game.modules.get("samioli-module");
+    if (module) {
+        (module as any).api = samiOliModuleAPI;
+    }
 });
 
 Hooks.once('socketlib.ready', () => {

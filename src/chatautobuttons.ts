@@ -9,10 +9,14 @@ import { startRedistributePotential } from "./spells/redistributepotential.ts";
 import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
+import { deploySnare } from "./actions/snare.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
-const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]'
-const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]'
+const CONSUMABLE_TAG = 'origin:item:type:consumable';
+const SNARE_PREFIX = 'origin:item:category:';
+const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]';
+const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]';
+const USE_BUTTON_CONSUMABLE = 'button[data-action="consume"]';
 
 type ButtonSpec = {
     label: string;
@@ -73,6 +77,14 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     }
 };
 
+const AUTO_SWAP_BUTTONS_CONSUMABLES: Record<string, ButtonSwapSpec> = {
+    "snare": {
+        label: "Deploy Snare!",
+        function: deploySnare,
+        buttonToReplace: USE_BUTTON_CONSUMABLE
+    }
+};
+
 export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const origin = message.flags.pf2e.origin;
     const rollOptions = origin?.rollOptions;
@@ -81,7 +93,15 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
     const token = message.token?.object;
     if (!token) return;
 
+    if (rollOptions.includes(CONSUMABLE_TAG)) {
+        const slug = rollOptions.find(item => item.startsWith(SNARE_PREFIX))?.slice(SNARE_PREFIX.length);
+        if (!slug) return;
+        swapButtons(slug, AUTO_SWAP_BUTTONS_CONSUMABLES, '.card-buttons', token, message, html);
+        return; 
+    }
+
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
+
     if (!slug) return;
 
     addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, message, html);
