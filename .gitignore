@@ -1,8 +1,4 @@
 packs/macros
+packs/actors
 node_modules
 dist
-**/LOCK
-**/LOG
-**.log
-**/LOG.old
-packs/actors/lost/
