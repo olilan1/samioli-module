@@ -25,6 +25,7 @@ import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
 import { samiOliModuleAPI } from "./api.ts";
+import { replaceButtonsForSnareMessages } from "./actions/snare.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -47,6 +48,8 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
         .run();
     hook(replaceUnstableCheckWithStrainCheck, message, html)
         .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+        .run();
+    hook(replaceButtonsForSnareMessages, message, html)
         .run();
 });
 

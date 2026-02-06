@@ -5,6 +5,7 @@ import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
 import { handleSustainSpell } from "./sustain.ts";
 import { extendBoostEidolon } from "./spells/boosteidolon.ts";
+import { addSnareToChatAndTarget } from "./actions/snare.ts";
 
 // Mapping of slug to function description.
 // Slug must match what is provided in the MessageSpec when calling createChatMessageWithButton
@@ -14,7 +15,8 @@ const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonFunctionDescription> = {
     "remove-antagonize": { func: removeAntagonizeEffect, takesMsg: false },
     "remove-panache": { func: onClearPanacheButtonClick, takesMsg: true },
     "sustain-spell": { func: handleSustainSpell, takesMsg: false },
-    "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true }
+    "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true },
+    "trigger-snare": { func: addSnareToChatAndTarget, takesMsg: false }
 };
 
 type StringOnlyFuncDescription = {

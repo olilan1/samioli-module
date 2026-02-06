@@ -2,6 +2,7 @@ import { removeAndApplyHuntPreyAsGM } from "./actions/huntprey.ts";
 import { startDazzlingDisplayAsGM } from "./actions/dazzlingdisplay.ts";
 import { demanifestEidolonAsGM, manifestEidolonAsGM } from "./actions/manifesteidolon.ts";
 import { deleteGhostlyCarrierTokenAsGM, summonGhostlyCarrierAsGM } from "./spells/ghostlycarrier.ts";
+import { createSnareAsGM, removeSnareAsGM } from "./actions/snare.ts";
 import { MODULE_ID } from "./utils.ts";
 
 let socket: SocketlibSocket | undefined;
@@ -12,6 +13,8 @@ export const REMOVE_AND_APPLY_HUNT_PREY = "removeAndApplyHuntPrey";
 export const DAZZLING_DISPLAY = "dazzlingDisplay";
 export const GHOSTLY_CARRIER_SUMMON = "summonGhostlyCarrier";
 export const GHOSTLY_CARRIER_DELETE = "deleteGhostlyCarrier";
+export const CREATE_SNARE = "createSnare";
+export const REMOVE_SNARE = "removeSnare";
 
 export const getSocket = () => {
     if (!socket) throw new Error("Socket not registered");
@@ -28,4 +31,6 @@ export function registerSocket() {
     socket.register(DAZZLING_DISPLAY, startDazzlingDisplayAsGM);
     socket.register(GHOSTLY_CARRIER_SUMMON, summonGhostlyCarrierAsGM);
     socket.register(GHOSTLY_CARRIER_DELETE, deleteGhostlyCarrierTokenAsGM);
+    socket.register(CREATE_SNARE, createSnareAsGM);
+    socket.register(REMOVE_SNARE, removeSnareAsGM);
 }
