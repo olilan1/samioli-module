@@ -1,5 +1,6 @@
 import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay } from "./utils.ts";
+import { getSocket } from "./sockets.ts";
 
 const GRID_HIGHLIGHT_RETRY_TIME = 20;
 const GRID_HIGHLIGHT_MAX_TIME = 1000;
@@ -20,6 +21,14 @@ export async function replaceTargets(arrayOfTokenIds: string[]) {
         // @ts-expect-error "targets" is correct
         game.user.broadcastActivity({ targets: arrayOfTokenIds });
     }
+}
+
+export async function replaceTargetsForUser(userId: string, arrayOfTokenIds: string[]) {
+    await getSocket().executeAsUser(replaceTargets, userId, arrayOfTokenIds);
+}
+
+export async function replaceTargetsForUsers(userIds: string[], arrayOfTokenIds: string[]) {
+    await getSocket().executeForUsers(replaceTargets, userIds, arrayOfTokenIds);
 }
 
 export async function targetTokensUnderTemplate(

@@ -2,25 +2,9 @@ import { ChatMessagePF2e, ConsumablePF2e, TokenDocumentPF2e, TokenPF2e } from "f
 import { CrosshairUpdatable } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
-import { ButtonSwapSpec, swapButtons } from "../chatautobuttons.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
-import { replaceTargets } from "../templatetarget.ts";
-import { getTokensAtLocation } from "../utils.ts";
-
-const USE_BUTTON_CONSUMABLE = 'button[data-action="consume"]';
-const SNARE_PREFIX = 'origin:item:category:';
-const AUTO_SWAP_BUTTONS_CONSUMABLES: Record<string, ButtonSwapSpec> = {
-    "snare": {
-        label: "Deploy Snare!",
-        function: deploySnare,
-        buttonToReplace: USE_BUTTON_CONSUMABLE
-    },
-    "remove-snare": {
-        label: "Remove Snare?",
-        function: removeSnare,
-        buttonToReplace: USE_BUTTON_CONSUMABLE
-    }
-};
+import { replaceTargetsForUsers } from "../templatetarget.ts";
+import { getOwnersFromActor, getTokensAtLocation } from "../utils.ts";
 
 export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessagePF2e) {
    
@@ -59,7 +43,6 @@ export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessage
     // We don't delete it entirely as we need to reference it when it's triggered
     const quantity = item.quantity - 1;
     await item.update({ "system.quantity": quantity });
-
 }
 
 export async function createSnareAsGM(location: Point, deployerUuid: string, snareId: string, 
@@ -107,22 +90,20 @@ function generateSnareScript(deployerUuid: string, snareId: string, itemUuid: st
 
     const script = `
 if (!game.user.isGM) return;
-const token = event.data.token;
+const triggererToken = event.data.token;
 const myApi = game.modules.get("samioli-module").api;
-myApi.handleSnareRegionEnter("${snareId}", "${itemUuid}", "${deployerUuid}", token, ${location.x}, ${location.y});
+myApi.handleSnareRegionEnter("${snareId}", "${itemUuid}", "${deployerUuid}", triggererToken, ${location.x}, ${location.y});
 `;
     return script;
 }
 
-export function triggerSnare(snareId: string, itemUuid: string, deployerUuid: string, token: TokenDocumentPF2e, x: number, y: number) {
-
-    animateSnareTrigger(token, x, y);
+export function triggerSnare(snareId: string, itemUuid: string, deployerUuid: string, triggererToken: TokenDocumentPF2e, snareX: number, snareY: number) {
     const deployer = fromUuidSync(deployerUuid) as TokenDocumentPF2e;
 
-    createSnareTriggeredChatMessage(deployer, token, itemUuid, snareId);
+    createSnareTriggeredChatMessage(deployer, triggererToken, itemUuid, snareId, snareX, snareY);
 }
 
-async function removeSnare(_token: TokenPF2e, message: ChatMessagePF2e) {
+export async function removeSnare(_token: TokenPF2e, message: ChatMessagePF2e) {
     const snareId = message.flags['samioli-module']?.snareId;
     if (!snareId) return;
     getSocket().executeAsGM(REMOVE_SNARE, snareId);
@@ -135,58 +116,41 @@ export async function removeSnareAsGM(snareId: string) {
 }
 
 async function createSnareTriggeredChatMessage(deployer: TokenDocumentPF2e, triggerer: TokenDocumentPF2e, 
-    itemUuid: string, snareId: string) {
+    itemUuid: string, snareId: string, snareX: number, snareY: number) {
 
     const content = `
-        <p>${triggerer.name} stepped on my snare!</p>
+        <p>${triggerer.name} stepped on ${deployer.name}'s snare!</p>
     `;
 
     await createChatMessageWithButton({
         slug: "trigger-snare",
-        actor: deployer.actor!,
+        actor: triggerer.actor!,
         content: content,
         button_label: "Trigger Snare!",
-        params: [itemUuid, snareId, triggerer.uuid]
+        params: [itemUuid, snareId, triggerer.uuid, snareX.toString(), snareY.toString()],
+        gmOnly: true
     });
 }
 
-export async function addSnareToChatAndTarget(itemUuid: string, snareId: string, triggererUuid: string) {
+export async function addSnareToChatAndTarget(itemUuid: string, snareId: string, triggererTokenUuid: string, snareX: string, snareY: string) {
+    const token = fromUuidSync(triggererTokenUuid) as TokenDocumentPF2e;
+    animateSnareTrigger(token, parseInt(snareX), parseInt(snareY));
+
     const item = fromUuidSync(itemUuid) as ConsumablePF2e;
-    const triggerer = fromUuidSync(triggererUuid) as TokenDocumentPF2e;
+    const triggerer = fromUuidSync(triggererTokenUuid) as TokenDocumentPF2e;
 
     const chatMessage = await item.toMessage(undefined, { create: true });
     
     if (chatMessage) {
         await chatMessage.update({
             "flags.samioli-module.snareId": snareId,
-            "flags.samioli-module.tokenUuid": triggererUuid
+            "flags.samioli-module.tokenUuid": triggererTokenUuid
         });
     }
 
-    // Target the snare triggerer
+    // Target the snare triggerer on the deploying users
     const targetTokenId = triggerer.object?.id;
-    replaceTargets([targetTokenId!]);
-
-}
-
-export function replaceButtonsForSnareMessages(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
- 
-    const origin = message.flags.pf2e.origin;
-    const rollOptions = origin?.rollOptions;
-    if (!rollOptions) return;
-
-    const token = message.token?.object;
-    if (!token) return;
-    
-    if (message.flags['samioli-module']?.snareId) {
-        swapButtons("remove-snare", AUTO_SWAP_BUTTONS_CONSUMABLES, '.card-buttons', token, message, html);
-        return;
-    }
-    const slug = rollOptions.find(item => item.startsWith(SNARE_PREFIX))?.slice(SNARE_PREFIX.length);
-    if (!slug) return;
-    swapButtons(slug, AUTO_SWAP_BUTTONS_CONSUMABLES, '.card-buttons', token, message, html);
-    return; 
-
+    replaceTargetsForUsers(getOwnersFromActor(item.actor!, false).map(u => u.id), [targetTokenId!]);
 }
 
 async function selectSquare(token: TokenPF2e) {

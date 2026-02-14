@@ -37,7 +37,8 @@ type MessageSpec = {
     content: string,
     button_label: string,
     flags?: Record<string, unknown>,
-    params?: string[]
+    params?: string[],
+    gmOnly?: boolean
 }
 
 export async function createChatMessageWithButton(spec: MessageSpec) {
@@ -51,9 +52,11 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
         throw new Error("Number of params provided does not match function inputs");
     }
 
+    const gms = game.users.filter(user => user.isGM).map(user => user.id);
+
     await ChatMessage.create({
         content: buildMessageContent(spec),
-        whisper: getOwnersFromActor(spec.actor).map(user => user.id),
+        whisper: spec.gmOnly ? gms : getOwnersFromActor(spec.actor).map(user => user.id),
         speaker: ChatMessage.getSpeaker({ actor: spec.actor }),
         flags: {
             samioli: {

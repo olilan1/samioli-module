@@ -4,9 +4,11 @@ import { demanifestEidolonAsGM, manifestEidolonAsGM } from "./actions/manifestei
 import { deleteGhostlyCarrierTokenAsGM, summonGhostlyCarrierAsGM } from "./spells/ghostlycarrier.ts";
 import { createSnareAsGM, removeSnareAsGM } from "./actions/snare.ts";
 import { MODULE_ID } from "./utils.ts";
+import { replaceTargets } from "./templatetarget.ts";
 
 let socket: SocketlibSocket | undefined;
 
+export const REPLACE_TARGETS = "replaceTargets";
 export const MANIFEST_EIDOLON = "manifestEidolon";
 export const DEMANIFEST_EIDOLON = "demanifestEidolon";
 export const REMOVE_AND_APPLY_HUNT_PREY = "removeAndApplyHuntPrey";
@@ -25,6 +27,7 @@ export function registerSocket() {
     socket = socketlib.registerModule(MODULE_ID)!;
     // Register the name of the function that you want to run as the GM
     // Requires a full restart of Foundry before this will work
+    socket.register(REPLACE_TARGETS, replaceTargets);
     socket.register(MANIFEST_EIDOLON, manifestEidolonAsGM);
     socket.register(DEMANIFEST_EIDOLON, demanifestEidolonAsGM);
     socket.register(REMOVE_AND_APPLY_HUNT_PREY, removeAndApplyHuntPreyAsGM);
