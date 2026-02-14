@@ -26,12 +26,13 @@ import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffect
 import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
 import { samiOliModuleAPI } from "./api.ts";
 import { replaceButtonsForSnareMessages } from "./actions/snare.ts";
+import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
 
 Hooks.on("init", () => {
     registerSettings();
     const module = game.modules.get("samioli-module");
     if (module) {
-        (module as any).api = samiOliModuleAPI;
+        (module as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
     }
 });
 

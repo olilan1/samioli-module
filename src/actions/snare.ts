@@ -5,6 +5,7 @@ import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
 import { ButtonSwapSpec, swapButtons } from "../chatautobuttons.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 import { replaceTargets } from "../templatetarget.ts";
+import { getTokensAtLocation } from "../utils.ts";
 
 const USE_BUTTON_CONSUMABLE = 'button[data-action="consume"]';
 const SNARE_PREFIX = 'origin:item:category:';
@@ -44,12 +45,15 @@ export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessage
         return;
     }
 
-    if (getTokenAtLocation(selectedLocation)) {
+    if (getTokensAtLocation(selectedLocation).length > 0) {
         ui.notifications.warn("Cannot place snare: There is a token in that space.");
         return;
     }
 
-    getSocket().executeAsGM(CREATE_SNARE, selectedLocation, deployerToken.document.uuid, message.id, itemUuid);
+    const player = game.user;
+    const playerColour = player.color.css;
+
+    getSocket().executeAsGM(CREATE_SNARE, selectedLocation, deployerToken.document.uuid, message.id, itemUuid, playerColour);
 
     // Decrement snare count
     // We don't delete it entirely as we need to reference it when it's triggered
@@ -59,13 +63,17 @@ export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessage
 }
 
 export async function createSnareAsGM(location: Point, deployerUuid: string, snareId: string, 
-    itemUuid: string) {
+    itemUuid: string, playerColour: string) {
     const size = canvas.grid.size;
-    const script = generateSnareScript(deployerUuid, snareId, itemUuid);
-    
+    const script = generateSnareScript(deployerUuid, snareId, itemUuid, location);
+    const deployer = fromUuidSync(deployerUuid) as TokenDocumentPF2e;
+    const deployerName = deployer.name;
+    const snare = fromUuidSync(itemUuid) as ConsumablePF2e;
+    const snareName = snare.name;
+
     const regionData = {
-        name: "Snare",
-        color: "#320101",
+        name: `${deployerName}'s ${snareName}`,
+        color: playerColour,
         visibility: 2,
         shapes: [{
              type: "rectangle", 
@@ -95,23 +103,20 @@ export async function createSnareAsGM(location: Point, deployerUuid: string, sna
     await canvas.scene?.createEmbeddedDocuments("Region", [regionData]);
 }
 
-function generateSnareScript(deployerUuid: string, snareId: string, itemUuid: string) {
+function generateSnareScript(deployerUuid: string, snareId: string, itemUuid: string, location: Point) {
 
     const script = `
 if (!game.user.isGM) return;
-const snareId = "${snareId}";
-const itemUuid = "${itemUuid}";
-const deployerUuid = "${deployerUuid}";
 const token = event.data.token;
 const myApi = game.modules.get("samioli-module").api;
-myApi.handleSnareRegionEnter(snareId, itemUuid, deployerUuid, token);
+myApi.handleSnareRegionEnter("${snareId}", "${itemUuid}", "${deployerUuid}", token, ${location.x}, ${location.y});
 `;
     return script;
 }
 
-export async function triggerSnare(snareId: string, itemUuid: string, deployerUuid: string, token: TokenDocumentPF2e) {
+export function triggerSnare(snareId: string, itemUuid: string, deployerUuid: string, token: TokenDocumentPF2e, x: number, y: number) {
 
-    animateSnareTrigger(token);
+    animateSnareTrigger(token, x, y);
     const deployer = fromUuidSync(deployerUuid) as TokenDocumentPF2e;
 
     createSnareTriggeredChatMessage(deployer, token, itemUuid, snareId);
@@ -148,14 +153,13 @@ async function createSnareTriggeredChatMessage(deployer: TokenDocumentPF2e, trig
 export async function addSnareToChatAndTarget(itemUuid: string, snareId: string, triggererUuid: string) {
     const item = fromUuidSync(itemUuid) as ConsumablePF2e;
     const triggerer = fromUuidSync(triggererUuid) as TokenDocumentPF2e;
-    const tokenUuid = triggerer.uuid;
 
     const chatMessage = await item.toMessage(undefined, { create: true });
     
     if (chatMessage) {
         await chatMessage.update({
             "flags.samioli-module.snareId": snareId,
-            "flags.samioli-module.tokenUuid": tokenUuid
+            "flags.samioli-module.tokenUuid": triggererUuid
         });
     }
 
@@ -165,7 +169,7 @@ export async function addSnareToChatAndTarget(itemUuid: string, snareId: string,
 
 }
 
-export async function replaceButtonsForSnareMessages(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+export function replaceButtonsForSnareMessages(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
  
     const origin = message.flags.pf2e.origin;
     const rollOptions = origin?.rollOptions;
@@ -247,12 +251,10 @@ function getSnareAtLocation(location: Point) {
     });
 }
 
-function getTokenAtLocation(location: Point) {
-    return canvas.tokens?.placeables.find((token) => token.x === location.x && token.y === location.y);
-}
+async function animateSnareTrigger(token: TokenDocumentPF2e, x: number, y: number) {
 
-async function animateSnareTrigger(token: TokenDocumentPF2e) {
- 
+    const centreOfGrid = canvas.grid.size / 2;
+
     const style = new PIXI.TextStyle({
             align: "center",
             dropShadowDistance: 19,
@@ -274,7 +276,7 @@ async function animateSnareTrigger(token: TokenDocumentPF2e) {
     new Sequence()
     .effect()
         // @ts-expect-error offset is valid
-        .atLocation(token, {offset: {x:0, y:-100}})
+        .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100}})
         .fadeIn(500)
         .text("Click!", style)
         .duration(4000)
