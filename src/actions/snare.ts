@@ -239,7 +239,6 @@ async function animateSnareTrigger(token: TokenDocumentPF2e, x: number, y: numbe
 
     new Sequence()
     .effect()
-        // @ts-expect-error offset is valid
         .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100}})
         .fadeIn(500)
         .text("Click!", style)
