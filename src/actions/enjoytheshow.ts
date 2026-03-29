@@ -99,7 +99,6 @@ async function animateEnjoyTheShow(message: ChatMessagePF2e) {
     const sequence = new Sequence()
 
     .effect()
-        // @ts-expect-error offset is valid
         .atLocation(token, {offset: {x:0, y:-100}})
         .fadeIn(500)
         .text(randomRetort(outcome), style)
