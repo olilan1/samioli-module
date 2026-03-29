@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-03-29
+
 - Shifting Rune Automation
 
 ## [0.59.0] - 2025-11-26
@@ -79,7 +81,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.59.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.60.0...HEAD
+
+[0.60.0]: https://github.com/olilan1/samioli-module/compare/v0.59.0...v0.60.0
 
 [0.59.0]: https://github.com/olilan1/samioli-module/compare/v0.58.0...v0.59.0
 
