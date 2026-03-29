@@ -23,10 +23,15 @@ import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
-import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
+import { samiOliModuleAPI } from "./api.ts";
+import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
 
 Hooks.on("init", () => {
     registerSettings();
+    const module = game.modules.get("samioli-module");
+    if (module) {
+        (module as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
+    }
 });
 
 Hooks.once('socketlib.ready', () => {

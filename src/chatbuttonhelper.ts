@@ -5,6 +5,7 @@ import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
 import { handleSustainSpell } from "./sustain.ts";
 import { extendBoostEidolon } from "./spells/boosteidolon.ts";
+import { addSnareToChatAndTarget } from "./actions/snare.ts";
 
 // Mapping of slug to function description.
 // Slug must match what is provided in the MessageSpec when calling createChatMessageWithButton
@@ -14,7 +15,8 @@ const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonFunctionDescription> = {
     "remove-antagonize": { func: removeAntagonizeEffect, takesMsg: false },
     "remove-panache": { func: onClearPanacheButtonClick, takesMsg: true },
     "sustain-spell": { func: handleSustainSpell, takesMsg: false },
-    "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true }
+    "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true },
+    "trigger-snare": { func: addSnareToChatAndTarget, takesMsg: false }
 };
 
 type StringOnlyFuncDescription = {
@@ -35,7 +37,8 @@ type MessageSpec = {
     content: string,
     button_label: string,
     flags?: Record<string, unknown>,
-    params?: string[]
+    params?: string[],
+    gmOnly?: boolean
 }
 
 export async function createChatMessageWithButton(spec: MessageSpec) {
@@ -49,9 +52,11 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
         throw new Error("Number of params provided does not match function inputs");
     }
 
+    const gms = game.users.filter(user => user.isGM).map(user => user.id);
+
     await ChatMessage.create({
         content: buildMessageContent(spec),
-        whisper: getOwnersFromActor(spec.actor).map(user => user.id),
+        whisper: spec.gmOnly ? gms : getOwnersFromActor(spec.actor).map(user => user.id),
         speaker: ChatMessage.getSpeaker({ actor: spec.actor }),
         flags: {
             samioli: {

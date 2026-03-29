@@ -9,16 +9,21 @@ import { startRedistributePotential } from "./spells/redistributepotential.ts";
 import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
+import { deploySnare, removeSnare } from "./actions/snare.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
-const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]'
-const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]'
+const CATEGORY_PREFIX = 'origin:item:category:';
+const TEMPLATE_BUTTON_SPELL = 'button[data-action="spell-template"]';
+const DAMAGE_BUTTON_SPELL = 'button[data-action="spell-damage"]';
+const USE_BUTTON_CONSUMABLE = 'button[data-action="consume"]';
 
-type ButtonSpec = {
+export type ButtonSpec = {
+    matcher?: string; // If not provided, the key is used as the matcher
     label: string;
     function: (token: TokenPF2e, message: ChatMessagePF2e) => void;
+    condition?: (message: ChatMessagePF2e) => boolean;
 }
-interface ButtonSwapSpec extends ButtonSpec {
+export interface ButtonSwapSpec extends ButtonSpec {
     buttonToReplace: string;
 }
 
@@ -73,6 +78,23 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     }
 };
 
+const AUTO_SWAP_BUTTONS_CONSUMABLES: Record<string, ButtonSwapSpec> = {
+    "deploy-snare": {
+        matcher: "snare",
+        label: "Deploy Snare!",
+        function: deploySnare,
+        buttonToReplace: USE_BUTTON_CONSUMABLE,
+        condition: (message: ChatMessagePF2e) => !(message.flags['samioli-module']?.snareId)
+    },
+    "remove-snare": {
+        matcher: "snare",
+        label: "Remove Snare?",
+        function: removeSnare,
+        buttonToReplace: USE_BUTTON_CONSUMABLE,
+        condition: (message: ChatMessagePF2e) => !!(message.flags['samioli-module']?.snareId)
+    }
+};
+
 export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const origin = message.flags.pf2e.origin;
     const rollOptions = origin?.rollOptions;
@@ -82,17 +104,23 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
     if (!token) return;
 
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
-    if (!slug) return;
+    if (slug) {
+        addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, message, html);
+        addMatchingButtons(slug, AUTO_BUTTONS_ACTIONS, '.card-content', token, message, html);
+        swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
+    }
 
-    addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, message, html);
-    addMatchingButtons(slug, AUTO_BUTTONS_ACTIONS, '.card-content', token, message, html);
-    swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
+    const category = rollOptions.find(item => item.startsWith(CATEGORY_PREFIX))?.slice(CATEGORY_PREFIX.length);
+    if (category) {
+        swapButtons(category, AUTO_SWAP_BUTTONS_CONSUMABLES, '.card-buttons', token, message, html);
+    }
 }
 
 function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
     divLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
-        if (slug === key) {
+        const matcher = buttonSpec.matcher ?? key;
+        if (slug === matcher && (!buttonSpec.condition || buttonSpec.condition(message))) {
             const div = html.find(divLookup);
             const button = $('<button type="button">' + buttonSpec.label + '</button>');
             button.on("click", function () {
@@ -107,7 +135,8 @@ function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
     divLookup: string, token: TokenPF2e,
     message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
-        if (slug === key) {
+        const matcher = buttonSpec.matcher ?? key;
+        if (slug === matcher && (!buttonSpec.condition || buttonSpec.condition(message))) {
             const buttonDataAction = buttonSpec.buttonToReplace!;
             const templateButton = html.find(buttonDataAction);
             const parentDiv = templateButton.closest(`div${divLookup}`);

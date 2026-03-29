@@ -2,7 +2,7 @@ import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, Condition
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { TokenMovementMethod } from "foundry-pf2e/foundry/client/_types.mjs";
+import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -99,7 +99,7 @@ export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
 /**
  * Returns the User(s) who have ownership or control over a given Actor.
  */
-export function getOwnersFromActor(actor: ActorPF2e): User[] {
+export function getOwnersFromActor(actor: ActorPF2e, includeGM: boolean = true): User[] {
     const controllingUsers = [];
     for (const userId in actor.ownership) {
         // Skip the "default" entry, which applies to all users unless overridden.
@@ -108,7 +108,7 @@ export function getOwnersFromActor(actor: ActorPF2e): User[] {
         const permissionLevel = actor.ownership[userId] ?? 0;
         if (permissionLevel >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
             const user = game.users.get(userId);
-            if (user) {
+            if (user && (includeGM || !user.isGM)) {
                 controllingUsers.push(user);
             }
         }
