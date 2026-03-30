@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 - Shifting Rune Automation
+- Simplify Dazzling Display
+- Manifest Eidolon bug fix
+- Duplicate Antagonise fix
+- Ghostly Carrier without the Compendium
+- Snare automation
 
 ## [0.59.0] - 2025-11-26
 
