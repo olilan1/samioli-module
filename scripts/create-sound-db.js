@@ -1,81 +1,78 @@
-const fs = require('fs');
-const path = require('path');
+/**
+ * This script generates a JSON database of sound files mapped by sound set and category.
+ * 
+ * USAGE:
+ * Point the `soundDirectory` variable to a folder containing your sound sets.
+ * The script expects the following directory structure:
+ * 
+ * soundDirectory/
+ * ├── SoundSetName1/
+ * │   ├── Attack/ (contains .wav, .mp3, .ogg, or .m4a files)
+ * │   ├── Death/
+ * │   └── Hurt/
+ * ├── SoundSetName2/
+ * │   ├── Attack/
+ * │   ├── Death/
+ * │   └── Hurt/
+ * 
+ * Run this script using Node.js: `node create-sound-db.js`
+ * It will output a `sounds_db.json` file in the current working directory.
+ */
+import fs from 'fs';
+import path from 'path';
 
-const soundDirectory = '../sounds/GameDevMarket/Humanoid_Creatures_2';
-
-const soundDirectories = findSubdirectories(soundDirectory);
+const soundDirectory = 'D:/Programming/Soundsets/Converted/Programming/Soundsets/Ovani';
+const modulePrefix = 'modules/pf2e-creature-sounds/sounds/Ovani';
 
 createSoundDatabase();
 
 async function createSoundDatabase() {
     const soundDatabase = {};
 
-    for (const directory of soundDirectories) {
-        try {
-            const files = fs.readdirSync(directory);
+    try {
+        const soundSets = fs.readdirSync(soundDirectory, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
 
-            for (const file of files) {
-                if ((file.endsWith('.wav') || file.endsWith('.mp3') || file.endsWith('.ogg') || file.endsWith('.WAV'))) { // Adjust extensions as needed
-                    // const regex =  /(\w+)_Monster_([a-zA-Z]+)(\w)*/;  // Evolved_Game_Creatures
-                    const regex = /CREAHmn_(.*?)(?=\sAttack|\sDeath|\sPain)\s(Attack|Death|Pain)(.*)/;   // Humanoid Creatures
-                    const matches = file.match(regex);
+        for (const soundSetName of soundSets) {
+            soundDatabase[soundSetName] = {
+                display_name: soundSetName,
+                notes: "",
+                hurt_sounds: [],
+                attack_sounds: [],
+                death_sounds: [],
+                creatures: [],
+                keywords: [],
+                traits: [],
+                size: -1
+            };
+
+            const setPath = path.join(soundDirectory, soundSetName);
+            const categoryMapping = {
+                'Attack': 'attack_sounds',
+                'Death': 'death_sounds',
+                'Hurt': 'hurt_sounds'
+            };
+
+            for (const [subDir, arrayName] of Object.entries(categoryMapping)) {
+                const subDirPath = path.join(setPath, subDir);
+                
+                if (fs.existsSync(subDirPath) && fs.statSync(subDirPath).isDirectory()) {
+                    const files = fs.readdirSync(subDirPath);
                     
-                    if (!matches) {
-                        continue;
-                    }
-
-                    const soundSetName = matches[1];
-                    const soundType = matches[2];
-
-                    if (!soundDatabase[soundSetName]) {
-                        soundDatabase[soundSetName] = {
-                            notes: "",
-                            hurt_sounds: [],
-                            attack_sounds: [],
-                            death_sounds: [],
-                            creatures: [],
-                            keywords: [],
-                            traits: []
-                        };
-                    }
-
-                    const fixedPath = fixPath(path.join(directory, file));
-
-                    if (soundType === "Pain") {
-                        soundDatabase[soundSetName].hurt_sounds.push(fixedPath);
-                    } else if (soundType === 'Attack') {
-                        soundDatabase[soundSetName].attack_sounds.push(fixedPath);
-                    } else if (soundType === 'Death') {
-                        soundDatabase[soundSetName].death_sounds.push(fixedPath);
+                    for (const file of files) {
+                        if (file.match(/\.(wav|mp3|ogg|m4a)$/i)) { // Adjust extensions as needed
+                            const fixedPath = `${modulePrefix}/${soundSetName}/${subDir}/${file}`;
+                            soundDatabase[soundSetName][arrayName].push(fixedPath);
+                        }
                     }
                 }
             }
-        } catch (error) {
-            console.error(`Error reading directory ${directory}:`, error);
         }
+    } catch (error) {
+        console.error(`Error reading sound directories:`, error);
     }
 
     fs.writeFileSync('./sounds_db.json', JSON.stringify(soundDatabase, null, 2));
     console.log('Sound database v3 created successfully!');
-}
-
-function fixPath(path) {
-    return path.replace(/\\/g, "/").replace("..", "modules/samioli-module");
-}
-
-function findSubdirectories(directoryPath) {
-    const subdirectories = [];
-
-    const items = fs.readdirSync(directoryPath);
-    for (const item of items) {
-        const itemPath = path.join(directoryPath, item);
-        const stats = fs.statSync(itemPath);
-
-        if (stats.isDirectory()) {
-            subdirectories.push(itemPath);
-            subdirectories.push(...findSubdirectories(itemPath)); // Recursively find subdirectories within subdirectories
-        }
-    }
-
-    return subdirectories;
 }
