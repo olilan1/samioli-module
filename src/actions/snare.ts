@@ -133,8 +133,7 @@ async function createSnareTriggeredChatMessage(deployer: TokenDocumentPF2e, trig
 }
 
 export async function addSnareToChatAndTarget(itemUuid: string, snareId: string, triggererTokenUuid: string, snareX: string, snareY: string) {
-    const token = fromUuidSync(triggererTokenUuid) as TokenDocumentPF2e;
-    animateSnareTrigger(token, parseInt(snareX), parseInt(snareY));
+    animateSnareTrigger(parseInt(snareX), parseInt(snareY));
 
     const item = fromUuidSync(itemUuid) as ConsumablePF2e;
     const triggerer = fromUuidSync(triggererTokenUuid) as TokenDocumentPF2e;
@@ -215,7 +214,7 @@ function getSnareAtLocation(location: Point) {
     });
 }
 
-async function animateSnareTrigger(token: TokenDocumentPF2e, x: number, y: number) {
+async function animateSnareTrigger(x: number, y: number) {
 
     const centreOfGrid = canvas.grid.size / 2;
 
