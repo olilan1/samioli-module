@@ -1,8 +1,14 @@
-import { ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
 import { sendBasicChatMessage } from "../utils.ts";
 import { ShiftingWeaponApp } from "../ui/shiftingui.ts";
 
 const { DialogV2 } = foundry.applications.api;
+
+export interface ActorAttackTrainedProficiencies {
+    simple: boolean;
+    martial: boolean;
+    advanced: string[];
+}
 
 export async function displayShiftingWeaponDialogFromActivationsModule(token: TokenPF2e, message: ChatMessagePF2e) {
 
@@ -94,8 +100,11 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
     const baseWeaponHands = weapon.getFlag("samioli-module", "originalBaseWeaponHands") as number;
     const isTwoHanded = baseWeaponHands === 2;
 
+    // Get Actor's weapon proficiencies
+    const proficiencies = getActorAttackTrainedProficiencies(token.actor!);
+
     // Open the weapon selection window and wait for a selection
-    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded, originalBaseWeapon);
+    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded, originalBaseWeapon, proficiencies);
 
     // Check if the user selected something or closed the window
     if (!selectedWeapon) {
@@ -191,4 +200,31 @@ function extractWeaponFromContent(content: string): WeaponPF2e | null {
     }
 
     return null;
+}
+
+function getActorAttackTrainedProficiencies(actor: ActorPF2e): ActorAttackTrainedProficiencies {
+    const attacks = (actor as any)?.system?.proficiencies?.attacks || {};
+    
+    // Check if rank is 1 or more for simple and martial weapons
+    const simple = (attacks.simple?.rank ?? 0) >= 1;
+    const martial = (attacks.martial?.rank ?? 0) >= 1;
+    
+    const advanced: string[] = [];
+    
+    // Check for advanced weapon proficiencies
+    for (const [key, value] of Object.entries(attacks)) {
+        if (key.startsWith("weapon-base-")) {
+            const rank = (value as any)?.rank ?? 0;
+            if (rank >= 1) {
+                const slug = key.replace("weapon-base-", "");
+                advanced.push(slug);
+            }
+        }
+    }
+    
+    return {
+        simple,
+        martial,
+        advanced
+    };
 }

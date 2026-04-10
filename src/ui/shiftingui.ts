@@ -1,4 +1,5 @@
 import { WeaponPF2e } from "foundry-pf2e";
+import { ActorAttackTrainedProficiencies } from "../actions/shifting.ts";
 import { ApplicationRenderOptions } from "foundry-pf2e/foundry/client/applications/_module.mjs";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -6,6 +7,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     private isTwoHanded: boolean;
     private originalBaseWeapon: string | null;
+    private proficiencies: ActorAttackTrainedProficiencies;
     private resolve?: (value: WeaponPF2e | null) => void;
 
     static override DEFAULT_OPTIONS = {
@@ -33,20 +35,21 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
     };
 
-    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
+    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, proficiencies: ActorAttackTrainedProficiencies, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
         super(options);
         this.isTwoHanded = isTwoHanded;
         this.originalBaseWeapon = originalBaseWeapon;
+        this.proficiencies = proficiencies;
 
         if (this.options.form) {
             this.options.form.handler = this.formHandler.bind(this);
         }
     }
 
-    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null): Promise<WeaponPF2e | null> {
+    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null, proficiencies: ActorAttackTrainedProficiencies): Promise<WeaponPF2e | null> {
 
         return new Promise((resolve) => {
-            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon);
+            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon, proficiencies);
             app.resolve = resolve;
             app.render(true);
         });
@@ -82,6 +85,55 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 }
             });
         });
+
+        // Search and filter functionality
+        const searchInput = html.querySelector(".shifting-search-input") as HTMLInputElement;
+        const hideUntrainedCheckbox = html.querySelector(".shifting-hide-untrained") as HTMLInputElement;
+
+        const filterRows = () => {
+            const query = searchInput?.value.toLowerCase() || "";
+            const hideUntrained = hideUntrainedCheckbox?.checked ?? false;
+
+            rows.forEach(row => {
+                const nameCell = row.querySelector(".weapon-name strong");
+                const traits = Array.from(row.querySelectorAll(".tags .tag")).map(t => t.textContent?.toLowerCase() || "");
+                const category = row.getAttribute("data-category") || "";
+                const slug = row.getAttribute("data-slug") || "";
+
+                const nameMatch = nameCell?.textContent?.toLowerCase().includes(query) ?? false;
+                const traitMatch = traits.some(t => t.includes(query));
+                const matchesSearch = nameMatch || traitMatch || query === "";
+
+                let matchesProficiency = true;
+                if (hideUntrained) {
+                    if (category === "simple") {
+                        matchesProficiency = this.proficiencies.simple;
+                    } else if (category === "martial") {
+                        matchesProficiency = this.proficiencies.martial;
+                    } else if (category === "advanced") {
+                        matchesProficiency = this.proficiencies.advanced.includes(slug);
+                    } else if (category === "unarmed") {
+                        matchesProficiency = true; 
+                    }
+                }
+
+                if (matchesSearch && matchesProficiency) {
+                    (row as HTMLElement).style.display = "";
+                } else {
+                    (row as HTMLElement).style.display = "none";
+                }
+            });
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener("input", filterRows);
+        }
+        if (hideUntrainedCheckbox) {
+            hideUntrainedCheckbox.addEventListener("change", filterRows);
+        }
+
+        // Run initial filter
+        filterRows();
     }
 
     updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
@@ -149,13 +201,16 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 return {
                     id: weapon._id,
                     name: weapon.name,
+                    slug: weapon.system.slug,
+                    rawCategory: weapon.system.category,
                     category: categoryLabel,
                     group: groupLabel,
                     traits: traits.map((trait: string) => ({
                         label: game.i18n.localize(CONFIG.PF2E.weaponTraits[trait as keyof typeof CONFIG.PF2E.weaponTraits]),
                         tooltip: game.i18n.localize(CONFIG.PF2E.traitsDescriptions[trait as keyof typeof CONFIG.PF2E.traitsDescriptions])
                     })),
-                    damage: `${weapon.system.damage.die} ${weapon.system.damage.damageType}`,
+                    dice: weapon.system.damage.die,
+                    type: weapon.system.damage.damageType,
                     hands: this.formatNumberOfHands(weapon.system.usage?.value),
                     bulk: weapon.system.bulk?.value,
                     isOriginalForm: isOriginalForm

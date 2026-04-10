@@ -1,5 +1,16 @@
 <div class="shifting-content">
-    <p class="notes">Select the form the weapon will take:</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <p class="notes" style="margin: 0;">Select the form the weapon will take:</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0; cursor: pointer; color: var(--color-text-dark-primary);">
+                <input type="checkbox" class="shifting-hide-untrained" checked>
+                Hide Untrained Weapons
+            </label>
+            <div class="search-container" style="flex: 0 0 250px;">
+                <input type="text" class="shifting-search-input" placeholder="Search by name or traits..." style="width: 100%;">
+            </div>
+        </div>
+    </div>
 
     <div class="table-container">
         <table class="pf2e-table">
@@ -9,14 +20,15 @@
                     <th>Weapon Form</th>
                     <th>Category</th>
                     <th>Group</th>
-                    <th>Damage</th>
+                    <th>Dice</th>
+                    <th>Type</th>
                     <th>Hands</th>
                     <th>Bulk</th>
                 </tr>
             </thead>
             <tbody>
                 {{#each weapons}}
-                <tr>
+                <tr data-category="{{this.rawCategory}}" data-slug="{{this.slug}}">
                     <td style="text-align: center;">
                         <input type="radio" name="weaponId" value="{{this.id}}">
                     </td>
@@ -30,7 +42,8 @@
                     </td>
                     <td style="text-align: center;">{{this.category}}</td>
                     <td style="text-align: center;">{{this.group}}</td>
-                    <td style="text-align: center;">{{this.damage}}</td>
+                    <td style="text-align: center;">{{this.dice}}</td>
+                    <td style="text-align: center;">{{this.type}}</td>
                     <td style="text-align: center;">{{this.hands}}</td>
                     <td style="text-align: center;">{{this.bulk}}</td>
                 </tr>
