@@ -1,13 +1,15 @@
 <div class="shifting-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <p class="notes" style="margin: 0;">Select the form the weapon will take:</p>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <label style="display: flex; align-items: center; gap: 0.3rem; margin: 0; cursor: pointer; color: var(--color-text-dark-primary);">
+    <div class="shifting-header">
+        <div class="shifting-header-notes">
+            <div class="notes">Select the form the weapon will take:</div>
+        </div>
+        <div class="shifting-filter-container">
+            <label class="shifting-hide-untrained-label">
                 <input type="checkbox" class="shifting-hide-untrained" checked>
                 Hide Untrained Weapons
             </label>
-            <div class="search-container" style="flex: 0 0 250px;">
-                <input type="text" class="shifting-search-input" placeholder="Search by name or traits..." style="width: 100%;">
+            <div class="search-container">
+                <input type="text" class="shifting-search-input" placeholder="Search by name or traits...">
             </div>
         </div>
     </div>
@@ -16,7 +18,7 @@
         <table class="pf2e-table">
             <thead>
                 <tr>
-                    <th style="width: 40px;"></th>
+                    <th class="radio-column"></th>
                     <th>Weapon Form</th>
                     <th>Category</th>
                     <th>Group</th>
@@ -29,7 +31,7 @@
             <tbody>
                 {{#each weapons}}
                 <tr data-category="{{this.rawCategory}}" data-slug="{{this.slug}}">
-                    <td style="text-align: center;">
+                    <td class="center-text">
                         <input type="radio" name="weaponId" value="{{this.id}}">
                     </td>
                     <td class="weapon-name">
@@ -40,19 +42,19 @@
                             {{/each}}
                         </div>
                     </td>
-                    <td style="text-align: center;">{{this.category}}</td>
-                    <td style="text-align: center;">{{this.group}}</td>
-                    <td style="text-align: center;">{{this.dice}}</td>
-                    <td style="text-align: center;">{{this.type}}</td>
-                    <td style="text-align: center;">{{this.hands}}</td>
-                    <td style="text-align: center;">{{this.bulk}}</td>
+                    <td class="center-text">{{this.category}}</td>
+                    <td class="center-text">{{this.group}}</td>
+                    <td class="center-text">{{this.dice}}</td>
+                    <td class="center-text">{{this.type}}</td>
+                    <td class="center-text">{{this.hands}}</td>
+                    <td class="center-text">{{this.bulk}}</td>
                 </tr>
                 {{/each}}
             </tbody>
         </table>
     </div>
 
-    <footer class="sheet-footer flexrow" style="margin-top: 1rem; justify-content: flex-end;">
+    <footer class="sheet-footer flexrow shifting-footer">
         <button type="submit" name="confirm" class="save-button">
             <i class="fa-solid fa-check"></i> Shift Weapon
         </button>

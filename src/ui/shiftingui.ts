@@ -112,8 +112,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                         matchesProficiency = this.proficiencies.martial;
                     } else if (category === "advanced") {
                         matchesProficiency = this.proficiencies.advanced.includes(slug);
-                    } else if (category === "unarmed") {
-                        matchesProficiency = true; 
                     }
                 }
 
