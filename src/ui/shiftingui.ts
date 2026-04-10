@@ -5,6 +5,7 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     private isTwoHanded: boolean;
+    private originalBaseWeapon: string | null;
     private resolve?: (value: WeaponPF2e | null) => void;
 
     static override DEFAULT_OPTIONS = {
@@ -32,19 +33,20 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
     };
 
-    constructor(isTwoHanded: boolean, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
+    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
         super(options);
         this.isTwoHanded = isTwoHanded;
+        this.originalBaseWeapon = originalBaseWeapon;
 
         if (this.options.form) {
             this.options.form.handler = this.formHandler.bind(this);
         }
     }
 
-    static async selectWeapon(isTwoHanded: boolean): Promise<WeaponPF2e | null> {
+    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null): Promise<WeaponPF2e | null> {
 
         return new Promise((resolve) => {
-            const app = new ShiftingWeaponApp(isTwoHanded);
+            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon);
             app.resolve = resolve;
             app.render(true);
         });
@@ -137,6 +139,12 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 const traits = weapon.system.traits?.value || [];
                 const categoryLabel = game.i18n.localize(CONFIG.PF2E.weaponCategories[weapon.system.category as keyof typeof CONFIG.PF2E.weaponCategories]) || weapon.system.category;
                 const groupLabel = game.i18n.localize(CONFIG.PF2E.weaponGroups[weapon.system.group as keyof typeof CONFIG.PF2E.weaponGroups]) || weapon.system.group;
+                let isOriginalForm = false;
+
+                // A compendium index entry is a plain object, not a full WeaponPF2e document, so it doesn't have getFlag!
+                if (this.originalBaseWeapon && this.originalBaseWeapon === weapon.system.slug) {
+                    isOriginalForm = true;
+                }
 
                 return {
                     id: weapon._id,
@@ -149,7 +157,8 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                     })),
                     damage: `${weapon.system.damage.die} ${weapon.system.damage.damageType}`,
                     hands: this.formatNumberOfHands(weapon.system.usage?.value),
-                    bulk: weapon.system.bulk?.value
+                    bulk: weapon.system.bulk?.value,
+                    isOriginalForm: isOriginalForm
                 };
             });
 

@@ -2,27 +2,100 @@ import { ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
 import { sendBasicChatMessage } from "../utils.ts";
 import { ShiftingWeaponApp } from "../ui/shiftingui.ts";
 
-export async function displayShiftingWeaponDialog(token: TokenPF2e, message: ChatMessagePF2e) {
+const { DialogV2 } = foundry.applications.api;
+
+export async function displayShiftingWeaponDialogFromActivationsModule(token: TokenPF2e, message: ChatMessagePF2e) {
 
     // Get the item from the message content
-    const currentWeapon = extractWeaponFromContent(message.content);
-    if (!currentWeapon) {
+    const weapon = extractWeaponFromContent(message.content);
+    if (!weapon) {
         ui.notifications.warn("This action acts on a weapon, but no weapon was found.");
         return;
     }
 
-    // Check that the item has the shifting rune
-    if (!hasShiftingRune(currentWeapon)) {
-        ui.notifications.warn(`The weapon ${currentWeapon.name} does not have a Shifting rune.`);
+    displayShiftingWeaponDialogForWeapon(token, weapon);
+}
+
+export async function displayShiftingWeaponDialogViaMacro(token: TokenPF2e) {
+    const weapon = await getHeldShiftingWeaponFromToken(token);
+    if (!weapon) return;
+    displayShiftingWeaponDialogForWeapon(token, weapon);
+}
+
+export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<WeaponPF2e | null> {
+    if (!token.actor) return null;
+
+    // Filter for all held weapons
+    const heldWeapons = token.actor.itemTypes.weapon.filter(w => w.isEquipped);
+
+    // Determine if it has a shifting rune
+    const shiftingWeapons = heldWeapons.filter(w => hasShiftingRune(w));
+
+    if (shiftingWeapons.length === 0) {
+        ui.notifications.warn("No equipped weapon with a shifting rune was found.");
+        return null;
+    }
+
+    if (shiftingWeapons.length === 1) {
+        return shiftingWeapons[0];
+    }
+
+    // Handle multiple shifting weapons scenario
+    try {
+        const weaponId = await DialogV2.wait({
+            window: { title: "Select Weapon to Shift" },
+            content: `
+                <form>
+                    <div class="form-group">
+                        <label>Select Weapon:</label>
+                        <select name="shiftingWeaponSelect">
+                            ${shiftingWeapons.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
+                        </select>
+                    </div>
+                </form>
+            `,
+            buttons: [{
+                action: "shift",
+                label: "Shift",
+                default: true,
+                callback: (_event: Event, _button: HTMLButtonElement, dialog: any) => {
+                    const selectElement = dialog.element.querySelector('[name="shiftingWeaponSelect"]');
+                    return selectElement?.value;
+                }
+            }],
+            rejectClose: true
+        });
+
+        if (weaponId) {
+            return shiftingWeapons.find(w => w.id === weaponId as string) || null;
+        }
+    } catch {
+        ui.notifications.warn("Shifting cancelled.");
+    }
+    
+    return null;
+}
+
+async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: WeaponPF2e) {
+     // Check that the item has the shifting rune
+    if (!hasShiftingRune(weapon)) {
+        ui.notifications.warn(`The weapon ${weapon.name} does not have a Shifting rune.`);
         return;
     }
 
+    // Set the original weapon flags if this is the first time shifting this weapon
+    if (!getOriginalBaseWeapon(weapon)) {
+        await setOriginalWeaponFlagsOnWeapon(weapon);
+    }
+
+    const originalBaseWeapon = getOriginalBaseWeapon(weapon);
+
     // Check how many hands the item is (this determines what it can shift into)
-    const baseWeaponHands = currentWeapon.getFlag("samioli-module", "originalBaseWeaponHands");
-    const isTwoHanded = (baseWeaponHands ?? currentWeapon.system.usage.hands) === 2;
+    const baseWeaponHands = weapon.getFlag("samioli-module", "originalBaseWeaponHands") as number;
+    const isTwoHanded = baseWeaponHands === 2;
 
     // Open the weapon selection window and wait for a selection
-    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded);
+    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded, originalBaseWeapon);
 
     // Check if the user selected something or closed the window
     if (!selectedWeapon) {
@@ -30,37 +103,43 @@ export async function displayShiftingWeaponDialog(token: TokenPF2e, message: Cha
         return;
     }
 
-    const content = `${token.name} shifts their ${removeShiftingSuffix(currentWeapon.name)} into a ${selectedWeapon.name}.`;
-
     // Update the existing weapon to match stats of the selected weapon form
-    await updateWeaponStats(currentWeapon, selectedWeapon);
+    const isOriginalForm = await updateWeaponStats(weapon, selectedWeapon);
+
+    let content = "";
+    if (isOriginalForm){
+        content = `${token.name} shifts their ${extractOriginalNameFromShiftedSuffix(weapon.name)} into it's original form.`;
+    } else {
+        content = `${token.name} shifts their ${extractOriginalNameFromShiftedSuffix(weapon.name)} into a ${selectedWeapon.name}.`;
+    }
 
     sendBasicChatMessage(content, token.actor!);
 }
 
-function getOriginalBaseWeapon(currentWeapon: WeaponPF2e): string {
-    const originalBaseWeapon = currentWeapon.getFlag("samioli-module", "originalBaseWeapon");
-    if (!originalBaseWeapon) {
-        currentWeapon.setFlag("samioli-module", "originalBaseWeapon", currentWeapon.system.baseItem);
-        currentWeapon.setFlag("samioli-module", "originalBaseWeaponHands", currentWeapon.system.usage.hands);
-    }
-    return originalBaseWeapon as string;
+function getOriginalBaseWeapon(currentWeapon: WeaponPF2e): string | null {
+    return currentWeapon.getFlag("samioli-module", "originalBaseWeapon") as string;
+}
+
+async function setOriginalWeaponFlagsOnWeapon(weapon: WeaponPF2e) {
+    await weapon.setFlag("samioli-module", "originalBaseWeapon", weapon.system.baseItem);
+    await weapon.setFlag("samioli-module", "originalBaseWeaponHands", weapon.system.usage.hands);
 }
 
 /**
  * Updates the current weapon with specific traits from the selected weapon.
  */
-async function updateWeaponStats(currentWeapon: WeaponPF2e, selectedWeapon: WeaponPF2e) {
+async function updateWeaponStats(currentWeapon: WeaponPF2e, selectedWeapon: WeaponPF2e): Promise<boolean> {
 
     const originalBaseWeapon = getOriginalBaseWeapon(currentWeapon);
-
-    const currentName = removeShiftingSuffix(currentWeapon.name);
+    const originalName = extractOriginalNameFromShiftedSuffix(currentWeapon.name);
+    let isOriginalForm = false;
 
     let newName = ``;
     if (originalBaseWeapon === selectedWeapon.system.baseItem) {
-        newName = `${currentName}`;
+        newName = `${originalName}`;
+        isOriginalForm = true;
     } else {
-        newName = `${currentName} (in ${selectedWeapon.name} form)`;
+        newName = `${selectedWeapon.name} (shifted ${originalName})`;
     }
 
     await currentWeapon.update({
@@ -73,15 +152,20 @@ async function updateWeaponStats(currentWeapon: WeaponPF2e, selectedWeapon: Weap
         "system.usage": selectedWeapon.system.usage,
         "name": newName
     });
+
+    return isOriginalForm;
 }
 
 /**
- * Removes the shifting suffix from a weapon name if present.
- * Looks for " (in ... form)" at the end of the string.
+ * Returns the original name of a shifted weapon.
+ * Extracts from " (shifted ...)" at the end of the string.
  */
-function removeShiftingSuffix(name: string): string {
-    const regex = / \(in .* form\)$/;
-    return name.replace(regex, "");
+function extractOriginalNameFromShiftedSuffix(name: string): string {
+    const match = name.match(/ \(shifted (.*)\)$/);
+    if (match) {
+        return match[1];
+    }
+    return name;
 }
 
 /**
