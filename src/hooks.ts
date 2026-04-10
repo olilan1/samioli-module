@@ -155,6 +155,7 @@ Hooks.on('preDeleteToken', async (token: TokenDocumentPF2e, _action, _id) => {
 
 Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
     hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
+        .ifGM()
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .run();
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
