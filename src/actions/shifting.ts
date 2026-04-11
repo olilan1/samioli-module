@@ -88,7 +88,7 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
     // Set the original weapon flags if this is the first time shifting this weapon
     if (!originalBaseWeapon) {
         await setOriginalWeaponFlagsOnWeapon(weapon);
-        originalBaseWeapon = weapon.system.baseItem;
+        await setOriginalWeaponNameFlag(weapon);
     }
 
     // Check how many hands the item is (this determines what it can shift into)
@@ -126,35 +126,45 @@ async function setOriginalWeaponFlagsOnWeapon(weapon: WeaponPF2e) {
     await weapon.setFlag("samioli-module", "originalBaseWeaponHands", weapon.system.usage.hands);
 }
 
+function getOriginalWeaponName(currentWeapon: WeaponPF2e): string | null {
+    return currentWeapon.getFlag("samioli-module", "originalWeaponName") as string;
+}
+
+async function setOriginalWeaponNameFlag(weapon: WeaponPF2e) {
+    await weapon.setFlag("samioli-module", "originalWeaponName", weapon.name);
+}
+
 /**
  * Updates the current weapon with specific traits from the selected weapon.
  */
-async function updateWeaponStats(currentWeapon: WeaponPF2e, selectedWeapon: WeaponPF2e): Promise<boolean> {
+async function updateWeaponStats(preShiftedWeapon: WeaponPF2e, postShiftedWeapon: WeaponPF2e): Promise<boolean> {
+    const originalBaseWeapon = getOriginalBaseWeapon(preShiftedWeapon);
+    const isChangingToOriginalForm = originalBaseWeapon === postShiftedWeapon.system.baseItem;
 
-    const originalBaseWeapon = getOriginalBaseWeapon(currentWeapon);
-    const originalName = extractOriginalNameFromShiftedSuffix(currentWeapon.name);
-    let isOriginalForm = false;
-
-    let newName = ``;
-    if (originalBaseWeapon === selectedWeapon.system.baseItem) {
-        newName = `${originalName}`;
-        isOriginalForm = true;
-    } else {
-        newName = `${selectedWeapon.name} (shifted ${originalName})`;
+    // If we're shifting FROM the original form, save its current name first
+    if (originalBaseWeapon === preShiftedWeapon.system.baseItem) {
+        await setOriginalWeaponNameFlag(preShiftedWeapon);
     }
 
-    await currentWeapon.update({
-        "system.damage": selectedWeapon.system.damage,
-        "system.baseItem": selectedWeapon.system.baseItem,
-        "system.category": selectedWeapon.system.category,
-        "system.group": selectedWeapon.system.group,
-        "system.traits": selectedWeapon.system.traits,
-        "system.bulk": selectedWeapon.system.bulk,
-        "system.usage": selectedWeapon.system.usage,
+    // Retrieve the original name (fallback to current name if somehow missing)
+    const originalName = getOriginalWeaponName(preShiftedWeapon) || preShiftedWeapon.name;
+
+    const newName = isChangingToOriginalForm 
+        ? originalName
+        : `${postShiftedWeapon.name} (shifted ${originalName})`;
+
+    await preShiftedWeapon.update({
+        "system.damage": postShiftedWeapon.system.damage,
+        "system.baseItem": postShiftedWeapon.system.baseItem,
+        "system.category": postShiftedWeapon.system.category,
+        "system.group": postShiftedWeapon.system.group,
+        "system.traits": postShiftedWeapon.system.traits,
+        "system.bulk": postShiftedWeapon.system.bulk,
+        "system.usage": postShiftedWeapon.system.usage,
         "name": newName
     });
 
-    return isOriginalForm;
+    return isChangingToOriginalForm;
 }
 
 /**
