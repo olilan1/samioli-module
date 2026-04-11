@@ -1,4 +1,4 @@
-import { ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
+import { CharacterPF2e, ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
 import { sendBasicChatMessage } from "../utils.ts";
 import { ShiftingWeaponApp } from "../ui/shiftingui.ts";
 
@@ -96,7 +96,7 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
     const isTwoHanded = baseWeaponHands === 2;
 
     // Open the weapon selection window and wait for a selection
-    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded, originalBaseWeapon);
+    const selectedWeapon = await ShiftingWeaponApp.selectWeapon(isTwoHanded, originalBaseWeapon, token.actor as CharacterPF2e);
 
     // Check if the user selected something or closed the window
     if (!selectedWeapon) {

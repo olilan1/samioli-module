@@ -46,3 +46,50 @@
     cursor: pointer;
     appearance: auto;
 }
+
+.shifting-window .shifting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shifting-window .shifting-header-notes {
+    align-items: start;
+    justify-content: start;
+}
+
+.shifting-window .shifting-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.shifting-window .shifting-hide-untrained-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    color: var(--color-text-dark-primary);
+    width: 265px;
+}
+
+.shifting-window .search-container {
+    flex: 0 0 250px;
+}
+
+.shifting-window .shifting-search-input {
+    width: 100%;
+}
+
+.shifting-window th.radio-column {
+    width: 40px;
+}
+
+.shifting-window td.center-text {
+    text-align: center;
+}
+
+.shifting-window .shifting-footer {
+    margin-top: 1rem;
+    justify-content: flex-end;
+}

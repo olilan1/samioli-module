@@ -1,11 +1,13 @@
-import { WeaponPF2e } from "foundry-pf2e";
+import { CharacterPF2e, WeaponPF2e } from "foundry-pf2e";
 import { ApplicationRenderOptions } from "foundry-pf2e/foundry/client/applications/_module.mjs";
+import { getWeaponProficiencyRank } from "../utils.ts";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     private isTwoHanded: boolean;
     private originalBaseWeapon: string | null;
+    private actor: CharacterPF2e;
     private resolve?: (value: WeaponPF2e | null) => void;
 
     static override DEFAULT_OPTIONS = {
@@ -33,20 +35,21 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
     };
 
-    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
+    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, actor: CharacterPF2e, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
         super(options);
         this.isTwoHanded = isTwoHanded;
         this.originalBaseWeapon = originalBaseWeapon;
+        this.actor = actor;
 
         if (this.options.form) {
             this.options.form.handler = this.formHandler.bind(this);
         }
     }
 
-    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null): Promise<WeaponPF2e | null> {
+    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null, actor: CharacterPF2e): Promise<WeaponPF2e | null> {
 
         return new Promise((resolve) => {
-            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon);
+            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon, actor);
             app.resolve = resolve;
             app.render(true);
         });
@@ -82,11 +85,54 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 }
             });
         });
+
+        // Search and filter functionality
+        const searchInput = html.querySelector(".shifting-search-input") as HTMLInputElement;
+        const hideUntrainedCheckbox = html.querySelector(".shifting-hide-untrained") as HTMLInputElement;
+
+        const filterRows = () => {
+            const query = searchInput?.value.toLowerCase() || "";
+            const hideUntrained = hideUntrainedCheckbox?.checked ?? false;
+
+            rows.forEach(row => {
+                const matchesSearch = this.weaponMatchesSearch(row, query);
+
+                let matchesProficiency = true;
+                if (hideUntrained) {
+                    matchesProficiency = row.getAttribute("data-is-proficient") === "true";
+                }
+
+                if (matchesSearch && matchesProficiency) {
+                    (row as HTMLElement).style.display = "";
+                } else {
+                    (row as HTMLElement).style.display = "none";
+                }
+            });
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener("input", filterRows);
+        }
+        if (hideUntrainedCheckbox) {
+            hideUntrainedCheckbox.addEventListener("change", filterRows);
+        }
+
+        // Run initial filter
+        filterRows();
     }
 
-    updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
+    private updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
         allRows.forEach(r => r.classList.remove("selected"));
         selectedRow.classList.add("selected");
+    }
+
+    private weaponMatchesSearch(row: Element, query: string): boolean {
+        const nameCell = row.querySelector(".weapon-name strong");
+        const traits = Array.from(row.querySelectorAll(".tags .tag")).map(t => t.textContent?.toLowerCase() || "");
+
+        const nameMatch = nameCell?.textContent?.toLowerCase().includes(query) ?? false;
+        const traitMatch = traits.some(t => t.includes(query));
+        return nameMatch || traitMatch || query === "";
     }
 
     override async _prepareContext(options: ApplicationRenderOptions) {
@@ -112,9 +158,8 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
 
         const baseWeapons = CONFIG.PF2E.baseWeaponTypes;
 
-        // Filter and Map Data
-        const weapons = index
-            .filter((item) => {
+        // Filter the index
+        const filteredIndex = index.filter((item) => {
                 // Check if it's in the list of base weapons
                 if (!(item.system.slug in baseWeapons)) return false;
                 // Remove things like ammo by confirming it's a weapon
@@ -133,15 +178,38 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 if (isRanged) return false;
 
                 return true;
-            })
-            .map((weapon) => {
+            });
+
+        const progress = ui.notifications.info("Loading weapons...", { progress: true});
+
+        // Fetch full Document objects for the filtered items concurrently
+        const weaponDocuments: WeaponPF2e[] = [];
+        let count = 0;
+        const total = filteredIndex.length;
+
+        const promises = filteredIndex.map(async (idx) => {
+            const weapon = (await pack.getDocument(idx._id)) as WeaponPF2e;
+            count++;
+            progress.update({ 
+                pct: (count / total), 
+                message: `Loading weapons... (${count} of ${total})` 
+            });
+            return weapon;
+        });
+
+        const weaponsRaw = await Promise.all(promises);
+        
+        for (const weapon of weaponsRaw) {
+            if (weapon) weaponDocuments.push(weapon);
+        }
+
+        // Map Data
+        const weapons = weaponDocuments.map((weapon) => {
 
                 const traits = weapon.system.traits?.value || [];
                 const categoryLabel = game.i18n.localize(CONFIG.PF2E.weaponCategories[weapon.system.category as keyof typeof CONFIG.PF2E.weaponCategories]) || weapon.system.category;
                 const groupLabel = game.i18n.localize(CONFIG.PF2E.weaponGroups[weapon.system.group as keyof typeof CONFIG.PF2E.weaponGroups]) || weapon.system.group;
                 let isOriginalForm = false;
-
-                // A compendium index entry is a plain object, not a full WeaponPF2e document, so it doesn't have getFlag!
                 if (this.originalBaseWeapon && this.originalBaseWeapon === weapon.system.slug) {
                     isOriginalForm = true;
                 }
@@ -149,26 +217,32 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 return {
                     id: weapon._id,
                     name: weapon.name,
+                    slug: weapon.system.slug,
+                    rawCategory: weapon.system.category,
                     category: categoryLabel,
                     group: groupLabel,
                     traits: traits.map((trait: string) => ({
                         label: game.i18n.localize(CONFIG.PF2E.weaponTraits[trait as keyof typeof CONFIG.PF2E.weaponTraits]),
                         tooltip: game.i18n.localize(CONFIG.PF2E.traitsDescriptions[trait as keyof typeof CONFIG.PF2E.traitsDescriptions])
                     })),
-                    damage: `${weapon.system.damage.die} ${weapon.system.damage.damageType}`,
+                    dice: weapon.system.damage.die,
+                    type: weapon.system.damage.damageType,
                     hands: this.formatNumberOfHands(weapon.system.usage?.value),
                     bulk: weapon.system.bulk?.value,
-                    isOriginalForm: isOriginalForm
+                    isOriginalForm: isOriginalForm,
+                    isProficient: getWeaponProficiencyRank(this.actor, weapon) > 0
                 };
             });
 
         // Sort alphabetically
         weapons.sort((a, b) => a.name.localeCompare(b.name));
 
+        ui.notifications.remove(progress);
+
         return { ...context, weapons };
     }
 
-    formatNumberOfHands(usage: string) {
+    private formatNumberOfHands(usage: string) {
         if (!usage) return "-";
         if (usage === "held-in-one-hand") return "1H";
         if (usage === "held-in-two-hands") return "2H";
