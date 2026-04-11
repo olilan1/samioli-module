@@ -8,7 +8,7 @@ import { startTectonicStomp } from "./actions/tectonicstomp.ts";
 import { startRedistributePotential } from "./spells/redistributepotential.ts";
 import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
-import { displayShiftingWeaponDialog } from "./actions/shifting.ts";
+import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shifting.ts";
 import { deploySnare, removeSnare } from "./actions/snare.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
@@ -61,7 +61,7 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     },
     "activation-shift-weapon": {
         label: "Shift weapon!",
-        function: displayShiftingWeaponDialog
+        function: displayShiftingWeaponDialogFromActivationsModule
     }
 }
 

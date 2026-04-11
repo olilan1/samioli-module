@@ -21,7 +21,7 @@
                         <input type="radio" name="weaponId" value="{{this.id}}">
                     </td>
                     <td class="weapon-name">
-                        <strong>{{this.name}}</strong>
+                        <strong>{{this.name}}{{#if this.isOriginalForm}} (Original Form){{/if}}</strong>
                         <div class="tags paizo-style" data-tooltip-class="pf2e">
                             {{#each this.traits}}
                             <span class="tag" data-tooltip="{{this.tooltip}}">{{this.label}}</span>
