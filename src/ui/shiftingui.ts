@@ -95,14 +95,10 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             const hideUntrained = hideUntrainedCheckbox?.checked ?? false;
 
             rows.forEach(row => {
-                const nameCell = row.querySelector(".weapon-name strong");
-                const traits = Array.from(row.querySelectorAll(".tags .tag")).map(t => t.textContent?.toLowerCase() || "");
                 const category = row.getAttribute("data-category") || "";
                 const slug = row.getAttribute("data-slug") || "";
 
-                const nameMatch = nameCell?.textContent?.toLowerCase().includes(query) ?? false;
-                const traitMatch = traits.some(t => t.includes(query));
-                const matchesSearch = nameMatch || traitMatch || query === "";
+                const matchesSearch = this.weaponMatchesSearch(row, query);
 
                 let matchesProficiency = true;
                 if (hideUntrained) {
@@ -134,9 +130,18 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         filterRows();
     }
 
-    updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
+    private updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
         allRows.forEach(r => r.classList.remove("selected"));
         selectedRow.classList.add("selected");
+    }
+
+    private weaponMatchesSearch(row: Element, query: string): boolean {
+        const nameCell = row.querySelector(".weapon-name strong");
+        const traits = Array.from(row.querySelectorAll(".tags .tag")).map(t => t.textContent?.toLowerCase() || "");
+
+        const nameMatch = nameCell?.textContent?.toLowerCase().includes(query) ?? false;
+        const traitMatch = traits.some(t => t.includes(query));
+        return nameMatch || traitMatch || query === "";
     }
 
     override async _prepareContext(options: ApplicationRenderOptions) {
@@ -221,7 +226,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         return { ...context, weapons };
     }
 
-    formatNumberOfHands(usage: string) {
+    private formatNumberOfHands(usage: string) {
         if (!usage) return "-";
         if (usage === "held-in-one-hand") return "1H";
         if (usage === "held-in-two-hands") return "2H";

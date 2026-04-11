@@ -1,4 +1,4 @@
-import { ActorPF2e, ChatMessagePF2e, ItemPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
+import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, ItemPF2e, MartialProficiency, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
 import { sendBasicChatMessage } from "../utils.ts";
 import { ShiftingWeaponApp } from "../ui/shiftingui.ts";
 
@@ -203,7 +203,7 @@ function extractWeaponFromContent(content: string): WeaponPF2e | null {
 }
 
 function getActorAttackTrainedProficiencies(actor: ActorPF2e): ActorAttackTrainedProficiencies {
-    const attacks = (actor as any)?.system?.proficiencies?.attacks || {};
+    const attacks = (actor as CharacterPF2e)?.system?.proficiencies?.attacks || {};
     
     // Check if rank is 1 or more for simple and martial weapons
     const simple = (attacks.simple?.rank ?? 0) >= 1;
@@ -214,7 +214,7 @@ function getActorAttackTrainedProficiencies(actor: ActorPF2e): ActorAttackTraine
     // Check for advanced weapon proficiencies
     for (const [key, value] of Object.entries(attacks)) {
         if (key.startsWith("weapon-base-")) {
-            const rank = (value as any)?.rank ?? 0;
+            const rank = (value as MartialProficiency)?.rank ?? 0;
             if (rank >= 1) {
                 const slug = key.replace("weapon-base-", "");
                 advanced.push(slug);
