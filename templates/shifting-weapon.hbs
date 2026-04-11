@@ -30,7 +30,7 @@
             </thead>
             <tbody>
                 {{#each weapons}}
-                <tr data-category="{{this.rawCategory}}" data-slug="{{this.slug}}">
+                <tr data-is-proficient="{{this.isProficient}}">
                     <td class="center-text">
                         <input type="radio" name="weaponId" value="{{this.id}}">
                     </td>

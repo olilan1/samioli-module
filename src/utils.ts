@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -369,4 +369,23 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
     });
 
     return visibleTokens;
+}
+
+export function getWeaponProficiencyRank(actor: CharacterPF2e, weapon: WeaponPF2e): ZeroToFour {
+    // If the character has an ancestral weapon familiarity or similar feature, it will make weapons that meet
+    // certain criteria also count as weapon of different category
+    const proficiencies = actor.system.proficiencies;
+    const categoryRank = proficiencies.attacks[weapon.category]?.rank ?? 0;
+    const groupRank = proficiencies.attacks[`weapon-group-${weapon.group}`]?.rank ?? 0;
+    const rollOptions = weapon.getRollOptions("item");
+
+    // Weapons that are interchangeable for all rules purposes (e.g., longbow and composite longbow)
+    const equivalentWeapons: Record<string, string | undefined> = CONFIG.PF2E.equivalentWeapons;
+    const baseWeapon = equivalentWeapons[weapon.baseType ?? ""] ?? weapon.baseType;
+    const baseWeaponRank = proficiencies.attacks[`weapon-base-${baseWeapon}`]?.rank ?? 0;
+    const syntheticRanks = Object.values(proficiencies.attacks)
+        .filter((p): p is MartialProficiency => !!p?.definition?.test(rollOptions))
+        .map((p) => p.rank);
+
+    return Math.max(categoryRank, groupRank, baseWeaponRank, ...syntheticRanks) as ZeroToFour;
 }
