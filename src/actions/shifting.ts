@@ -88,7 +88,7 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
     // Set the original weapon flags if this is the first time shifting this weapon
     if (!originalBaseWeapon) {
         await setOriginalWeaponFlagsOnWeapon(weapon);
-        await setOriginalWeaponNameFlag(weapon);
+        originalBaseWeapon = weapon.system.baseItem;
     }
 
     // Check how many hands the item is (this determines what it can shift into)
