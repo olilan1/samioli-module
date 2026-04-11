@@ -13,13 +13,13 @@ export async function displayShiftingWeaponDialogFromActivationsModule(token: To
         return;
     }
 
-    displayShiftingWeaponDialogForWeapon(token, weapon);
+    await displayShiftingWeaponDialogForWeapon(token, weapon);
 }
 
 export async function displayShiftingWeaponDialogViaMacro(token: TokenPF2e) {
     const weapon = await getHeldShiftingWeaponFromToken(token);
     if (!weapon) return;
-    displayShiftingWeaponDialogForWeapon(token, weapon);
+    await displayShiftingWeaponDialogForWeapon(token, weapon);
 }
 
 export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<WeaponPF2e | null> {
@@ -83,12 +83,13 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
         return;
     }
 
-    // Set the original weapon flags if this is the first time shifting this weapon
-    if (!getOriginalBaseWeapon(weapon)) {
-        await setOriginalWeaponFlagsOnWeapon(weapon);
-    }
+    let originalBaseWeapon = getOriginalBaseWeapon(weapon);
 
-    const originalBaseWeapon = getOriginalBaseWeapon(weapon);
+    // Set the original weapon flags if this is the first time shifting this weapon
+    if (!originalBaseWeapon) {
+        await setOriginalWeaponFlagsOnWeapon(weapon);
+        originalBaseWeapon = weapon.system.baseItem;
+    }
 
     // Check how many hands the item is (this determines what it can shift into)
     const baseWeaponHands = weapon.getFlag("samioli-module", "originalBaseWeaponHands") as number;
@@ -108,7 +109,7 @@ async function displayShiftingWeaponDialogForWeapon(token: TokenPF2e, weapon: We
 
     let content = "";
     if (isOriginalForm){
-        content = `${token.name} shifts their ${extractOriginalNameFromShiftedSuffix(weapon.name)} into it's original form.`;
+        content = `${token.name} shifts their ${extractOriginalNameFromShiftedSuffix(weapon.name)} into its original form.`;
     } else {
         content = `${token.name} shifts their ${extractOriginalNameFromShiftedSuffix(weapon.name)} into a ${selectedWeapon.name}.`;
     }
