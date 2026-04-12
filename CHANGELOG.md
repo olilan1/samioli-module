@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Fix start of turn spells bug
+- Add macro for weapon shifting
+- Add filtering for weapon shift dialog
+- Update create sound database script
+
 ## [0.60.0] - 2026-03-30
 
 - Shifting Rune Automation
