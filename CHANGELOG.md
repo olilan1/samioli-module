@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-04-12
+
 - Fix start of turn spells bug
 - Add macro for weapon shifting
 - Add filtering for weapon shift dialog
@@ -91,7 +93,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.60.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.61.0...HEAD
+
+[0.61.0]: https://github.com/olilan1/samioli-module/compare/v0.60.0...v0.61.0
 
 [0.60.0]: https://github.com/olilan1/samioli-module/compare/v0.59.0...v0.60.0
 
