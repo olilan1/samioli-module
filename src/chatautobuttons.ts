@@ -10,6 +10,7 @@ import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shifting.ts";
 import { deploySnare, removeSnare } from "./actions/snare.ts";
+import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const CATEGORY_PREFIX = 'origin:item:category:';
@@ -36,6 +37,20 @@ const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
         label: "Start diving!",
         function: startDiveAndBreach
     },
+    "translocate": {
+        label: "Translocate!",
+        function: startTranslocate
+    },
+    "dimension-door": {
+        label: "Translocate!",
+        function: startTranslocate
+    },
+    "warp-step": {
+        label: "Warp!",
+        function: startWarpStep,
+        condition: (message: ChatMessagePF2e) =>
+            !!(message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:tag:amped"))
+    }
 };
 
 const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
@@ -121,7 +136,12 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
         if (slug === matcher && (!buttonSpec.condition || buttonSpec.condition(message))) {
-            const div = html.find(divLookup);
+            let div = html.find(divLookup);
+            if (div.length === 0) {
+                div = $(`<div class="${divLookup.replace('.', '')}"/>`);
+                const buttonsSection = html.find('.card-buttons');
+                buttonsSection.after(div);
+            }
             const button = $('<button type="button">' + buttonSpec.label + '</button>');
             button.on("click", function () {
                 buttonSpec.function(token, message);
