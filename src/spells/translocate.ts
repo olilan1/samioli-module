@@ -1,4 +1,5 @@
 import { ChatMessagePF2e, CreaturePF2e, TokenPF2e } from "foundry-pf2e";
+import { getCollidableCallbacks } from "../utils.ts";
 
 const TELEPORT_SOUND = "sound/NWN2-Sounds/sfx_Teleportation.wav";
 
@@ -119,14 +120,16 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
 
 async function selectDestination(token: TokenPF2e, maxRange: number, icon: string) {
     ui.notifications.info("Select destination for teleport.");
-    
+
     return await Sequencer.Crosshair.show({
-        location: {
-            obj: token,
-            limitMaxRange: maxRange
+            location: {
+                obj: token,
+                limitMaxRange: maxRange,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            },
+            icon: {
+                texture: icon
+            }
         },
-        icon: {
-            texture: icon
-        }
-    });
+        getCollidableCallbacks("Teleport", icon));
 }

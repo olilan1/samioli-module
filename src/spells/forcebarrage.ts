@@ -1,6 +1,5 @@
 import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getTokensAtLocation } from "../utils.ts";
-import { CrosshairUpdatable } from "../types.ts";
+import { delay, getCollidableCallbacks, getTokensAtLocation } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollSpellDamage } from "../spelldamageroll.ts";
 
@@ -113,44 +112,27 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards:
     const iconTexture = "icons/svg/explosion.svg";
     const color = "#000000ff";
     const templateData = await Sequencer.Crosshair.show({
-        distance: crosshairWidth,
-        fillColor: color,
-        label: {
-            text: labelText,
-            dy: -100
+            distance: crosshairWidth,
+            fillColor: color,
+            label: {
+                text: labelText,
+                dy: -100
+            },
+            location: {
+                obj: token,
+                limitMaxRange: 120,
+                limitMinRange: 5,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            },
+            icon: {
+                texture: iconTexture
+            }, 
+            snap: {
+                position: snapPosition
+            }
         },
-        location: {
-            obj: token,
-            limitMaxRange: 120,
-            limitMinRange: 5,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
-        },
-        icon: {
-            texture: iconTexture
-        }, 
-        snap: {
-            position: snapPosition
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": iconTexture
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        invalidPlacement: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Force Barrage", iconTexture));
+
     return templateData;
 
 }

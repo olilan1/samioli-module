@@ -3,6 +3,7 @@ import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
+import { CrosshairUpdatable } from "./types.ts";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -388,4 +389,30 @@ export function getWeaponProficiencyRank(actor: CharacterPF2e, weapon: WeaponPF2
         .map((p) => p.rank);
 
     return Math.max(categoryRank, groupRank, baseWeaponRank, ...syntheticRanks) as ZeroToFour;
+}
+
+export function getCollidableCallbacks(actionName: string, icon: string): CrosshairCallbackData {
+    return {
+        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
+            crosshair.updateCrosshair({
+                "icon.texture": "icons/svg/cancel.svg"
+            });
+        },
+        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
+            crosshair.updateCrosshair({
+                "icon.texture": icon
+            });
+        },
+        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
+            ui.notifications.warn(`${actionName} cancelled.`);
+            return false;
+        },
+        [Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT]: () => {
+            ui.notifications.warn("Invalid selection.");
+        },
+        show: undefined,
+        move: undefined,
+        mouseMove: undefined,
+        placed: undefined
+    };
 }

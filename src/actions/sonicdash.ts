@@ -1,7 +1,7 @@
 import { TokenPF2e } from "foundry-pf2e";
-import { CrosshairUpdatable } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
+import { getCollidableCallbacks } from "../utils.ts";
 
 export async function startSonicDash(token: TokenPF2e) {
 
@@ -19,55 +19,36 @@ async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
     const landSpeed = token.actor?.system.attributes.speed.total;
 
     const moveLocation = await Sequencer.Crosshair.show({
-        location: {
-            obj: token,
-            limitMaxRange: landSpeed * 2,
-            limitMinRange: 0,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
-            showRange: true,
-            lockToEdge: false,
-            lockToEdgeDirection: false,
-            displayRangePoly: false,
-            rangePolyFillAlpha: null,
-            rangePolyFillColor: null,
-            rangePolyLineAlpha: null,
-            rangePolyLineColor: null,
-            offset: {
-                x: 0,
-                y: 0
-            }, 
+            location: {
+                obj: token,
+                limitMaxRange: landSpeed * 2,
+                limitMinRange: 0,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+                showRange: true,
+                lockToEdge: false,
+                lockToEdgeDirection: false,
+                displayRangePoly: false,
+                rangePolyFillAlpha: null,
+                rangePolyFillColor: null,
+                rangePolyLineAlpha: null,
+                rangePolyLineColor: null,
+                offset: {
+                    x: 0,
+                    y: 0
+                }, 
+            },
+            icon: {
+                texture: "icons/svg/wingfoot.svg" as ImageFilePath,
+                borderVisible: false,
+            },
+            snap: {
+                position: CONST.GRID_SNAPPING_MODES.CENTER,
+                direction: 0,
+                size: CONST.GRID_SNAPPING_MODES.CENTER
+            },
+            t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE
         },
-        icon: {
-            texture: "icons/svg/wingfoot.svg" as ImageFilePath,
-            borderVisible: false,
-        },
-        snap: {
-            position: CONST.GRID_SNAPPING_MODES.CENTER,
-            direction: 0,
-            size: CONST.GRID_SNAPPING_MODES.CENTER
-        },
-        t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            });
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/wingfoot.svg"
-            });
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.info("Sonic Dash Cancelled");
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        invalidPlacement: undefined,
-        mouseMove: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Sonic Dash", "icons/svg/wingfoot.svg"));
 
     return moveLocation;
 }
