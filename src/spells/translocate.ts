@@ -9,7 +9,7 @@ export async function startTranslocate(token: TokenPF2e, message: ChatMessagePF2
     await teleport(token, maxRange, "icons/magic/symbols/ring-circle-smoke-blue.webp");
 }
 
-export async function startWarpStep(token: TokenPF2e, message: ChatMessagePF2e) {
+export async function startWarpStep(token: TokenPF2e, _message: ChatMessagePF2e) {
     const maxRange = (((token.actor) as CreaturePF2e).movement.speeds.land.value + 10) * 2;
     await teleport(token, maxRange, "systems/pf2e/icons/spells/warp-step.webp");
 }
@@ -68,7 +68,7 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
             })
             .scale(token.document.texture.scaleX)
             .waitUntilFinished(-750)
-            .animation()
+        .animation()
             .on(token)
             .opacity(0)
         .effect()
@@ -104,10 +104,10 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
             })
             .duration(1000)
             .waitUntilFinished(-250)
-            .animation()
+        .animation()
+            .on(token)
             .teleportTo(destination) // Teleport to location
             .snapToGrid()
-            .on(token)
             .opacity(1)
         .play()
 }
