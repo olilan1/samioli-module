@@ -1,5 +1,7 @@
 import { ChatMessagePF2e, CreaturePF2e, TokenPF2e } from "foundry-pf2e";
 
+const TELEPORT_SOUND = "sound/NWN2-Sounds/sfx_Teleportation.wav";
+
 export async function startTranslocate(token: TokenPF2e, message: ChatMessagePF2e) {
     const rankString = message.flags.pf2e?.origin?.rollOptions
         ?.find(opt => opt.startsWith("origin:item:rank:"))
@@ -28,6 +30,9 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
     // TODO: Make this look right for large creatures
 
     new Sequence()
+        .sound()
+            .file(TELEPORT_SOUND)
+            .volume(0.5)
         .effect()
             .file("jb2a.cast_generic.01.blue.0")
             .atLocation(token)
