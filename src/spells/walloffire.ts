@@ -1,6 +1,5 @@
 import { ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { CrosshairUpdatable } from "../types.ts";
-import { delay, deleteTemplateById, getTokenIdsFromTokens } from "../utils.ts";
+import { delay, deleteTemplateById, getCollidableCallbacks, getTokenIdsFromTokens } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
@@ -183,35 +182,16 @@ export function removeWallOfFire(template: MeasuredTemplateDocumentPF2e) {
 
 async function selectCentrePoint(token: TokenPF2e): Promise<Point | false> {
     const centrePoint = await Sequencer.Crosshair.show({
-        location: {
-            obj: token,
-            limitMaxRange: 120,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            location: {
+                obj: token,
+                limitMaxRange: 120,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            },
+            icon: {
+                texture: "icons/svg/fire.svg"
+            }
         },
-        icon: {
-            texture: "icons/svg/fire.svg"
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/fire.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.warn("Wall of fire cancelled.");
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        invalidPlacement: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
     return centrePoint;
 }
 
@@ -220,37 +200,16 @@ async function selectStartingPoint(token: TokenPF2e): Promise<Point | false> {
     ui.notifications.info("Select a starting location for the wall of fire. (Max 120ft from token)");
 
     const startingPointTemplate = await Sequencer.Crosshair.show({
-        location: {
-            obj: token,
-            limitMaxRange: 120,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            location: {
+                obj: token,
+                limitMaxRange: 120,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            },
+            icon: {
+                texture: "icons/svg/fire.svg"
+            }
         },
-        icon: {
-            texture: "icons/svg/fire.svg"
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/fire.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.warn("Wall of fire cancelled.");
-            return false;
-        },
-        [Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT]: () => {
-            ui.notifications.warn("Starting location cannot be placed there.");
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
 
     if (!startingPointTemplate) return false;
 
@@ -262,37 +221,16 @@ async function selectStartingPoint(token: TokenPF2e): Promise<Point | false> {
 async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
     ui.notifications.info("Select an end location for the wall of fire. (Max 60ft from starting point)");
     const endPointTemplate = await Sequencer.Crosshair.show({
-        location: {
-            obj: startingPoint,
-            limitMaxRange: 55, //we limit to 55 so that the total length of the wall is 60ft as it includes half a square at each end
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
-        },
-        icon: {
-            texture: "icons/svg/fire.svg"
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            });
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/fire.svg"
-            });
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.warn("Wall of fire cancelled.");
-            return false;
-        },
-        [Sequencer.Crosshair.CALLBACKS.INVALID_PLACEMENT]: () => {
-            ui.notifications.warn("Starting location cannot be placed there.");
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        placed: undefined
-    });
+            location: {
+                obj: startingPoint,
+                limitMaxRange: 55, //we limit to 55 so that the total length of the wall is 60ft as it includes half a square at each end
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            },
+            icon: {
+                texture: "icons/svg/fire.svg"
+            }
+        }, 
+        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
 
     if (!endPointTemplate) return false;
 

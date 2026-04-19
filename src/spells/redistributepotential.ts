@@ -1,8 +1,9 @@
 import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { CrosshairUpdatable, CustomTemplateData } from "../types.ts";
+import { CustomTemplateData } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getCollidableCallbacks } from "../utils.ts";
 
 type RedistributePotentialType = "steal-heat" | "concentrate-heat";
 
@@ -190,42 +191,24 @@ async function selectLocation(redistributePotentialType: RedistributePotentialTy
     }
 
     const selectedLocation = await Sequencer.Crosshair.show({
-        distance: crosshairWidth,
-        fillColor: color,
-        location: {
-            obj: locationObject,
-            limitMaxRange: maxLimit,
-            limitMinRange: minLimit,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            distance: crosshairWidth,
+            fillColor: color,
+            location: {
+                obj: locationObject,
+                limitMaxRange: maxLimit,
+                limitMinRange: minLimit,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
+            },
+            icon: {
+                texture: iconTexture
+            },
+            snap: {
+                position: snapPosition
+            }, 
+            gridHighlight: true
         },
-        icon: {
-            texture: iconTexture
-        },
-        snap: {
-            position: snapPosition
-        }, 
-        gridHighlight: true
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": iconTexture
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.warn("Redistribute potential cancelled.");
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        invalidPlacement: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Redistribute Potential", iconTexture));
+
     return selectedLocation;
 }
 

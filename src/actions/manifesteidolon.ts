@@ -1,6 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, TokenDocumentPF2e } from "foundry-pf2e";
-import { getEidolonActor, getTokensOnCurrentSceneForActor, isCharacter } from "../utils.ts";
-import { CrosshairUpdatable } from "../types.ts";
+import { getCollidableCallbacks, getEidolonActor, getTokensOnCurrentSceneForActor, isCharacter } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { DEMANIFEST_EIDOLON, getSocket, MANIFEST_EIDOLON } from "../sockets.ts";
 
@@ -124,44 +123,25 @@ async function selectEidolonManifestLocation(summonerToken: TokenDocumentPF2e, e
     const eidolonImg = eidolonActor.prototypeToken.texture.src;
     if (!eidolonImg) return false;
     const centrePoint = await Sequencer.Crosshair.show({
-        location: {
-            obj: summonerToken,
-            limitMaxRange: 5,
-            limitMinRange: 5,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            location: {
+                obj: summonerToken,
+                limitMaxRange: 5,
+                limitMinRange: 5,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            },
+            icon: {
+                texture: eidolonImg
+            },
+            direction: 0,
+            lockManualRotation: true,
+            angle: 0,
+            snap: {
+                position: CONST.GRID_SNAPPING_MODES.CENTER,
+                resolution: 1,
+                size: CONST.GRID_SNAPPING_MODES.CENTER,
+                direction: 0
+            }
         },
-        icon: {
-            texture: eidolonImg
-        },
-        direction: 0,
-        lockManualRotation: true,
-        angle: 0,
-        snap: {
-            position: CONST.GRID_SNAPPING_MODES.CENTER,
-            resolution: 1,
-            size: CONST.GRID_SNAPPING_MODES.CENTER,
-            direction: 0
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": eidolonImg
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            ui.notifications.warn("Manifest Eidolon Cancelled.");
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        invalidPlacement: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Manifest Eidolon", eidolonImg));
     return centrePoint;
 }

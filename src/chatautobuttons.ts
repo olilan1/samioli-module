@@ -10,6 +10,7 @@ import { summonGhostlyCarrier } from "./spells/ghostlycarrier.ts";
 import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shifting.ts";
 import { deploySnare, removeSnare } from "./actions/snare.ts";
+import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const CATEGORY_PREFIX = 'origin:item:category:';
@@ -36,6 +37,24 @@ const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
         label: "Start diving!",
         function: startDiveAndBreach
     },
+    "ghostly-carrier": {
+        label: "Summon a ghostly carrier!",
+        function: summonGhostlyCarrier
+    },
+    "translocate": {
+        label: "Translocate!",
+        function: startTranslocate
+    },
+    "dimension-door": {
+        label: "Translocate!",
+        function: startTranslocate
+    },
+    "warp-step": {
+        label: "Warp!",
+        function: startWarpStep,
+        condition: (message: ChatMessagePF2e) =>
+            !!(message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:tag:amped"))
+    }
 };
 
 const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
@@ -54,10 +73,6 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "tectonic-stomp": {
         label: "Start stomping!",
         function: startTectonicStomp
-    },
-    "ghostly-carrier": {
-        label: "Summon a ghostly carrier!",
-        function: summonGhostlyCarrier
     },
     "activation-shift-weapon": {
         label: "Shift weapon!",
@@ -95,6 +110,10 @@ const AUTO_SWAP_BUTTONS_CONSUMABLES: Record<string, ButtonSwapSpec> = {
     }
 };
 
+/**
+ * Checks a chat message for specific roll options (slugs or categories) 
+ * and triggers the addition or swapping of custom UI buttons on the chat card.
+ */
 export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const origin = message.flags.pf2e.origin;
     const rollOptions = origin?.rollOptions;
@@ -120,32 +139,71 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
     divLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
-        if (slug === matcher && (!buttonSpec.condition || buttonSpec.condition(message))) {
-            const div = html.find(divLookup);
-            const button = $('<button type="button">' + buttonSpec.label + '</button>');
-            button.on("click", function () {
-                buttonSpec.function(token, message);
-            });
-            div.after(button);
+        
+        if (slug !== matcher || (buttonSpec.condition && !buttonSpec.condition(message))) {
+            continue;
+        }
+
+        let targetDiv = html.find(divLookup);
+        const button = $(`<button type="button">${buttonSpec.label}</button>`);
+        button.on("click", () => buttonSpec.function(token, message));
+
+        if (targetDiv.length === 0) {
+            // Create the wrapper div and insert the new button inside it
+            targetDiv = $(`<div class="${divLookup.replace('.', '')}"/>`);
+            targetDiv.append(button);
+            html.find('.card-buttons').append(targetDiv);
+            insertButtonWhereAppropriate(html, targetDiv);
+        } else {
+            // If the target container already exists, place the new button next to it
+            targetDiv.after(button);
         }
     }
 }
 
+/**
+ * Add the button into a suitable place in the card.
+ */
+function insertButtonWhereAppropriate(html: JQuery<HTMLElement>, target: JQuery<HTMLElement>) {
+    const cardButtons = html.find('.card-buttons');
+    const footer = html.find('footer');
+    const cardContent = html.find('.card-content');
+    
+    if (cardButtons.length > 0) {
+        // If there's a card-buttons container already, add the button to that
+        cardButtons.append(target);
+    } else if (footer.length > 0) {
+        // Otherwise, add before the footer if one exists
+        footer.before(target);
+    } else if (cardContent.length > 0) {
+        // Otherwise, add after the card-content div if it exists
+        cardContent.after(target);
+    } else {
+        // Otherwsie, just add at the end
+        html.append(target);
+    }
+}
+
+/**
+ * Replaces an existing button (defined by buttonToReplace) with a custom button 
+ * mapped to the provided slug.
+ */
 function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
     divLookup: string, token: TokenPF2e,
     message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
-        if (slug === matcher && (!buttonSpec.condition || buttonSpec.condition(message))) {
-            const buttonDataAction = buttonSpec.buttonToReplace!;
-            const templateButton = html.find(buttonDataAction);
-            const parentDiv = templateButton.closest(`div${divLookup}`);
-            const button = $('<button type="button">' + buttonSpec.label + '</button>');
-            button.on("click", function () {
-                buttonSpec.function(token, message);
-            });
-            parentDiv.after(button);
-            parentDiv.remove();
+
+        if (slug !== matcher || (buttonSpec.condition && !buttonSpec.condition(message))) {
+            continue;
         }
+
+        const buttonDataAction = buttonSpec.buttonToReplace!;
+        const templateButton = html.find(buttonDataAction);
+        const parentDiv = templateButton.closest(`div${divLookup}`);
+        const button = $(`<button type="button">${buttonSpec.label}</button>`);
+        button.on("click", () => buttonSpec.function(token, message));
+        parentDiv.after(button);
+        parentDiv.remove();
     }
 }

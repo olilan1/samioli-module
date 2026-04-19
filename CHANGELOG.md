@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add animation button for translocate and amped warp step
+
 ## [0.61.0] - 2026-04-12
 
 - Fix start of turn spells bug

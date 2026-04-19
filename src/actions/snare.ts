@@ -1,10 +1,9 @@
 import { ChatMessagePF2e, ConsumablePF2e, TokenDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { CrosshairUpdatable } from "../types.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 import { replaceTargetsForUsers } from "../templatetarget.ts";
-import { getOwnersFromActor, getTokensAtLocation } from "../utils.ts";
+import { getCollidableCallbacks, getOwnersFromActor, getTokensAtLocation } from "../utils.ts";
 
 export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessagePF2e) {
    
@@ -159,45 +158,27 @@ async function selectSquare(token: TokenPF2e) {
     const iconTexture = "icons/svg/trap.svg";
     const color = "#000000ff";
     const selectedLocation = await Sequencer.Crosshair.show({
-        t: CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE,
-        distance: crosshairWidth,
-        fillColor: color,
-        label: {
-            text: labelText,
-            dy: -150
+            t: CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE,
+            distance: crosshairWidth,
+            fillColor: color,
+            label: {
+                text: labelText,
+                dy: -150
+            },
+            location: {
+                obj: token,
+                limitMaxRange: 5,
+                limitMinRange: 5,
+                wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
+            },
+            icon: {
+                texture: iconTexture
+            }, 
+            snap: {
+                position: snapPosition
+            }
         },
-        location: {
-            obj: token,
-            limitMaxRange: 5,
-            limitMinRange: 5,
-            wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES
-        },
-        icon: {
-            texture: iconTexture
-        }, 
-        snap: {
-            position: snapPosition
-        }
-    }, {
-        [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": iconTexture
-            })
-        },
-        [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
-            return false;
-        },
-        show: undefined,
-        move: undefined,
-        mouseMove: undefined,
-        invalidPlacement: undefined,
-        placed: undefined
-    });
+        getCollidableCallbacks("Snare placement", iconTexture));
 
     selectedLocation.x -= canvas.grid.size / 2;
     selectedLocation.y -= canvas.grid.size / 2;
