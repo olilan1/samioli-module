@@ -89,7 +89,7 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
             .fadeIn(200)
             .fadeOut(500)
             .belowTokens()
-        .effect() //location.rotationFromOrigin
+        .effect()
             .copySprite(token)
             .scale(token.document.texture.scaleX)
             .atLocation(destination)
@@ -118,6 +118,8 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
 }
 
 async function selectDestination(token: TokenPF2e, maxRange: number, icon: string) {
+    ui.notifications.info("Select destination for teleport.");
+    
     return await Sequencer.Crosshair.show({
         location: {
             obj: token,
