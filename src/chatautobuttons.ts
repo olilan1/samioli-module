@@ -124,9 +124,12 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
 
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
     if (slug) {
-        addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.spell-button', token, message, html);
+        console.log(message);
+        if (message.flags.pf2e.casting) {
+            addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.card-buttons', token, message, html);
+            swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
+        }
         addMatchingButtons(slug, AUTO_BUTTONS_ACTIONS, '.card-content', token, message, html);
-        swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
     }
 
     const category = rollOptions.find(item => item.startsWith(CATEGORY_PREFIX))?.slice(CATEGORY_PREFIX.length);
@@ -136,7 +139,7 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
 }
 
 function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
-    divLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    containerLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
         
@@ -144,43 +147,14 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
             continue;
         }
 
-        let targetDiv = html.find(divLookup);
         const button = $(`<button type="button">${buttonSpec.label}</button>`);
         button.on("click", () => buttonSpec.function(token, message));
 
-        if (targetDiv.length === 0) {
-            // Create the wrapper div and insert the new button inside it
-            targetDiv = $(`<div class="${divLookup.replace('.', '')}"/>`);
-            targetDiv.append(button);
-            html.find('.card-buttons').append(targetDiv);
-            insertButtonWhereAppropriate(html, targetDiv);
-        } else {
-            // If the target container already exists, place the new button next to it
-            targetDiv.after(button);
+        // If the target container exists, place the new button at the end of it
+        const targetContainer = html.find(containerLookup);
+        if (targetContainer.length > 0) {
+            targetContainer.after(button);
         }
-    }
-}
-
-/**
- * Add the button into a suitable place in the card.
- */
-function insertButtonWhereAppropriate(html: JQuery<HTMLElement>, target: JQuery<HTMLElement>) {
-    const cardButtons = html.find('.card-buttons');
-    const footer = html.find('footer');
-    const cardContent = html.find('.card-content');
-    
-    if (cardButtons.length > 0) {
-        // If there's a card-buttons container already, add the button to that
-        cardButtons.append(target);
-    } else if (footer.length > 0) {
-        // Otherwise, add before the footer if one exists
-        footer.before(target);
-    } else if (cardContent.length > 0) {
-        // Otherwise, add after the card-content div if it exists
-        cardContent.after(target);
-    } else {
-        // Otherwsie, just add at the end
-        html.append(target);
     }
 }
 
