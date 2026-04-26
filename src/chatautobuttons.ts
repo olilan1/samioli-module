@@ -124,7 +124,6 @@ export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTM
 
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
     if (slug) {
-        console.log(message);
         if (message.flags.pf2e.casting) {
             addMatchingButtons(slug, AUTO_BUTTONS_SPELLS, '.card-buttons', token, message, html);
             swapButtons(slug, AUTO_SWAP_BUTTONS_SPELLS, '.spell-button', token, message, html);
