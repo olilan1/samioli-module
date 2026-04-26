@@ -53,9 +53,9 @@ export async function startDiveAndBreach(token: TokenPF2e) {
     replaceTargets(targetIds);
 }
 
-async function selectLocation(origin: Point | TokenPF2e, range: number): Promise<Point | false> {
+async function selectLocation(origin: Point | TokenPF2e, range: number) {
     const icon = "icons/svg/target.svg";
-    const selectedLocation = await Sequencer.Crosshair.show({
+    return await Sequencer.Crosshair.show({
             fillColor: "#80b3ce",
             location: {
                 obj: origin,
@@ -67,9 +67,6 @@ async function selectLocation(origin: Point | TokenPF2e, range: number): Promise
             }
         },
         getCollidableCallbacks("Dive and Breach", icon));
-
-    if (!selectedLocation) return false;
-    return { x: selectedLocation.x, y: selectedLocation.y };
 }
 
 function getSequencerLocation(location: Point): Point {
@@ -148,10 +145,12 @@ async function doAnimation(token: TokenPF2e, firstLocation: Point, secondLocatio
         //initial leap
         .animation()
             .on(token)
-            .rotateIn(rotation, 500, { delay: 250 })
-            .moveTowards(firstLocationSequencer, { ease: "easeInBack" })
-            .duration(1000)
-            .waitUntilFinished(0)
+            .rotateIn(rotation, 500, { delay: 25 })
+            .moveTowards(firstLocationSequencer)
+            .moveSpeed(6)
+            .waitUntilFinished()
+        // Above animation doesn't seem to appear without this wait
+        .wait(500)
         //hide token on landing
         .animation()
             .on(token)
@@ -186,10 +185,13 @@ async function doAnimation(token: TokenPF2e, firstLocation: Point, secondLocatio
             .rotate(0)
             .teleportTo(secondLocationSequencer)
             .opacity(1)
+            .waitUntilFinished()
+        // Below animation doesn't seem to appear without this wait
+        .wait(500)
         //final leap to last location
         .animation()
             .on(token)
-            .duration(500)
-            .moveTowards(thirdLocationSequencer, { ease: "easeOutExpo" })
+            .moveTowards(thirdLocationSequencer)
+            .moveSpeed(6)
         .play();
 }
