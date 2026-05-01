@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Add animation button for translocate and amped warp step
+- Shifting weapon improvements
 
 ## [0.61.0] - 2026-04-12
 
