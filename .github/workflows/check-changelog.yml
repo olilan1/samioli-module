@@ -1,4 +1,4 @@
-name: "Changelog Guard"
+name: "Changelog Update Check"
 
 on:
   pull_request:
