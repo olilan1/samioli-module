@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Add animation button for translocate and amped warp step
+- Automation for Mood Cloud emote action
 
 ## [0.61.0] - 2026-04-12
 
