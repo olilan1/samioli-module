@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Add animation button for translocate and amped warp step
+- Update conservation of energy with remastered spell list
 
 ## [0.61.0] - 2026-04-12
 
