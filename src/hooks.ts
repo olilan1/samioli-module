@@ -22,6 +22,7 @@ import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
+import { addDancingBladeDamageButtons, startDancingBlade } from "./spells/dancingblade.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
 import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
@@ -47,6 +48,8 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
         .run();
     hook(replaceUnstableCheckWithStrainCheck, message, html)
         .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+        .run();
+    hook(addDancingBladeDamageButtons, message, html)
         .run();
 });
 

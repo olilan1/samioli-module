@@ -11,6 +11,7 @@ import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shifting.ts";
 import { deploySnare, removeSnare } from "./actions/snare.ts";
 import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
+import { startDancingBlade } from "./spells/dancingblade.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const CATEGORY_PREFIX = 'origin:item:category:';
@@ -54,6 +55,10 @@ const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
         function: startWarpStep,
         condition: (message: ChatMessagePF2e) =>
             !!(message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:tag:amped"))
+    },
+    "dancing-blade": {
+        label: "Dance!",
+        function: startDancingBlade
     }
 };
 

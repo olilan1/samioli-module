@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour } from "foundry-pf2e";
+import type { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";

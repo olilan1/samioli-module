@@ -114,6 +114,8 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
     const template = getTemplateFromEffect(effect);
     if (template) {
         runMatchingSustainFunction(template);
+    } else {
+        runMatchingSustainFunction(effect);
     }
 }
 
@@ -194,10 +196,21 @@ export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
     const templateId = item.getFlag("samioli-module", "sustainedTemplateId"); 
-    if (typeof templateId !== "string" || !templateId) {
-        return;
+    if (typeof templateId === "string" && templateId) {
+        await deleteTemplateById(templateId);
     }
 
-    await deleteTemplateById(templateId);
-
+    if (item.slug === "sustaining-effect-dancing-blade") {
+        const targetUuid = item.getFlag("samioli-module", "targetUuid") as string;
+        if (targetUuid) {
+            const targetDoc = fromUuidSync(targetUuid);
+            const targetActor = (targetDoc instanceof foundry.documents.BaseToken 
+                ? targetDoc.actor : null) as ActorPF2e | null;
+            
+            if (targetActor) {
+                const effect = targetActor.itemTypes.effect.find(e => e.slug === "target-dancing-blade");
+                await effect?.delete();
+            }
+        }
+    }
 }
