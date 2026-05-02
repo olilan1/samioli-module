@@ -12,7 +12,7 @@ import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, chec
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
-import { postMessagesForWithinEffects, deleteWithinEffectsForTemplate, addEffectsToTokensInStartOfTurnTemplates, addOrRemoveWithinEffectIfNeeded } from "./startofturnspells.ts";
+import { postMessagesForWithinEffects, deleteWithinEffectsForTemplate, addEffectsToTokensInStartOfTurnTemplates, evaluateAreaEffectsOnTokenUpdate } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
 import { getHtmlElement, MODULE_ID } from "./utils.ts";
@@ -153,11 +153,14 @@ Hooks.on('preDeleteToken', async (token: TokenDocumentPF2e, _action, _id) => {
         .run();
 });
 
-Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
-    hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
+Hooks.on('updateToken', (tokenDoc: TokenDocumentPF2e, changedData: DeepPartial<foundry.documents.TokenSource>, context, _userId) => {
+    hook(evaluateAreaEffectsOnTokenUpdate, tokenDoc, changedData, context)
         .ifGM()
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .run();
+});
+
+Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
         .ifGM()
         .run();
