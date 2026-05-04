@@ -5,9 +5,15 @@ import type {
     TokenPF2e, 
     WeaponPF2e, 
     EffectSource,
-    TokenDocumentPF2e,
+    SpellPF2e,
 } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, getCollidableCallbacks, getTokensAtLocation } from "../utils.ts";
+import { 
+    addOrUpdateEffectOnActor, 
+    getCollidableCallbacks, 
+    getTokensAtLocation, 
+    MODULE_ID 
+} from "../utils.ts";
+import { sendDamageRollToChat, DAMAGE_TAG_CONFIG } from "../damagehelper.ts";
 import type { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import type { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
@@ -19,24 +25,35 @@ const SHORTHAND_DAMAGE_TYPES: Record<string, string> = {
     "s": "slashing"
 };
 
+/**
+ * Tracking data stored on the sustain effect for Dancing Blade.
+ */
+interface DancingBladeFlags {
+    dancingWeaponId: string;
+    castRank: number;
+    isAmped: boolean;
+    targetUuid: string;
+    skipSustainChat: boolean;
+}
+
 // --- Entry Points ---
 
 /**
  * Handles the initial casting of the Dancing Blade spell.
+ * Orchestrates weapon selection, targeting, and initial action resolution.
+ * @param token The caster's token.
+ * @param message The chat message from the spell cast.
  */
 export async function startDancingBlade(token: TokenPF2e, message: ChatMessagePF2e) {
     const actor = token.actor;
     if (!actor) return;
 
+    // 1. Weapon Selection
     const weapons = actor.itemTypes.weapon;
     if (weapons.length === 0) {
         ui.notifications.warn("You have no weapons to use with Dancing Blade.");
         return;
     }
-
-    const castRank = message.flags.pf2e.origin?.castRank ?? 5;
-    const rollOptions = message.flags?.pf2e?.origin?.rollOptions;
-    const isAmped = !!(rollOptions?.includes("origin:item:tag:amped"));
 
     const weaponId = await promptForWeapon(weapons);
     if (!weaponId) return;
@@ -44,100 +61,193 @@ export async function startDancingBlade(token: TokenPF2e, message: ChatMessagePF
     const weapon = actor.items.get(weaponId) as WeaponPF2e;
     if (!weapon) return;
 
-    const spell = actor.itemTypes.spell.find(s => s.slug === "dancing-blade");
-    const rangeValue = spell?.system.range.value ?? "30";
-    const range = parseInt(rangeValue.replace(/[^0-9]/g, "")) || 30;
+    // 2. Metadata Assessment
+    const castRank = message.flags.pf2e.origin?.castRank ?? 5;
+    const rollOptions = message.flags?.pf2e?.origin?.rollOptions;
+    const isAmped = !!(rollOptions?.includes("origin:item:tag:amped"));
 
+    // 3. Targeting
+    const range = getDancingBladeRange(actor);
     const target = await promptForTarget(token, range);
     if (!target) return;
 
-    // Apply partner effect and start persistent animation BEFORE the strike
-    const targetEffect = await applyTargetEffect(target, token, weapon.img);
-    if (targetEffect) {
-        startDancingBladePersistentAnimation(target, targetEffect);
-    }
+    // 4. Setup Partnership
+    const targetEffect = await partnerWithTarget(target, token, weapon);
+    if (!targetEffect) return;
 
-    await resolveDancingBladeStrike(token, target, weapon, castRank, isAmped);
+    // 5. Initial Action
+    await handleBladeAction(token, target, weapon, {
+        castRank,
+        isAmped,
+        isInitialCast: true
+    });
 
+    // 6. Setup Sustain Tracking
     const sustainEffect = actor.itemTypes.effect.find(
         e => e.slug === "sustaining-effect-dancing-blade"
     );
     if (sustainEffect) {
-        await sustainEffect.update({
-            "flags.samioli-module": {
-                dancingWeaponId: weapon.id,
-                castRank,
-                isAmped,
-                targetUuid: target.document.uuid
-            }
-        });
+        const flags: DancingBladeFlags = {
+            dancingWeaponId: weapon.id,
+            castRank,
+            isAmped,
+            targetUuid: target.document.uuid,
+            skipSustainChat: true
+        };
+        await sustainEffect.update({ [`flags.${MODULE_ID}`]: flags });
     }
 }
 
 /**
  * Handles the sustain action for Dancing Blade.
+ * Provides the interactive menu for Strike, Guard, Push, or Change Partner.
+ * @param effect The sustain effect being processed.
  */
 export async function sustainDancingBlade(effect: EffectPF2e) {
     const actor = effect.actor;
-    if (!actor) return;
+    if (!actor || !actor.getActiveTokens()[0]) return;
 
-    const token = actor.getActiveTokens()[0];
-    if (!token) return;
+    const token = actor.getActiveTokens()[0]!;
+    const flags = getDancingBladeFlags(effect);
 
-    const weaponId = effect.getFlag("samioli-module", "dancingWeaponId") as string;
-    const castRank = effect.getFlag("samioli-module", "castRank") as number;
-    const isAmped = effect.getFlag("samioli-module", "isAmped") as boolean;
-    const targetUuid = effect.getFlag("samioli-module", "targetUuid") as string;
+    if (!flags?.dancingWeaponId) {
+        ui.notifications.error("Could not find Dancing Blade tracking data on the effect.");
+        return;
+    }
 
-    const weapon = actor.items.get(weaponId) as WeaponPF2e;
+    const { dancingWeaponId, castRank, isAmped, targetUuid } = flags;
+    const weapon = actor.items.get(dancingWeaponId) as WeaponPF2e;
     if (!weapon) {
         ui.notifications.warn("The original dancing weapon was not found.");
         return;
     }
 
-    const choice = await promptForSustainAction(weapon.name);
+    const choice = await promptForBladeAction(weapon.name, isAmped, false);
     if (!choice) return;
 
-    if (choice === "strike") {
-        const targetDoc = fromUuidSync(targetUuid);
-        const targetToken = (targetDoc instanceof foundry.documents.BaseToken 
-            ? (targetDoc as TokenDocumentPF2e).object : null) as TokenPF2e | null;
+    const currentTargetToken = getTokenFromUuid(targetUuid);
 
-        if (!targetToken) {
-            ui.notifications.warn("The target is no longer on the board.");
-            return;
-        }
-        await resolveDancingBladeStrike(token, targetToken, weapon, castRank, isAmped);
-    } else if (choice === "partner") {
-        const spell = actor.itemTypes.spell.find(s => s.slug === "dancing-blade");
-        const rangeValue = spell?.system.range.value ?? "30";
-        const range = parseInt(rangeValue.replace(/[^0-9]/g, "")) || 30;
-
+    if (choice === "partner") {
+        const range = getDancingBladeRange(actor);
         const newTarget = await promptForTarget(token, range);
         if (!newTarget) return;
 
-        const oldTargetDoc = fromUuidSync(targetUuid);
-        const oldTargetActor = (oldTargetDoc instanceof foundry.documents.BaseToken 
-            ? (oldTargetDoc as TokenDocumentPF2e).actor : null) as ActorPF2e | null;
-
-        if (oldTargetActor && oldTargetDoc?.uuid !== newTarget.document.uuid) {
-            const oldEffect = oldTargetActor.itemTypes.effect.find(
-                e => e.slug === "target-dancing-blade"
-            );
-            await oldEffect?.delete();
+        // Cleanup old target
+        if (currentTargetToken && currentTargetToken.uuid !== newTarget.document.uuid) {
+            await cleanupTargetEffects(currentTargetToken);
         }
 
-        const targetEffect = await applyTargetEffect(newTarget, token, weapon.img);
+        const targetEffect = await partnerWithTarget(newTarget, token, weapon);
         if (targetEffect) {
-            startDancingBladePersistentAnimation(newTarget, targetEffect);
+            await effect.setFlag(MODULE_ID, "targetUuid", newTarget.document.uuid);
+            await ChatMessage.create({
+                content: `<strong>Dancing Blade</strong> is now partnering with ${newTarget.name}.`,
+                speaker: ChatMessage.getSpeaker({ token: token.document })
+            });
         }
-
-        await effect.setFlag("samioli-module", "targetUuid", newTarget.document.uuid);
-        ui.notifications.info(`Dancing Blade is now partnering with ${newTarget.name}.`);
+    } else {
+        if (!currentTargetToken) {
+            ui.notifications.warn("The target is no longer on the board.");
+            return;
+        }
+        await handleBladeAction(token, currentTargetToken, weapon, {
+            castRank,
+            isAmped,
+            isInitialCast: false,
+            choice
+        });
     }
 }
 
-// --- Strike Logic ---
+// --- Logic Helpers ---
+
+/**
+ * Safely retrieves and types the Dancing Blade flags from an effect.
+ */
+function getDancingBladeFlags(effect: EffectPF2e): DancingBladeFlags | null {
+    const flags = effect.getFlag(MODULE_ID, "all");
+    if (!flags || typeof flags !== "object") return null;
+    return flags as unknown as DancingBladeFlags;
+}
+
+/**
+ * Centralizes the resolution of a blade action (Strike, Guard, Push).
+ */
+async function handleBladeAction(
+    caster: TokenPF2e, 
+    target: TokenPF2e, 
+    weapon: WeaponPF2e,
+    context: { castRank: number, isAmped: boolean, isInitialCast: boolean, choice?: string }
+) {
+    const { castRank, isAmped, isInitialCast } = context;
+    let choice = context.choice;
+
+    if (!choice) {
+        choice = await promptForBladeAction(weapon.name, isAmped, isInitialCast);
+    }
+    if (!choice) return;
+
+    switch (choice) {
+        case "strike":
+            await resolveDancingBladeStrike(caster, target, weapon, castRank, isAmped);
+            break;
+        case "guard":
+            await applyDancingBladeGuard(caster, target, weapon);
+            break;
+        case "push": {
+            const spell = getDancingBladeSpell(caster.actor!);
+            if (spell) await resolveDancingBladePush(caster, target, weapon, spell);
+            break;
+        }
+    }
+}
+
+/**
+ * Sets up a new partner for the Dancing Blade, including visuals and tracking effects.
+ */
+async function partnerWithTarget(
+    target: TokenPF2e, 
+    caster: TokenPF2e, 
+    weapon: WeaponPF2e
+): Promise<EffectPF2e | undefined> {
+    const targetEffect = await applyTargetEffect(target, caster, weapon.img);
+    if (targetEffect) {
+        startDancingBladePersistentAnimation(target, targetEffect, weapon);
+    }
+    return targetEffect;
+}
+
+/**
+ * Removes Dancing Blade related effects from a token.
+ */
+async function cleanupTargetEffects(target: TokenPF2e) {
+    const targetActor = target.actor;
+    if (!targetActor) return;
+
+    const oldEffects = targetActor.itemTypes.effect.filter(
+        e => ["target-dancing-blade", "dancing-blade-guard"].includes(e.slug!)
+    );
+    for (const e of oldEffects) await e.delete();
+}
+
+/**
+ * Generic cleanup function for Dancing Blade sustain effect deletion.
+ * Registered in SUSTAIN_DELETION_MAPPINGS.
+ */
+export async function cleanupDancingBlade(effect: EffectPF2e) {
+    const targetUuid = effect.getFlag(MODULE_ID, "targetUuid") as string | undefined;
+    if (!targetUuid) return;
+
+    const targetDoc = fromUuidSync(targetUuid);
+    const targetToken = targetDoc instanceof foundry.documents.BaseToken 
+        ? targetDoc.object as TokenPF2e : null;
+    
+    if (targetToken) {
+        await cleanupTargetEffects(targetToken);
+    }
+}
+
+// --- Strike and Action Resolution ---
 
 /**
  * Resolves a strike for Dancing Blade, including attack roll and message prep.
@@ -160,86 +270,170 @@ export async function resolveDancingBladeStrike(
     }
     if (!selectedDamageType) return;
 
-    const spell = actor.itemTypes.spell.find(s => s.slug === "dancing-blade");
+    const spell = getDancingBladeSpell(actor);
     const statistic = spell?.spellcasting?.statistic;
     if (!statistic) {
         ui.notifications.error("Could not find spellcasting statistic for Dancing Blade.");
         return;
     }
 
-    // Trigger strike animation (handles hiding persistent anim)
-    await playDancingBladeStrikeAnimation(caster, target);
+    await playDancingBladeStrikeAnimation(target);
+
+    const materialType = weapon.system.material?.type;
+    const strikeTraits = ["attack"];
+    if (materialType) strikeTraits.push(materialType);
+
+    const weaponOptions = weapon.getRollOptions("item");
+    const extraRollOptions = Array.from(new Set([
+        ...weaponOptions,
+        `${MODULE_ID}:dancing-blade-attack`,
+        `${MODULE_ID}:cast-rank:${castRank}`,
+        `${MODULE_ID}:is-amped:${isAmped}`,
+        `${MODULE_ID}:damage-type:${selectedDamageType}`,
+        `${MODULE_ID}:weapon-id:${weapon.id}`,
+        `${MODULE_ID}:weapon-name:${weapon.name}`,
+        "melee",
+        "melee-attack-roll"
+    ]));
+    if (materialType) extraRollOptions.push(`item:material:${materialType}`);
 
     await statistic.roll({
         target: target.actor ?? null,
-        title: `Dancing Blade Attack - ${weapon.name}`,
+        title: `Dancing Blade Strike: ${weapon.name}`,
         item: spell ?? null,
+        domains: ["melee-attack-roll"],
+        traits: strikeTraits,
+        extraRollOptions
+    });
+}
+
+/**
+ * Applies the Guard amped effect to a target.
+ */
+export async function applyDancingBladeGuard(
+    caster: TokenPF2e, 
+    target: TokenPF2e, 
+    weapon: WeaponPF2e
+) {
+    const guardEffectSource = createGuardEffect(caster, weapon.img);
+    await addOrUpdateEffectOnActor(target.actor!, guardEffectSource);
+    await ChatMessage.create({
+        content: `<strong>Dancing Blade</strong> is now guarding ${target.name}.`,
+        speaker: ChatMessage.getSpeaker({ token: caster.document })
+    });
+}
+
+/**
+ * Resolves a Push amped action for Dancing Blade.
+ */
+export async function resolveDancingBladePush(
+    caster: TokenPF2e, 
+    target: TokenPF2e, 
+    weapon: WeaponPF2e, 
+    spell: SpellPF2e
+) {
+    const statistic = spell.spellcasting?.statistic;
+    if (!statistic) {
+        ui.notifications.error("Could not find spellcasting statistic for Dancing Blade.");
+        return;
+    }
+
+    const fortitudeDc = target.actor?.saves?.fortitude?.dc?.value;
+    if (fortitudeDc === undefined) {
+        ui.notifications.error("Could not find Fortitude DC for the target.");
+        return;
+    }
+
+    await statistic.roll({
+        target: target.actor ?? null,
+        dc: { value: fortitudeDc },
+        title: `Dancing Blade Push - ${weapon.name}`,
+        item: spell,
+        traits: ["attack"],
         extraRollOptions: [
-            "samioli-module:dancing-blade-attack",
-            `samioli-module:cast-rank:${castRank}`,
-            `samioli-module:is-amped:${isAmped}`,
-            `samioli-module:damage-type:${selectedDamageType}`,
-            `samioli-module:weapon-id:${weapon.id}`,
-            `samioli-module:weapon-name:${weapon.name}`
+            `${MODULE_ID}:dancing-blade-push`,
+            "action:push"
         ]
     });
 }
 
 /**
- * Rolls damage for Dancing Blade when triggered by the chat card buttons.
+ * Rolls damage for Dancing Blade when triggered by chat card buttons.
  */
 export async function rollDancingBladeDamage(message: ChatMessagePF2e, isCritical: boolean) {
     const rollOptions = message.flags.pf2e.context?.options ?? [];
     const getOption = (p: string) => rollOptions.find(o => o.startsWith(p))?.split(":")[2];
 
-    const castRankStr = getOption("samioli-module:cast-rank:");
-    const isAmpedStr = getOption("samioli-module:is-amped:");
-    const dmgType = getOption("samioli-module:damage-type:");
-    const weaponName = getOption("samioli-module:weapon-name:");
+    const castRankStr = getOption(`${MODULE_ID}:cast-rank:`);
+    const isAmpedStr = getOption(`${MODULE_ID}:is-amped:`);
+    const dmgType = getOption(`${MODULE_ID}:damage-type:`);
+    const weaponId = getOption(`${MODULE_ID}:weapon-id:`);
+    const weaponName = getOption(`${MODULE_ID}:weapon-name:`);
     
     const context = message.flags.pf2e.context;
     const targetUuid = (context && "target" in context) ? context.target?.token : null;
 
-    if (!castRankStr || !dmgType || !targetUuid) {
-        ui.notifications.error("Could not find Dancing Blade attack or target data.");
+    if (!castRankStr || !dmgType || !targetUuid || !weaponId) {
+        ui.notifications.error("Could find Dancing Blade attack or target data.");
         return;
     }
+
+    const weapon = message.actor?.items.get(weaponId) as WeaponPF2e | undefined;
+    const materialType = weapon?.system.material?.type || undefined;
+    const weaponOptions = weapon?.getRollOptions("item") ?? [];
 
     const castRank = parseInt(castRankStr);
     const isAmped = isAmpedStr === "true";
     const numDice = 3 + Math.floor((castRank - 5) / 2);
     const dieSize = isAmped ? "d10" : "d6";
     const formula = isCritical ? `(${numDice}${dieSize} * 2)` : `${numDice}${dieSize}`;
-    const damageRollFormula = `${formula}[${dmgType}]`;
+    
+    const damageTypes = [dmgType];
+    if (materialType) damageTypes.push(materialType);
+    const damageRollFormula = `{${formula}[${damageTypes}]}`;
     
     const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll") as typeof Roll;
     const damageRoll = await new DamageRoll(damageRollFormula).evaluate();
     
-    await damageRoll.toMessage({
-        speaker: ChatMessage.getSpeaker({ token: message.token }),
-        flavor: `<h4>Dancing Blade ${isCritical ? "Critical " : ""}Damage (${weaponName})</h4>`,
-        flags: {
-            pf2e: {
-                context: {
-                    type: "damage-roll",
-                    sourceType: "spell",
-                    target: (context && "target" in context) ? context.target : null,
-                    options: []
-                }
-            },
-            "pf2e-toolbelt": { targetHelper: { targets: [targetUuid] } }
+    const damageOptions = Array.from(new Set([
+        ...rollOptions, 
+        ...weaponOptions, 
+        "melee", 
+        "melee-attack-roll"
+    ]));
+    if (materialType) damageOptions.push(`item:material:${materialType}`);
+
+    const traitsToInclude: string[] = [];
+    if (weapon) {
+        for (const [key, config] of Object.entries(DAMAGE_TAG_CONFIG)) {
+            if (config.group !== 'trait') continue;
+            if (weaponOptions.includes(config.value) && config.hasTag) {
+                traitsToInclude.push(key);
+            }
         }
+    }
+
+    await sendDamageRollToChat({
+        roll: damageRoll,
+        title: `Dancing Blade:`,
+        subtitle: `${weaponName}`,
+        damageType: dmgType,
+        targetUuid,
+        traits: traitsToInclude,
+        material: materialType,
+        speaker: ChatMessage.getSpeaker({ token: message.token }),
+        rollOptions: damageOptions
     });
 }
 
 /**
- * Adds Damage and Critical buttons to the attack roll card.
+ * Injects Damage and Critical buttons into the attack roll card footer.
  */
 export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
     const context = message.flags.pf2e.context;
     if (context?.type !== "attack-roll") return;
     
-    const isDancingBlade = context.options?.includes("samioli-module:dancing-blade-attack");
+    const isDancingBlade = context.options?.includes(`${MODULE_ID}:dancing-blade-attack`);
     if (!isDancingBlade) return;
 
     const damageButton = $('<button type="button" data-action="damage">Damage</button>');
@@ -254,7 +448,9 @@ export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQu
         rollDancingBladeDamage(message, true); 
     });
 
-    const buttonContainer = $('<div class="card-buttons flexrow" style="gap: 5px; margin-top: 4px;" />');
+    const buttonContainer = $(`
+        <div class="card-buttons flexrow" style="gap: 5px; margin-top: 4px;" />
+    `);
     buttonContainer.append(damageButton, criticalButton);
 
     const footer = html.find("footer");
@@ -267,8 +463,58 @@ export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQu
 
 // --- Data Helpers ---
 
+function getDancingBladeSpell(actor: ActorPF2e): SpellPF2e | undefined {
+    return actor.itemTypes.spell.find(s => s.slug === "dancing-blade");
+}
+
+function getDancingBladeRange(actor: ActorPF2e): number {
+    const spell = getDancingBladeSpell(actor);
+    const rangeValue = spell?.system.range.value ?? "30";
+    return parseInt(rangeValue.replace(/[^0-9]/g, "")) || 30;
+}
+
+function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
+    if (!uuid) return null;
+    const doc = fromUuidSync(uuid);
+    if (doc instanceof foundry.documents.BaseToken) {
+        return doc.object as TokenPF2e;
+    }
+    return null;
+}
+
+function createGuardEffect(caster: TokenPF2e, icon: string): EffectSource {
+    const spell = caster.actor ? getDancingBladeSpell(caster.actor) : undefined;
+    return {
+        type: "effect",
+        name: "Dancing Blade Guard",
+        img: icon as ImageFilePath,
+        system: {
+            slug: "dancing-blade-guard",
+            tokenIcon: { show: true },
+            duration: { value: 1, unit: "rounds", expiry: "turn-start" },
+            context: {
+                origin: {
+                    actor: caster.actor?.uuid,
+                    item: spell?.uuid,
+                    token: caster.document.uuid
+                }
+            },
+            rules: [
+                {
+                    key: "FlatModifier",
+                    selector: "ac",
+                    value: 2,
+                    type: "circumstance",
+                    predicate: ["melee"]
+                }
+            ]
+        }
+    } as DeepPartial<EffectSource> as EffectSource;
+}
+
 /**
- * Dynamically retrieves all available damage types for the weapon by parsing its strike formula.
+ * Dynamically retrieves available damage types for the weapon.
+ * Scans base damage, versatile traits, and character strike formulas.
  */
 async function getWeaponDamageTypes(weapon: WeaponPF2e): Promise<string[]> {
     const types = new Set<string>();
@@ -311,7 +557,7 @@ async function getWeaponDamageTypes(weapon: WeaponPF2e): Promise<string[]> {
 }
 
 /**
- * Applies or updates the tracking effect on the spell's current partner.
+ * Applies the partner tracking effect to the spell's current target.
  */
 async function applyTargetEffect(
     target: TokenPF2e, 
@@ -331,7 +577,7 @@ async function applyTargetEffect(
             tokenIcon: { show: true },
             duration: { value: 0, unit: "unlimited", expiry: null }
         },
-        flags: { "samioli-module": { casterUuid: caster.document.uuid } }
+        flags: { [MODULE_ID]: { casterUuid: caster.document.uuid } }
     } as DeepPartial<EffectSource> as EffectSource;
 
     const result = await addOrUpdateEffectOnActor(targetActor, effectSource);
@@ -340,22 +586,67 @@ async function applyTargetEffect(
 
 // --- Animation Helpers ---
 
-const PERSISTENT_ANIM = "jb2a.spiritual_weapon.sword.spectral.blue";
 const STRIKE_ANIM = "jb2a.impact.003.blue";
+
+/**
+ * Returns the most appropriate spiritual weapon animation for the given weapon.
+ * Supports 1H/2H variants and specific overrides like Javelins or Picks.
+ */
+function getPersistentAnimation(weapon: WeaponPF2e): string {
+    const slug = weapon.slug ?? weapon.name.slugify();
+    const group = weapon.group;
+    const isTwoHanded = weapon.system.usage.value === "held-in-two-hands";
+
+    if (slug.includes("scythe")) return "jb2a.spiritual_weapon.scythe.spectral.blue";
+    if (slug.includes("maul")) return "jb2a.spiritual_weapon.maul.spectral.blue";
+    if (slug.includes("mace")) return "jb2a.spiritual_weapon.mace.spectral.blue";
+    if (slug.includes("katana")) return "jb2a.spiritual_weapon.katana.01.astral.01.blue";
+    if (slug.includes("rapier")) return "jb2a.spiritual_weapon.rapier.01.astral.01.blue";
+    if (slug.includes("scimitar")) return "jb2a.spiritual_weapon.scimitar.01.astral.01.blue";
+    if (slug.includes("trident")) return "jb2a.spiritual_weapon.trident.01.astral.01.blue";
+    if (slug.includes("glaive")) return "jb2a.spiritual_weapon.glaive.01.astral.01.blue";
+    if (slug.includes("falchion")) return "jb2a.spiritual_weapon.falchion.01.astral.01.blue";
+    if (slug.includes("staff")) return "jb2a.spiritual_weapon.quarterstaff.01.astral.01.blue";
+    if (slug.includes("javelin")) return "jb2a.spiritual_weapon.javelin.01.astral.01.blue";
+
+    switch (group) {
+        case "pick": return "jb2a.spiritual_weapon.scythe.spectral.blue";
+        case "axe": return isTwoHanded 
+            ? "jb2a.spiritual_weapon.greataxe.01.astral.01.blue" 
+            : "jb2a.spiritual_weapon.handaxe.01.astral.01.blue";
+        case "club": return isTwoHanded 
+            ? "jb2a.spiritual_weapon.greatclub.01.astral.01.blue" 
+            : "jb2a.spiritual_weapon.club.01.astral.01.blue";
+        case "hammer": return isTwoHanded 
+            ? "jb2a.spiritual_weapon.hammer.01.astral.01.blue" 
+            : "jb2a.spiritual_weapon.warhammer.01.astral.01.blue";
+        case "sword": return isTwoHanded 
+            ? "jb2a.spiritual_weapon.greatsword.01.astral.01.blue" 
+            : "jb2a.spiritual_weapon.sword.spectral.blue";
+        case "knife": return "jb2a.spiritual_weapon.dagger.02.astral.01.blue";
+        case "polearm": return "jb2a.spiritual_weapon.halberd.01.astral.01.blue";
+        case "spear": return "jb2a.spiritual_weapon.spear.01.astral.01.blue";
+        case "flail": return "jb2a.spiritual_weapon.mace.spectral.blue";
+        default: return "jb2a.spiritual_weapon.sword.spectral.blue";
+    }
+}
 
 /**
  * Starts the persistent floating weapon animation tied to the target's effect.
  */
-async function startDancingBladePersistentAnimation(target: TokenPF2e, effect: EffectPF2e) {
-    const casterUuid = effect.getFlag("samioli-module", "casterUuid") as string;
-    const casterDoc = fromUuidSync(casterUuid);
-    const casterActor = (casterDoc instanceof foundry.documents.BaseToken ? casterDoc.actor : null);
-    const casterId = casterActor?.id;
+async function startDancingBladePersistentAnimation(
+    target: TokenPF2e, 
+    effect: EffectPF2e, 
+    weapon: WeaponPF2e
+) {
+    const casterUuid = effect.getFlag(MODULE_ID, "casterUuid") as string;
+    const casterToken = getTokenFromUuid(casterUuid);
+    const casterId = casterToken?.actor?.id;
     if (!casterId) return;
 
     new Sequence()
         .effect()
-            .file(PERSISTENT_ANIM)
+            .file(getPersistentAnimation(weapon))
             .attachTo(target)
             .name(`dancing-blade-${casterId}`)
             .persist()
@@ -368,7 +659,7 @@ async function startDancingBladePersistentAnimation(target: TokenPF2e, effect: E
 /**
  * Plays a quick impact animation over the target.
  */
-async function playDancingBladeStrikeAnimation(_caster: TokenPF2e, target: TokenPF2e) {
+async function playDancingBladeStrikeAnimation(target: TokenPF2e) {
     new Sequence()
         .effect()
             .file(STRIKE_ANIM)
@@ -396,9 +687,12 @@ async function promptForWeapon(weapons: WeaponPF2e[]): Promise<string | undefine
         buttons: [{
             action: "select",
             label: "Dance!",
+            icon: "fa-solid fa-sparkles",
             default: true,
             callback: (_e, _b, dialog) => 
-                (dialog as foundry.applications.api.DialogV2).element.querySelector<HTMLSelectElement>("select")?.value
+                (dialog as InstanceType<typeof DialogV2>).element.querySelector<HTMLSelectElement>(
+                    "select"
+                )?.value
         }],
         rejectClose: false
     }) as string | undefined;
@@ -408,13 +702,13 @@ async function promptForTarget(token: TokenPF2e, range: number): Promise<TokenPF
     let target: TokenPF2e | undefined;
     while (!target) {
         const selectedLocation = await startCrosshairsTargetSelection(token, range) as Point;
-        if (!selectedLocation) return undefined; // Cancelled
+        if (!selectedLocation) return undefined;
 
         const targetTokens = getTokensAtLocation(selectedLocation);
         if (targetTokens.length === 1) {
             target = targetTokens[0];
         } else if (targetTokens.length > 1) {
-            ui.notifications.warn("Multiple tokens found at this location. Please click a specific target.");
+            ui.notifications.warn("Multiple tokens found. Please click a specific target.");
         } else {
             ui.notifications.warn("No target found here. Please click an enemy.");
         }
@@ -425,6 +719,7 @@ async function promptForTarget(token: TokenPF2e, range: number): Promise<TokenPF
 async function promptForDamageType(damageTypes: string[]): Promise<string | undefined> {
     return await DialogV2.wait({
         window: { title: "Select Damage Type" },
+        position: { width: 350 },
         content: `
             <form>
                 <div class="form-group">
@@ -432,7 +727,10 @@ async function promptForDamageType(damageTypes: string[]): Promise<string | unde
                     <select name="typeSelect">
                         ${damageTypes.map(t => {
                             const pf2eConfig = CONFIG.PF2E;
-                            const label = game.i18n.localize(pf2eConfig.damageTypes[t as keyof typeof pf2eConfig.damageTypes] ?? t);
+                            const label = game.i18n.localize(
+                                pf2eConfig.damageTypes[t as keyof typeof pf2eConfig.damageTypes] 
+                                ?? t
+                            );
                             return `<option value="${t}">${label}</option>`;
                         }).join("")}
                     </select>
@@ -442,22 +740,47 @@ async function promptForDamageType(damageTypes: string[]): Promise<string | unde
         buttons: [{
             action: "select",
             label: "Strike!",
+            icon: "fa-solid fa-sword",
             default: true,
             callback: (_e, _b, dialog) => 
-                (dialog as foundry.applications.api.DialogV2).element.querySelector<HTMLSelectElement>("select")?.value
+                (dialog as InstanceType<typeof DialogV2>).element.querySelector<HTMLSelectElement>(
+                    "select"
+                )?.value
         }],
         rejectClose: false
     }) as string | undefined;
 }
 
-async function promptForSustainAction(weaponName: string): Promise<string | undefined> {
+async function promptForBladeAction(
+    weaponName: string, 
+    isAmped: boolean, 
+    isInitialCast: boolean
+): Promise<string | undefined> {
+    const buttons = [
+        { action: "strike", label: "Strike", icon: "fa-solid fa-swords" }
+    ];
+
+    if (isAmped) {
+        buttons.push(
+            { action: "guard", label: "Guard", icon: "fa-solid fa-shield-halved" },
+            { action: "push", label: "Push", icon: "fa-solid fa-hand-sparkles" }
+        );
+    }
+
+    if (!isInitialCast) {
+        buttons.push({ 
+            action: "partner", 
+            label: "Change Partner", 
+            icon: "fa-solid fa-people-arrows" 
+        });
+    }
+
+    const title = isInitialCast ? "Dancing Blade Action" : "Sustain Dancing Blade";
+
     return await DialogV2.wait({
-        window: { title: "Sustain Dancing Blade" },
+        window: { title },
         content: `<p>What do you want to do with your <b>Dancing ${weaponName}</b>?</p>`,
-        buttons: [
-            { action: "strike", label: "Strike", icon: "fa-solid fa-swords" },
-            { action: "partner", label: "Change Partner", icon: "fa-solid fa-people-arrows" }
-        ],
+        buttons,
         rejectClose: false
     }) as string | undefined;
 }
@@ -465,7 +788,6 @@ async function promptForSustainAction(weaponName: string): Promise<string | unde
 async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
     const labelText = `Select a target for Dancing Blade (${range} ft range)`;
     const iconTexture = "icons/svg/target.svg";
-    
     const placementRestrictions = Sequencer.Crosshair.PLACEMENT_RESTRICTIONS;
 
     return await Sequencer.Crosshair.show({

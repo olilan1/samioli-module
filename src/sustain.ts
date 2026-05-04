@@ -1,8 +1,28 @@
-import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect } from "./utils.ts";
-import { runMatchingSustainFunction } from "./triggers.ts";
+import { 
+    ActorPF2e, 
+    ChatMessagePF2e, 
+    EffectPF2e, 
+    ItemPF2e, 
+    SpellPF2e, 
+    EffectSource, 
+    MeasuredTemplateDocumentPF2e 
+} from "foundry-pf2e";
+import { 
+    addOrUpdateEffectOnActor, 
+    deleteTemplateById, 
+    isEffect, 
+    MODULE_ID 
+} from "./utils.ts";
+import { 
+    runMatchingSustainFunction, 
+    runMatchingSustainDeletionFunction 
+} from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
+/**
+ * Checks if a spell cast message should trigger a sustain effect tracking.
+ * Automatically applies a "Sustaining: [Spell]" effect to the actor.
+ */
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
     const messageItem: ItemPF2e | null = message.item;
     if (isSpellPF2e(messageItem)) {
@@ -18,20 +38,20 @@ function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
     return !!item && item.type === "spell";
 }
 
+/**
+ * Creates a "Sustaining: [Spell]" effect source.
+ * This effect tracks the spell's duration and links it to templates or special automation.
+ */
 function createEffect(spell: SpellPF2e) {
-
-    const sustainedEffectPrefix = 'Sustaining: '
-
+    const sustainedEffectPrefix = 'Sustaining: ';
     const effectName = `${sustainedEffectPrefix}${spell.name}`;
     const description = spell.system.description.value;
-
     const effectLevel = spell.system.level?.value ?? spell.parent?.level ?? 1;
-    const image = spell.img;
 
     const effect = {
         type: 'effect',
         name: effectName,
-        img: image,
+        img: spell.img,
         system: {
             tokenIcon: { show: true },
             duration: {
@@ -49,7 +69,7 @@ function createEffect(spell: SpellPF2e) {
             slug: `sustaining-effect-${spell.system.slug}`
         },
         flags: {
-            "samioli-module": {
+            [MODULE_ID]: {
                 sustainedSpellId: spell.id
             }
         }
@@ -58,11 +78,13 @@ function createEffect(spell: SpellPF2e) {
     return effect as DeepPartial<EffectSource> as EffectSource;
 }
 
+/**
+ * Triggers a sustain prompt if the actor has active sustain effects.
+ * Typically called at the start of an actor's turn.
+ */
 export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
     const sustainedEffects = getActorSustainedEffects(actor);
-    if (!sustainedEffects) {
-        return;
-    }
+    if (!sustainedEffects) return;
 
     for (const effect of sustainedEffects) {
         if (!effect.slug) continue;
@@ -75,18 +97,20 @@ export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
 }
 
 function getActorSustainedEffects(actor: ActorPF2e) {
-    const sustainedEffects = actor.items.filter(item => item.type === 'effect' &&
-        (item.slug?.startsWith('sustaining-effect-') ?? false));
-    if (sustainedEffects.length === 0) {
-        return;
-    }
-    return sustainedEffects;
+    const sustainedEffects = actor.items.filter(item => 
+        item.type === 'effect' && (item.slug?.startsWith('sustaining-effect-') ?? false)
+    );
+    return sustainedEffects.length > 0 ? sustainedEffects : undefined;
 }
 
 function getSpellBySlug(spellSlug: string, actor: ActorPF2e): SpellPF2e | null {
     return actor.itemTypes.spell.find(s => s.slug === spellSlug) ?? null;
 }
 
+/**
+ * Handles the sustain action, updating duration and running triggers.
+ * Orchestrates template updates or interactive sustain menus (via triggers.ts).
+ */
 export async function handleSustainSpell(actorId: string, effectSlug: string) {
     const actor = game.actors.get(actorId);
     if (!actor || !actor.isOwner) {
@@ -94,13 +118,15 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
         return;
     }
 
-    const effect = actor.items.find(item => item.slug === effectSlug
-        && item.type === 'effect') as EffectPF2e;
+    const effect = actor.items.find(item => 
+        item.slug === effectSlug && item.type === 'effect'
+    ) as EffectPF2e;
     if (!effect) {
         ui.notifications.error("Could not find the sustained effect on the actor.");
         return;
     }
 
+    // Update effect to next turn
     const currentStartValue = effect.system.start.value;
     const newStartValue = currentStartValue + 6;
 
@@ -111,6 +137,7 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
 
     await addSustainedSpellBackIntoChat(effect, actor);
 
+    // Run sustain triggers (e.g., Dancing Blade menu or Floating Flame movement)
     const template = getTemplateFromEffect(effect);
     if (template) {
         runMatchingSustainFunction(template);
@@ -120,27 +147,34 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
 }
 
 function getTemplateFromEffect(effect: EffectPF2e) {
-    const templateId = effect.getFlag("samioli-module", "sustainedTemplateId");
+    const templateId = effect.getFlag(MODULE_ID, "sustainedTemplateId");
     if (typeof templateId !== "string" || !templateId) return;
-    if (!canvas.scene) return;
-    return canvas.scene.templates.get(templateId);
+    return canvas.scene?.templates.get(templateId);
 }
 
+/**
+ * Re-posts the spell card to chat during sustain, unless suppressed by flags.
+ */
 async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2e) {
-    const spellId = effect.getFlag("samioli-module", "sustainedSpellId");
+    const skipChat = !!effect.getFlag(MODULE_ID, "skipSustainChat");
+    if (skipChat) return;
+
+    const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
     if (typeof spellId !== "string" || !spellId) return;
-    if (!spellId) return;
-    const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
+
+    const spellUuid = `Actor.${actor.id}.Item.${spellId}`;
     const spell = fromUuidSync(spellUuid);
-    if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
-    await spell.toMessage();
+    if (spell instanceof CONFIG.PF2E.Item.documentClasses.spell) {
+        await spell.toMessage();
+    }
 }
 
+/**
+ * Creates the chat message with the "Sustain" button.
+ */
 async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
     const effectSlug = `sustaining-effect-${spell.slug}`;
-    const content = `
-        <p>Do you want to sustain <strong>${spell.name}</strong>?</p>
-    `;
+    const content = `<p>Do you want to sustain <strong>${spell.name}</strong>?</p>`;
 
     await createChatMessageWithButton({
         slug: "sustain-spell",
@@ -151,11 +185,11 @@ async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
     });
 }
 
+/**
+ * Posts a chat message notification when a sustained spell is lost (effect deleted).
+ */
 export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
-    
-    if (!isEffect(item)) return;
-
-    if (!item.slug?.startsWith('sustaining-effect-')) return;
+    if (!isEffect(item) || !item.slug?.startsWith('sustaining-effect-')) return;
 
     const spellName = item.name.replace('Sustaining: ', '');
     const content = `<p><strong>${spellName}</strong> was not sustained.</p>`;
@@ -165,17 +199,21 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
     });
 }
 
-async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e,
-    effect: EffectPF2e) {
+async function associateTemplateWithEffect(
+    template: MeasuredTemplateDocumentPF2e, 
+    effect: EffectPF2e
+) {
     await effect.update({
-        'flags.samioli-module': {
-            sustainedTemplateId: template.id
-        }
+        [`flags.${MODULE_ID}.sustainedTemplateId`]: template.id
     });
 }
 
-export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTemplateDocumentPF2e) {
-
+/**
+ * Links a placed template to an active sustain effect.
+ */
+export async function checkIfTemplatePlacedHasSustainEffect(
+    template: MeasuredTemplateDocumentPF2e
+) {
     if (!template.actor) return;
 
     const sustainedEffectsOnActor = getActorSustainedEffects(template.actor);
@@ -185,32 +223,26 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
     if (!spellSlugFromTemplate) return;
 
     const matchingEffect = sustainedEffectsOnActor.find(effect =>
-        effect.slug?.replace('sustaining-effect-', '') === spellSlugFromTemplate);
+        effect.slug?.replace('sustaining-effect-', '') === spellSlugFromTemplate
+    );
 
     if (matchingEffect) {
         await associateTemplateWithEffect(template, matchingEffect as EffectPF2e);
     }
 }
 
-export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
+/**
+ * Handles cleanup when a sustain effect is deleted (templates, triggers, etc).
+ */
+export async function handleSustainedEffectDeletion(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.getFlag("samioli-module", "sustainedTemplateId"); 
+    // 1. Automatic template cleanup
+    const templateId = item.getFlag(MODULE_ID, "sustainedTemplateId"); 
     if (typeof templateId === "string" && templateId) {
         await deleteTemplateById(templateId);
     }
 
-    if (item.slug === "sustaining-effect-dancing-blade") {
-        const targetUuid = item.getFlag("samioli-module", "targetUuid") as string;
-        if (targetUuid) {
-            const targetDoc = fromUuidSync(targetUuid);
-            const targetActor = (targetDoc instanceof foundry.documents.BaseToken 
-                ? targetDoc.actor : null) as ActorPF2e | null;
-            
-            if (targetActor) {
-                const effect = targetActor.itemTypes.effect.find(e => e.slug === "target-dancing-blade");
-                await effect?.delete();
-            }
-        }
-    }
+    // 2. Run generic spell-specific cleanup triggers (e.g., Dancing Blade target cleanup)
+    runMatchingSustainDeletionFunction(item);
 }

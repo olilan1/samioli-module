@@ -55,10 +55,6 @@ const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
         function: startWarpStep,
         condition: (message: ChatMessagePF2e) =>
             !!(message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:tag:amped"))
-    },
-    "dancing-blade": {
-        label: "Dance!",
-        function: startDancingBlade
     }
 };
 
@@ -94,6 +90,11 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     "force-barrage": {
         label: "Select Targets",
         function: selectForceBarrageTargets,
+        buttonToReplace: DAMAGE_BUTTON_SPELL
+    },
+    "dancing-blade": {
+        label: "Dance!",
+        function: startDancingBlade,
         buttonToReplace: DAMAGE_BUTTON_SPELL
     }
 };
