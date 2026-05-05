@@ -145,8 +145,10 @@ export async function sustainDancingBlade(effect: EffectPF2e) {
         return;
     }
 
-    const choice = await promptForBladeAction(weapon.name, isAmped, false);
-    if (!choice) return;
+    const damageTypes = await getWeaponDamageTypes(weapon);
+    const result = await promptForBladeAction(weapon.name, isAmped, false, damageTypes);
+    if (!result) return;
+    const { choice, attackNumber, damageType } = result;
 
     const currentTargetToken = getTokenFromUuid(targetUuid);
 
@@ -177,7 +179,9 @@ export async function sustainDancingBlade(effect: EffectPF2e) {
             castRank,
             isAmped,
             isInitialCast: false,
-            choice
+            choice,
+            attackNumber,
+            damageType
         });
     }
 }
@@ -214,26 +218,32 @@ async function handleBladeAction(
     caster: TokenPF2e, 
     target: TokenPF2e, 
     weapon: WeaponPF2e,
-    context: { castRank: number, isAmped: boolean, isInitialCast: boolean, choice?: string }
+    context: { castRank: number, isAmped: boolean, isInitialCast: boolean, choice?: string, attackNumber?: number, damageType?: string }
 ) {
     const { castRank, isAmped, isInitialCast } = context;
     let choice = context.choice;
+    let attackNumber = context.attackNumber ?? 1;
+    let damageType = context.damageType;
 
     if (!choice) {
-        choice = await promptForBladeAction(weapon.name, isAmped, isInitialCast);
+        const damageTypes = await getWeaponDamageTypes(weapon);
+        const result = await promptForBladeAction(weapon.name, isAmped, isInitialCast, damageTypes);
+        if (!result) return;
+        choice = result.choice;
+        attackNumber = result.attackNumber;
+        damageType = result.damageType;
     }
-    if (!choice) return;
 
     switch (choice) {
         case "strike":
-            await resolveDancingBladeStrike(caster, target, weapon, castRank, isAmped);
+            await resolveDancingBladeStrike(caster, target, weapon, castRank, isAmped, attackNumber, damageType);
             break;
         case "guard":
             await applyDancingBladeGuard(caster, target, weapon);
             break;
         case "push": {
             const spell = getDancingBladeSpell(caster.actor!);
-            if (spell) await resolveDancingBladePush(caster, target, weapon, spell);
+            if (spell) await resolveDancingBladePush(caster, target, weapon, spell, attackNumber);
             break;
         }
     }
@@ -295,16 +305,16 @@ export async function resolveDancingBladeStrike(
     target: TokenPF2e, 
     weapon: WeaponPF2e, 
     castRank: number, 
-    isAmped: boolean
+    isAmped: boolean,
+    attackNumber: number = 1,
+    selectedDamageType?: string
 ) {
     const actor = caster.actor;
     if (!actor) return;
 
     const damageTypes = await getWeaponDamageTypes(weapon);
-    let selectedDamageType = damageTypes[0];
-
-    if (damageTypes.length > 1) {
-        selectedDamageType = (await promptForDamageType(damageTypes)) ?? "";
+    if (!selectedDamageType) {
+        selectedDamageType = damageTypes[0];
     }
     if (!selectedDamageType) return;
 
@@ -338,9 +348,10 @@ export async function resolveDancingBladeStrike(
     await statistic.roll({
         target: target.actor ?? null,
         title: `Dancing Blade Strike: ${weapon.name}`,
-        item: spell ?? null,
-        domains: ["melee-attack-roll"],
+        item: spell,
+        melee: true,
         traits: strikeTraits,
+        attackNumber,
         extraRollOptions
     });
 }
@@ -370,7 +381,8 @@ export async function resolveDancingBladePush(
     _caster: TokenPF2e, 
     target: TokenPF2e, 
     weapon: WeaponPF2e, 
-    spell: SpellPF2e
+    spell: SpellPF2e<ActorPF2e>,
+    attackNumber: number = 1
 ) {
     const statistic = spell.spellcasting?.statistic;
     if (!statistic) {
@@ -392,9 +404,25 @@ export async function resolveDancingBladePush(
         title: `Dancing Blade Push - ${weapon.name}`,
         item: spell,
         traits: ["attack"],
+        attackNumber,
+        action: "shove",
         extraRollOptions: [
             `${MODULE_ID}:dancing-blade-push`,
-            "action:push"
+            "action:shove"
+        ],
+        extraRollNotes: [
+            {
+                selector: "dancing-blade-push",
+                title: "Critical Success",
+                text: "You push the target up to 10 feet.",
+                outcome: ["criticalSuccess"]
+            },
+            {
+                selector: "dancing-blade-push",
+                title: "Success",
+                text: "You push the target back 5 feet.",
+                outcome: ["success"]
+            }
         ]
     });
 }
@@ -505,7 +533,7 @@ export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQu
 
 // --- Data Helpers ---
 
-function getDancingBladeSpell(actor: ActorPF2e): SpellPF2e | undefined {
+function getDancingBladeSpell(actor: ActorPF2e): SpellPF2e<ActorPF2e> | undefined {
     return actor.itemTypes.spell.find(s => s.slug === "dancing-blade");
 }
 
@@ -519,7 +547,7 @@ function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
     if (!uuid) return null;
     const doc = fromUuidSync(uuid);
     if (doc instanceof foundry.documents.BaseToken) {
-        return (doc as any).object as TokenPF2e;
+        return (doc as unknown as { object: TokenPF2e }).object;
     }
     return null;
 }
@@ -704,6 +732,7 @@ function playBladeAnimationSequence(config: {
             .moveTowards({
                 x: target.center.x + (gridOffset.x * canvas.grid.size),
                 y: target.center.y + (gridOffset.y * canvas.grid.size)
+            // @ts-expect-error Sequencer typings incorrectly require a target in the options object
             }, { ease: "easeInOutQuint" })
             .moveSpeed(600)
             .scale(0.5)
@@ -845,47 +874,18 @@ async function promptForTarget(token: TokenPF2e, range: number): Promise<TokenPF
     return target;
 }
 
-async function promptForDamageType(damageTypes: string[]): Promise<string | undefined> {
-    return await DialogV2.wait({
-        window: { title: "Select Damage Type" },
-        position: { width: 350 },
-        content: `
-            <form>
-                <div class="form-group">
-                    <label>Damage Type:</label>
-                    <select name="typeSelect">
-                        ${damageTypes.map(t => {
-                            const pf2eConfig = CONFIG.PF2E;
-                            const label = game.i18n.localize(
-                                pf2eConfig.damageTypes[t as keyof typeof pf2eConfig.damageTypes] 
-                                ?? t
-                            );
-                            return `<option value="${t}">${label}</option>`;
-                        }).join("")}
-                    </select>
-                </div>
-            </form>
-        `,
-        buttons: [{
-            action: "select",
-            label: "Strike!",
-            icon: "fa-solid fa-sword",
-            default: true,
-            callback: (_e, _b, dialog) => 
-                (dialog as InstanceType<typeof DialogV2>).element.querySelector<HTMLSelectElement>(
-                    "select"
-                )?.value
-        }],
-        rejectClose: false
-    }) as string | undefined;
-}
-
 async function promptForBladeAction(
     weaponName: string, 
     isAmped: boolean, 
-    isInitialCast: boolean
-): Promise<string | undefined> {
-    const buttons = [
+    isInitialCast: boolean,
+    damageTypes: string[]
+): Promise<{ choice: string, attackNumber: number, damageType?: string } | undefined> {
+    const buttons: {
+        action: string;
+        label: string;
+        icon: string;
+        callback?: (event: Event, button: HTMLButtonElement, dialog: InstanceType<typeof DialogV2>) => { choice: string, attackNumber: number, damageType?: string };
+    }[] = [
         { action: "strike", label: "Strike", icon: "fa-solid fa-swords" }
     ];
 
@@ -904,14 +904,63 @@ async function promptForBladeAction(
         });
     }
 
+    // Add callback to each button to extract MAP penalty and damage type
+    buttons.forEach(b => {
+        b.callback = (_e: Event, _b: HTMLButtonElement, dialog: InstanceType<typeof DialogV2>) => {
+            const mapValue = dialog.element.querySelector<HTMLInputElement>('input[name="attackNumber"]:checked')?.value;
+            const dtValue = dialog.element.querySelector<HTMLSelectElement>('select[name="damageTypeSelect"]')?.value;
+            return {
+                choice: b.action,
+                attackNumber: parseInt(mapValue ?? "1", 10) || 1,
+                damageType: dtValue
+            };
+        };
+    });
+
     const title = isInitialCast ? "Dancing Blade Action" : "Sustain Dancing Blade";
+
+    let damageTypeHtml = "";
+    if (damageTypes.length > 1) {
+        const optionsHtml = damageTypes.map(t => {
+            const pf2eConfig = CONFIG.PF2E;
+            const label = game.i18n.localize(
+                pf2eConfig.damageTypes[t as keyof typeof pf2eConfig.damageTypes] 
+                ?? t
+            );
+            return `<option value="${t}">${label}</option>`;
+        }).join("");
+        
+        damageTypeHtml = `
+            <div class="form-group" style="width: 75%; margin: 0 auto;">
+                <label style="flex-grow: 0;">Damage&nbsp;Type:</label>
+                <select name="damageTypeSelect" style="width: 100%;">
+                    ${optionsHtml}
+                </select>
+            </div>
+        `;
+    }
+
+    const content = `
+        <p>What do you want to do with your dancing <b>${weaponName}</b>?</p>
+        ${damageTypeHtml}
+        <div class="map-radio-group" style="display: flex; gap: 10px; justify-content: center;">
+            <input type="radio" id="map-1" name="attackNumber" value="1" checked>
+            <label for="map-1">No MAP</label>
+            
+            <input type="radio" id="map-2" name="attackNumber" value="2">
+            <label for="map-2">MAP -5</label>
+            
+            <input type="radio" id="map-3" name="attackNumber" value="3">
+            <label for="map-3">MAP -10</label>
+        </div>
+    `;
 
     return await DialogV2.wait({
         window: { title },
-        content: `<p>What do you want to do with your <b>Dancing ${weaponName}</b>?</p>`,
+        content,
         buttons,
         rejectClose: false
-    }) as string | undefined;
+    }) as { choice: string, attackNumber: number, damageType?: string } | undefined;
 }
 
 async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
