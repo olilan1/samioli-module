@@ -19,6 +19,14 @@ import type { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
 const { DialogV2 } = foundry.applications.api;
 
+const STRIKE_ANIM = "jb2a.impact.003.blue";
+const PUSH_ANIM = "jb2a.impact.010.orange";
+const CAST_SOUND =  "modules/samioli-module/sounds/GDM/Gamemaster Audio - Pro Sound Collection/spell_harness_magic_01.m4a";
+const TRANSIT_SOUND =  "modules/samioli-module/sounds/GDM/Medieval Fantasy SFX Pack/Spell - Air 2.m4a";
+const STRIKE_SOUND = "modules/samioli-module/sounds/GDM/Medieval Fantasy SFX Pack/Axe 3.m4a";
+const PUSH_SOUND = "modules/samioli-module/sounds/GDM/Medieval Fantasy SFX Pack/Hammer 2.m4a";
+const GUARD_SOUND = "modules/samioli-module/sounds/GDM/Gamemaster Audio - Pro Sound Collection/unsheathe_sword_with_ringout.m4a";
+
 const SHORTHAND_DAMAGE_TYPES: Record<string, string> = {
     "b": "bludgeoning",
     "p": "piercing",
@@ -66,16 +74,31 @@ export async function startDancingBlade(token: TokenPF2e, message: ChatMessagePF
     const rollOptions = message.flags?.pf2e?.origin?.rollOptions;
     const isAmped = !!(rollOptions?.includes("origin:item:tag:amped"));
 
-    // 3. Targeting
+    // 3. Initial Animation near Caster
+    const casterId = actor.id;
+    const effectName = `dancing-blade-${casterId}`;
+    playBladeAnimationSequence({
+        animFile: getPersistentAnimation(weapon),
+        effectName,
+        target: token
+    });
+
+    // 4. Targeting
     const range = getDancingBladeRange(actor);
     const target = await promptForTarget(token, range);
-    if (!target) return;
+    if (!target) {
+        Sequencer.EffectManager.endEffects({ name: `dancing-blade-${casterId}` });
+        return;
+    }
 
-    // 4. Setup Partnership
-    const targetEffect = await partnerWithTarget(target, token, weapon);
-    if (!targetEffect) return;
+    // 5. Setup Partnership
+    const targetEffect = await partnerWithTarget(target, token, weapon, token);
+    if (!targetEffect) {
+        Sequencer.EffectManager.endEffects({ name: `dancing-blade-${casterId}` });
+        return;
+    }
 
-    // 5. Initial Action
+    // 6. Initial Action
     await handleBladeAction(token, target, weapon, {
         castRank,
         isAmped,
@@ -133,11 +156,11 @@ export async function sustainDancingBlade(effect: EffectPF2e) {
         if (!newTarget) return;
 
         // Cleanup old target
-        if (currentTargetToken && currentTargetToken.uuid !== newTarget.document.uuid) {
+        if (currentTargetToken && currentTargetToken.document.uuid !== newTarget.document.uuid) {
             await cleanupTargetEffects(currentTargetToken);
         }
 
-        const targetEffect = await partnerWithTarget(newTarget, token, weapon);
+        const targetEffect = await partnerWithTarget(newTarget, token, weapon, currentTargetToken ?? token);
         if (targetEffect) {
             await effect.setFlag(MODULE_ID, "targetUuid", newTarget.document.uuid);
             await ChatMessage.create({
@@ -165,9 +188,23 @@ export async function sustainDancingBlade(effect: EffectPF2e) {
  * Safely retrieves and types the Dancing Blade flags from an effect.
  */
 function getDancingBladeFlags(effect: EffectPF2e): DancingBladeFlags | null {
-    const flags = effect.getFlag(MODULE_ID, "all");
-    if (!flags || typeof flags !== "object") return null;
-    return flags as unknown as DancingBladeFlags;
+    const dancingWeaponId = effect.getFlag(MODULE_ID, "dancingWeaponId") as string | undefined;
+    const castRank = effect.getFlag(MODULE_ID, "castRank") as number | undefined;
+    const isAmped = effect.getFlag(MODULE_ID, "isAmped") as boolean | undefined;
+    const targetUuid = effect.getFlag(MODULE_ID, "targetUuid") as string | undefined;
+    const skipSustainChat = effect.getFlag(MODULE_ID, "skipSustainChat") as boolean | undefined;
+
+    if (!dancingWeaponId || castRank === undefined || isAmped === undefined || !targetUuid) {
+        return null;
+    }
+
+    return {
+        dancingWeaponId,
+        castRank,
+        isAmped,
+        targetUuid,
+        skipSustainChat: skipSustainChat ?? false
+    };
 }
 
 /**
@@ -208,11 +245,12 @@ async function handleBladeAction(
 async function partnerWithTarget(
     target: TokenPF2e, 
     caster: TokenPF2e, 
-    weapon: WeaponPF2e
+    weapon: WeaponPF2e,
+    previousLocationToken: TokenPF2e
 ): Promise<EffectPF2e | undefined> {
     const targetEffect = await applyTargetEffect(target, caster, weapon.img);
     if (targetEffect) {
-        startDancingBladePersistentAnimation(target, targetEffect, weapon);
+        startDancingBladePersistentAnimation(target, targetEffect, weapon, previousLocationToken);
     }
     return targetEffect;
 }
@@ -277,7 +315,7 @@ export async function resolveDancingBladeStrike(
         return;
     }
 
-    await playDancingBladeStrikeAnimation(target);
+    await playDancingBladeAttackAnimation(target, "strike");
 
     const materialType = weapon.system.material?.type;
     const strikeTraits = ["attack"];
@@ -315,6 +353,8 @@ export async function applyDancingBladeGuard(
     target: TokenPF2e, 
     weapon: WeaponPF2e
 ) {
+    await playDancingBladeGuardAnimation(target);
+
     const guardEffectSource = createGuardEffect(caster, weapon.img);
     await addOrUpdateEffectOnActor(target.actor!, guardEffectSource);
     await ChatMessage.create({
@@ -327,7 +367,7 @@ export async function applyDancingBladeGuard(
  * Resolves a Push amped action for Dancing Blade.
  */
 export async function resolveDancingBladePush(
-    caster: TokenPF2e, 
+    _caster: TokenPF2e, 
     target: TokenPF2e, 
     weapon: WeaponPF2e, 
     spell: SpellPF2e
@@ -343,6 +383,8 @@ export async function resolveDancingBladePush(
         ui.notifications.error("Could not find Fortitude DC for the target.");
         return;
     }
+
+    await playDancingBladeAttackAnimation(target, "push");
 
     await statistic.roll({
         target: target.actor ?? null,
@@ -477,7 +519,7 @@ function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
     if (!uuid) return null;
     const doc = fromUuidSync(uuid);
     if (doc instanceof foundry.documents.BaseToken) {
-        return doc.object as TokenPF2e;
+        return (doc as any).object as TokenPF2e;
     }
     return null;
 }
@@ -586,8 +628,6 @@ async function applyTargetEffect(
 
 // --- Animation Helpers ---
 
-const STRIKE_ANIM = "jb2a.impact.003.blue";
-
 /**
  * Returns the most appropriate spiritual weapon animation for the given weapon.
  * Supports 1H/2H variants and specific overrides like Javelins or Picks.
@@ -632,40 +672,128 @@ function getPersistentAnimation(weapon: WeaponPF2e): string {
 }
 
 /**
+ * Shared logic for playing the Dancing Blade animation sequence.
+ */
+function playBladeAnimationSequence(config: {
+    animFile: string,
+    effectName: string,
+    target: TokenPF2e,
+    previousLocationToken?: TokenPF2e,
+    tieToEffect?: EffectPF2e
+}) {
+    const { animFile, effectName, target, previousLocationToken, tieToEffect } = config;
+    const seq = new Sequence();
+    const gridOffset = { x: 0.6, y: -0.6 };
+    const attachOffset = { offset: { x: 0.6, y: -0.6 }, gridUnits: true };
+
+    // Cleanup existing effects with the same name
+    Sequencer.EffectManager.endEffects({ name: effectName });
+
+    // Handle transit if there's a different previous location
+    const isTransiting = previousLocationToken && previousLocationToken.id !== target.id;
+    if (isTransiting) {
+        seq
+        .sound()
+            .file(TRANSIT_SOUND)
+        .effect()
+            .file(animFile)
+            .atLocation({
+                x: previousLocationToken.center.x + (gridOffset.x * canvas.grid.size),
+                y: previousLocationToken.center.y + (gridOffset.y * canvas.grid.size)
+            })
+            .moveTowards({
+                x: target.center.x + (gridOffset.x * canvas.grid.size),
+                y: target.center.y + (gridOffset.y * canvas.grid.size)
+            }, { ease: "easeInOutQuint" })
+            .moveSpeed(600)
+            .scale(0.5)
+            .fadeOut(100)
+            .waitUntilFinished(-100);
+    }
+
+    // Persistent floating blade
+    const persistEffect = seq.effect()
+        .file(animFile)
+        .attachTo(target, attachOffset)
+        .name(effectName)
+        .persist()
+        .scale(0.5)
+        .fadeOut(500);
+
+    if (tieToEffect) {
+        persistEffect.tieToDocuments(tieToEffect);
+    }
+
+    if (isTransiting) {
+        persistEffect.fadeIn(100);
+    } else {
+        // Initial cast
+        persistEffect.fadeIn(500);
+        seq.sound()
+            .file(CAST_SOUND);
+    }
+
+    seq.play();
+}
+
+/**
  * Starts the persistent floating weapon animation tied to the target's effect.
  */
 async function startDancingBladePersistentAnimation(
     target: TokenPF2e, 
     effect: EffectPF2e, 
-    weapon: WeaponPF2e
+    weapon: WeaponPF2e,
+    previousLocationToken: TokenPF2e
 ) {
     const casterUuid = effect.getFlag(MODULE_ID, "casterUuid") as string;
     const casterToken = getTokenFromUuid(casterUuid);
     const casterId = casterToken?.actor?.id;
     if (!casterId) return;
 
-    new Sequence()
-        .effect()
-            .file(getPersistentAnimation(weapon))
-            .attachTo(target)
-            .name(`dancing-blade-${casterId}`)
-            .persist()
-            .scale(0.5)
-            .spriteOffset({ x: 0.6, y: -0.6 }, { gridUnits: true })
-            .tieToDocuments(effect)
-        .play();
+    const effectName = `dancing-blade-${casterId}`;
+    const animFile = getPersistentAnimation(weapon);
+
+    playBladeAnimationSequence({
+        animFile,
+        effectName,
+        target,
+        previousLocationToken,
+        tieToEffect: effect
+    });
 }
 
 /**
  * Plays a quick impact animation over the target.
  */
-async function playDancingBladeStrikeAnimation(target: TokenPF2e) {
+async function playDancingBladeAttackAnimation(target: TokenPF2e, type: "strike" | "push") {
     new Sequence()
         .effect()
-            .file(STRIKE_ANIM)
+            .file(type == "strike" ? STRIKE_ANIM : PUSH_ANIM)
             .atLocation(target)
             .spriteOffset({ x: 0.3, y: -0.3 }, { gridUnits: true })
             .scale(0.5)
+            .playbackRate(0.6)
+        .sound()
+            .file(type == "strike" ? STRIKE_SOUND : PUSH_SOUND)
+        .play();
+}
+
+/**
+ * Plays the guard animation over the target.
+ */
+async function playDancingBladeGuardAnimation(target: TokenPF2e) {
+    new Sequence()
+        .effect()
+            .file("jb2a.icon.shield.blue")
+            .atLocation(target)
+            .scale(0.5)
+            .scaleIn(0, 500, { ease: "easeOutBack" })
+            .scaleOut(0, 500, { ease: "easeInBack" })
+            .fadeIn(250)
+            .fadeOut(250)
+            .duration(1500)
+        .sound()
+            .file(GUARD_SOUND)
         .play();
 }
 
@@ -674,10 +802,11 @@ async function playDancingBladeStrikeAnimation(target: TokenPF2e) {
 async function promptForWeapon(weapons: WeaponPF2e[]): Promise<string | undefined> {
     return await DialogV2.wait({
         window: { title: "Select Dancing Weapon" },
+        position: { width: 350 },
         content: `
             <form>
                 <div class="form-group">
-                    <label>Weapon:</label>
+                    <label style="flex-grow: 0">Weapon:</label>
                     <select name="weaponSelect">
                         ${weapons.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
                     </select>

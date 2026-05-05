@@ -93,7 +93,7 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
         buttonToReplace: DAMAGE_BUTTON_SPELL
     },
     "dancing-blade": {
-        label: "Dance!",
+        label: "Animate!",
         function: startDancingBlade,
         buttonToReplace: DAMAGE_BUTTON_SPELL
     }
