@@ -210,7 +210,7 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
 }
 
 export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: EffectSource):
-    Promise<EffectPF2e | void> {
+    Promise<EffectPF2e | undefined> {
     const existingEffect = actor.items.find(item => item.slug === effectSource.system.slug
         && item.type === 'effect');
     if (existingEffect) {

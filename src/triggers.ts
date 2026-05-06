@@ -13,6 +13,13 @@ import {
 } from "./spells/floatingflame.ts";
 import { removeWallOfFire } from "./spells/walloffire.ts";
 import { sustainDancingBlade, cleanupDancingBlade } from "./spells/dancingblade.ts";
+import { MODULE_ID } from "./utils.ts";
+
+/**
+ * Spells that opt-out of automatic sustain effect creation on cast,
+ * managing their own sustain effects manually.
+ */
+export const MANUAL_SUSTAIN_SPELLS = new Set(["dancing-blade"]);
 
 /**
  * Mappings for functions that run when a Measured Template is created.
@@ -118,10 +125,16 @@ function rollOptionsContains(
     const rollOptions = document.flags.pf2e?.origin?.rollOptions;
     if (rollOptions?.includes(rollOption)) return true;
 
-    // Sustaining effects often don't have full origin data, so we check the slug
-    if (document.type === "effect" && document.slug) {
-        const spellSlug = document.slug.replace("sustaining-effect-", "");
-        if (`origin:item:${spellSlug}` === rollOption) return true;
+    // Sustaining effects often don't have full origin data, so we check the flag or slug
+    if (document.type === "effect") {
+        const spellId = document.getFlag(MODULE_ID, "sustainedSpellId");
+        if (spellId) {
+            const spell = document.actor?.items.get(spellId as string);
+            if (spell && `origin:item:${spell.slug}` === rollOption) return true;
+        } else if (document.slug) {
+            const spellSlug = document.slug.replace("sustaining-effect-", "");
+            if (`origin:item:${spellSlug}` === rollOption) return true;
+        }
     }
 
     return false;

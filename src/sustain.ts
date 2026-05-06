@@ -15,7 +15,8 @@ import {
 } from "./utils.ts";
 import { 
     runMatchingSustainFunction, 
-    runMatchingSustainDeletionFunction 
+    runMatchingSustainDeletionFunction,
+    MANUAL_SUSTAIN_SPELLS 
 } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
@@ -24,14 +25,20 @@ import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
  * Automatically applies a "Sustaining: [Spell]" effect to the actor.
  */
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
-    const messageItem: ItemPF2e | null = message.item;
-    if (isSpellPF2e(messageItem)) {
-        if (messageItem.system.duration.sustained) {
-            if (!message.actor) return;
-            const effect = createEffect(messageItem);
-            await addOrUpdateEffectOnActor(message.actor, effect);
-        }
-    }
+    const messageItem = message.item;
+    if (!isSpellPF2e(messageItem)) return;
+    if (!hasSustainedDuration(messageItem)) return;
+    if (MANUAL_SUSTAIN_SPELLS.has(messageItem.slug ?? "")) return;
+    if (!message.actor) return;
+
+    await addSustainEffectToActor(message.actor, messageItem);
+}
+
+function hasSustainedDuration(spell: SpellPF2e): boolean {
+    // We cast through unknown to avoid "Type instantiation is excessively deep" errors 
+    // caused by the complexity of the PF2e system's Spell types.
+    const system = spell.system as unknown as { duration?: { sustained?: boolean } };
+    return !!system.duration?.sustained;
 }
 
 function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
@@ -41,17 +48,26 @@ function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
 /**
  * Creates a "Sustaining: [Spell]" effect source.
  * This effect tracks the spell's duration and links it to templates or special automation.
+ * It is then applied to the actor.
  */
-function createEffect(spell: SpellPF2e) {
+export async function addSustainEffectToActor(
+    actor: ActorPF2e,
+    spell: SpellPF2e,
+    extraSlugStr?: string,
+    extraFlags?: Record<string, unknown>,
+    imgOverride?: string,
+) {
     const sustainedEffectPrefix = 'Sustaining: ';
-    const effectName = `${sustainedEffectPrefix}${spell.name}`;
+    const subtitle = extraFlags?.sustainedSubtitle as string | undefined;
+    const effectName = subtitle ? `${sustainedEffectPrefix}${spell.name} (${subtitle})` : `${sustainedEffectPrefix}${spell.name}`;
     const description = spell.system.description.value;
     const effectLevel = spell.system.level?.value ?? spell.parent?.level ?? 1;
+    const slugSuffixStr = extraSlugStr ? `-${extraSlugStr}` : "";
 
     const effect = {
         type: 'effect',
         name: effectName,
-        img: spell.img,
+        img: imgOverride ?? spell.img,
         system: {
             tokenIcon: { show: true },
             duration: {
@@ -66,16 +82,17 @@ function createEffect(spell: SpellPF2e) {
             },
             unidentified: false,
             level: { value: effectLevel },
-            slug: `sustaining-effect-${spell.system.slug}`
+            slug: `sustaining-effect-${spell.system.slug}${slugSuffixStr}`
         },
         flags: {
             [MODULE_ID]: {
-                sustainedSpellId: spell.id
+                sustainedSpellId: spell.id,
+                ...(extraFlags ?? {})
             }
         }
     };
     
-    return effect as DeepPartial<EffectSource> as EffectSource;
+    return addOrUpdateEffectOnActor(actor, effect as DeepPartial<EffectSource> as EffectSource);
 }
 
 /**
@@ -88,10 +105,10 @@ export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
 
     for (const effect of sustainedEffects) {
         if (!effect.slug) continue;
-        const spellSlug = effect.slug.replace('sustaining-effect-', '');
-        const spell = getSpellBySlug(spellSlug, actor);
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
+        const spell = actor.items.get(spellId) as SpellPF2e;
         if (spell) {
-            await createSustainChatMessage(actor, spell);
+            await createSustainChatMessage(actor, spell, effect as EffectPF2e);
         }
     }
 }
@@ -101,10 +118,6 @@ function getActorSustainedEffects(actor: ActorPF2e) {
         item.type === 'effect' && (item.slug?.startsWith('sustaining-effect-') ?? false)
     );
     return sustainedEffects.length > 0 ? sustainedEffects : undefined;
-}
-
-function getSpellBySlug(spellSlug: string, actor: ActorPF2e): SpellPF2e | null {
-    return actor.itemTypes.spell.find(s => s.slug === spellSlug) ?? null;
 }
 
 /**
@@ -126,13 +139,12 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
         return;
     }
 
-    // Update effect to next turn
-    const currentStartValue = effect.system.start.value;
-    const newStartValue = currentStartValue + 6;
-
+    // Update effect to expire at the end of the next turn, relative to the current time.
+    // We use game.time.worldTime rather than incrementing the current start value
+    // to prevent duration stacking if the spell is sustained multiple times in one round.
     await effect.update({
         "system.duration.value": 1,
-        "system.start.value": newStartValue,
+        "system.start.value": game.time.worldTime,
     });
 
     await addSustainedSpellBackIntoChat(effect, actor);
@@ -172,16 +184,19 @@ async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2
 /**
  * Creates the chat message with the "Sustain" button.
  */
-async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
-    const effectSlug = `sustaining-effect-${spell.slug}`;
-    const content = `<p>Do you want to sustain <strong>${spell.name}</strong>?</p>`;
+async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effect: EffectPF2e) {
+    const effectSlug = effect.slug;
+    const subtitle = effect.getFlag(MODULE_ID, "sustainedSubtitle") as string | undefined;
+
+    const spellNameStr = subtitle ? `${spell.name} (${subtitle})` : spell.name;
+    const content = `<p>Do you want to sustain <strong>${spellNameStr}</strong>?</p>`;
 
     await createChatMessageWithButton({
         slug: "sustain-spell",
         actor: actor,
         content: content,
         button_label: "Sustain",
-        params: [actor.id, effectSlug]
+        params: [actor.id, effectSlug ?? ""]
     });
 }
 
@@ -222,9 +237,11 @@ export async function checkIfTemplatePlacedHasSustainEffect(
     const spellSlugFromTemplate = template.item?.slug;
     if (!spellSlugFromTemplate) return;
 
-    const matchingEffect = sustainedEffectsOnActor.find(effect =>
-        effect.slug?.replace('sustaining-effect-', '') === spellSlugFromTemplate
-    );
+    const matchingEffect = sustainedEffectsOnActor.find(effect => {
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
+        const spell = template.actor!.items.get(spellId) as SpellPF2e;
+        return spell?.slug === spellSlugFromTemplate;
+    });
 
     if (matchingEffect) {
         await associateTemplateWithEffect(template, matchingEffect as EffectPF2e);
