@@ -505,12 +505,12 @@ export async function rollDancingBladeDamage(message: ChatMessagePF2e, isCritica
     if (materialType) damageOptions.push(`item:material:${materialType}`);
 
     // Add relevant "traits" as defined in the damage helper (e.g. Ghost Touch)
-    const traitsToInclude: string[] = [];
+    const traitsToInclude = [];
     if (weapon) {
         for (const [key, config] of Object.entries(DAMAGE_TAG_CONFIG)) {
             if (config.group !== "trait") continue;
             if (weaponOptions.includes(config.value) && config.hasTag) {
-                traitsToInclude.push(key);
+                traitsToInclude.push({ key, ...config });
             }
         }
     }

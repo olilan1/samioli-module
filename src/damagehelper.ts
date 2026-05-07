@@ -1,3 +1,4 @@
+import { TokenDocumentPF2e } from "foundry-pf2e";
 import { logd } from "./utils.ts";
 
 const { DialogV2 } = foundry.applications.api;
@@ -177,42 +178,33 @@ function createDamageRoll(formData: Record<string, unknown>) {
     damageAndMaterialTypes.push(damageType);
     if (material) damageAndMaterialTypes.push(material);
 
-    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll");
+    const formula = damageModifiers.length > 0 
+        ? `{(${value}[${damageModifiers}])[${damageAndMaterialTypes}]}`
+        : `{${value}[${damageAndMaterialTypes}]}`;
+
+    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll") as typeof Roll;
     if (!DamageRoll) return;
-
-    let formula = ``;
-    if (damageModifiers.length > 0) {
-        formula = `{(${value}[${damageModifiers}])[${damageAndMaterialTypes}]}`;
-    } else {
-        formula = `{${value}[${damageAndMaterialTypes}]}`;
-    }
-
-    const newFlavor = getFlavorHtml(damageType, damageTraits, material, isPersistent);
 
     const myRoll = new DamageRoll(formula);
 
-    myRoll.toMessage({
-        flavor: newFlavor,
-        speaker: ChatMessage.getSpeaker(),
-        flags: {
-            pf2e: {
-                context: {
-                    options: damageTraits.map(trait => trait.value)
-                }
-            }
-        }
+    sendDamageRollToChat({
+        roll: myRoll,
+        damageType,
+        traits: damageTraits,
+        material,
+        isPersistent,
+        rollOptions: damageTraits.map(trait => trait.value)
     });
 }
 
-function getFlavorHtml(damageType: string, damageTraits: { key: string; label: string; 
-    group: string; value: string; hasTag: boolean; }[] , material: string, isPersistent: boolean):
-    string {
+function getFlavorHtml(damageType: string, damageTraits: DamageTrait[], 
+    material: string, isPersistent: boolean, title: string = "Damage:", subtitle?: string): string {
 
     const hasTagTraits = damageTraits.filter(trait => trait.hasTag);
     const noTagTraits = damageTraits.filter(trait => !trait.hasTag);
     const headerStart = `
         <h4 class="action">
-        <strong>Damage: 
+        <strong>${title}${subtitle ? " " + subtitle : ""} 
     `;
     const traitLabels = noTagTraits.map(trait => trait.label);
     let headerNoTagTraitsString: string;
@@ -284,11 +276,11 @@ function isIntegerOrRoll(input: string): boolean {
 
 export interface DamageMessageData {
     roll: Roll;
-    title: string;
+    title?: string;
     subtitle?: string;
     damageType: string;
     targetUuid?: string;
-    traits?: string[];
+    traits?: DamageTrait[];
     material?: string;
     isPersistent?: boolean;
     speaker?: foundry.documents.ChatSpeakerData;
@@ -297,30 +289,19 @@ export interface DamageMessageData {
 
 export async function sendDamageRollToChat(data: DamageMessageData) {
     const { 
-        roll, title, subtitle, targetUuid, 
-        traits = [], material, speaker, rollOptions = [] 
+        roll, damageType, targetUuid, 
+        traits = [], material, isPersistent = false, speaker, rollOptions = [],
+        title, subtitle
     } = data;
 
-    let headerHtml = `<h4 class="action"><strong>${title}`;
-    if (subtitle) headerHtml += ` ${subtitle}`;
-    headerHtml += "</strong></h4>";
-
-    let tagsHtml = '<div class="tags" data-tooltip-class="pf2e">';
-    for (const trait of traits) {
-        tagsHtml += getTraitTagHtml(trait);
-    }
-    if (material) {
-        tagsHtml += getMaterialTagHtml(material);
-    }
-    tagsHtml += '</div>';
-
-    const flavor = `${headerHtml}${tagsHtml}`;
+    const flavor = getFlavorHtml(damageType, traits, material ?? "", isPersistent, title, subtitle);
     const targetDoc = targetUuid ? fromUuidSync(targetUuid) : null;
     
     let targetData = null;
-    if (targetDoc instanceof foundry.documents.BaseToken) {
-        targetData = { actor: targetDoc.actor?.uuid, token: targetUuid };
-    } else if (targetDoc instanceof foundry.documents.BaseActor) {
+    if (targetDoc && targetDoc.documentName === "Token") {
+        const tokenDoc = targetDoc as TokenDocumentPF2e;
+        targetData = { actor: tokenDoc.actor?.uuid, token: targetUuid };
+    } else if (targetDoc && targetDoc.documentName === "Actor") {
         targetData = { actor: targetUuid, token: null };
     }
 
