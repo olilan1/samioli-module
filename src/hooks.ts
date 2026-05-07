@@ -8,13 +8,7 @@ import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBla
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
-import { 
-    ifActorHasSustainEffectCreateMessage, 
-    checkIfSpellInChatIsSustain, 
-    checkIfTemplatePlacedHasSustainEffect, 
-    handleSustainedEffectDeletion, 
-    createSpellNotSustainedChatMessage 
-} from "./sustain.ts";
+import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, handleSustainedEffectDeletion, createSpellNotSustainedChatMessage } from "./sustain.ts";
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";

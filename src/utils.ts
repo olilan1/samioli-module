@@ -1,4 +1,4 @@
-import type { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour, SpellPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -204,7 +204,7 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
 }
 
 export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: EffectSource):
-    Promise<EffectPF2e | undefined> {
+    Promise<EffectPF2e | void> {
     const existingEffect = actor.items.find(item => item.slug === effectSource.system.slug
         && item.type === 'effect');
     if (existingEffect) {
