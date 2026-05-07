@@ -1,7 +1,7 @@
 import type { ChatMessagePF2e, EffectPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
 import { getCollidableCallbacks, getTokensAtLocation, MODULE_ID } from "../utils.ts";
 import type { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { getTokenFromUuid, rollDancingBladeDamage } from "./dancingblade.ts";
+import { rollDancingBladeDamage } from "./dancingblade.ts";
 
 const { DialogV2 } = foundry.applications.api;
 
@@ -15,8 +15,6 @@ const STRIKE_SOUND = "modules/samioli-module/sounds/GDM/Medieval Fantasy SFX Pac
 const PUSH_SOUND = "modules/samioli-module/sounds/GDM/Medieval Fantasy SFX Pack/Hammer 2.m4a";
 const GUARD_SOUND =
     "modules/samioli-module/sounds/GDM/Gamemaster Audio - Pro Sound Collection/unsheathe_sword_with_ringout.m4a";
-
-// --- Animation Helpers ---
 
 const ANIMATION_SPECIFIC_WEAPONS: Record<string, string> = {
     scythe: "jb2a.spiritual_weapon.scythe.spectral.blue",
@@ -60,7 +58,7 @@ const ANIMATION_GROUPS: Record<string, string | ((isTwoHanded: boolean) => strin
  * Returns the most appropriate spiritual weapon animation for the given weapon.
  * Supports 1H/2H variants and specific weapons like Javelins or Picks.
  */
-export function getPersistentAnimation(weapon: WeaponPF2e): string {
+function getPersistentAnimation(weapon: WeaponPF2e): string {
     const slug = weapon.slug ?? weapon.name.slugify();
     const group = weapon.group;
     const isTwoHanded = weapon.system.usage.value === "held-in-two-hands";
@@ -77,53 +75,82 @@ export function getPersistentAnimation(weapon: WeaponPF2e): string {
 }
 
 /**
- * Shared logic for playing the Dancing Blade animation sequence.
+ * Orchestrates the Dancing Blade animation sequence, including optional transit from
+ * a previous location and the final persistent floating effect.
  */
 export function playBladeAnimationSequence(config: {
-    animFile: string;
+    weapon: WeaponPF2e;
     effectName: string;
     target: TokenPF2e;
     previousLocationToken?: TokenPF2e;
     tieToEffect?: EffectPF2e;
 }) {
-    const { animFile, effectName, target, previousLocationToken, tieToEffect } = config;
+    const { weapon, effectName, target, previousLocationToken, tieToEffect } = config;
+    const animFile = getPersistentAnimation(weapon);
     const seq = new Sequence();
     const gridOffset = { x: 0.6, y: -0.6 };
-    const attachOffset = { offset: { x: 0.6, y: -0.6 }, gridUnits: true };
 
     // Cleanup existing effects with the same name
     Sequencer.EffectManager.endEffects({ name: effectName });
 
-    // Handle transit if there's a different previous location
-    const isTransiting = previousLocationToken && previousLocationToken.id !== target.id;
+    const isTransiting = !!(previousLocationToken && previousLocationToken.id !== target.id);
     if (isTransiting) {
-        // prettier-ignore
-        seq.sound()
-            .file(TRANSIT_SOUND)
-            .effect()
-            .file(animFile)
-            .atLocation({
-                x: previousLocationToken.center.x + gridOffset.x * canvas.grid.size,
-                y: previousLocationToken.center.y + gridOffset.y * canvas.grid.size,
-            })
-            .moveTowards(
-                {
-                    x: target.center.x + gridOffset.x * canvas.grid.size,
-                    y: target.center.y + gridOffset.y * canvas.grid.size,
-                },
-                // @ts-expect-error Sequencer typings incorrectly require a target here
-                { ease: "easeInOutQuint" },
-            )
-            .moveSpeed(600)
-            .scale(0.5)
-            .fadeOut(100)
-            .waitUntilFinished(-100);
+        addTransitEffect(seq, animFile, previousLocationToken, target, gridOffset);
     }
 
-    // Persistent floating blade
+    addPersistentEffect(seq, animFile, target, effectName, isTransiting, tieToEffect);
+
+    seq.play();
+}
+
+/**
+ * Adds an animation showing the dancing weapon moving to a new target to the provided Sequence.
+ */
+function addTransitEffect(
+    seq: Sequence,
+    animFile: string,
+    source: TokenPF2e,
+    target: TokenPF2e,
+    offset: { x: number; y: number },
+) {
+    const grid = canvas.grid.size;
     // prettier-ignore
-    const persistEffect = seq
-        .effect()
+    seq.sound()
+        .file(TRANSIT_SOUND)
+    .effect()
+        .file(animFile)
+        .atLocation({
+            x: source.center.x + offset.x * grid,
+            y: source.center.y + offset.y * grid,
+        })
+        .moveTowards(
+            {
+                x: target.center.x + offset.x * grid,
+                y: target.center.y + offset.y * grid,
+            },
+            // @ts-expect-error Sequencer typings incorrectly require a target here
+            { ease: "easeInOutQuint" },
+        )
+        .moveSpeed(600)
+        .scale(0.5)
+        .fadeOut(100)
+        .waitUntilFinished(-100);
+}
+
+/**
+ * Adds a persistent floating effect to the provided Sequence.
+ */
+function addPersistentEffect(
+    seq: Sequence,
+    animFile: string,
+    target: TokenPF2e,
+    effectName: string,
+    isTransiting: boolean,
+    tieToEffect?: EffectPF2e,
+): void {
+    const attachOffset = { offset: { x: 0.6, y: -0.6 }, gridUnits: true };
+    // prettier-ignore
+    const persistEffect = seq.effect()
         .file(animFile)
         .attachTo(target, attachOffset)
         .name(effectName)
@@ -138,12 +165,9 @@ export function playBladeAnimationSequence(config: {
     if (isTransiting) {
         persistEffect.fadeIn(100);
     } else {
-        // Initial cast
         persistEffect.fadeIn(500);
         seq.sound().file(CAST_SOUND);
     }
-
-    seq.play();
 }
 
 /**
@@ -158,10 +182,8 @@ export function startDancingBladePersistentAnimation(
     weaponId: string,
 ) {
     const effectName = `dancing-blade-${weaponId}`;
-    const animFile = getPersistentAnimation(weapon);
-
     playBladeAnimationSequence({
-        animFile,
+        weapon,
         effectName,
         target,
         previousLocationToken,
@@ -176,13 +198,13 @@ export function playDancingBladeAttackAnimation(target: TokenPF2e, type: "strike
     // prettier-ignore
     new Sequence()
         .effect()
-        .file(type === "strike" ? STRIKE_ANIM : PUSH_ANIM)
-        .atLocation(target)
-        .spriteOffset({ x: 0.3, y: -0.3 }, { gridUnits: true })
-        .scale(0.5)
-        .playbackRate(0.6)
+            .file(type === "strike" ? STRIKE_ANIM : PUSH_ANIM)
+            .atLocation(target)
+            .spriteOffset({ x: 0.3, y: -0.3 }, { gridUnits: true })
+            .scale(0.5)
+            .playbackRate(0.6)
         .sound()
-        .file(type === "strike" ? STRIKE_SOUND : PUSH_SOUND)
+            .file(type === "strike" ? STRIKE_SOUND : PUSH_SOUND)
         .play();
 }
 
@@ -193,16 +215,16 @@ export function playDancingBladeGuardAnimation(target: TokenPF2e) {
     // prettier-ignore
     new Sequence()
         .effect()
-        .file("jb2a.icon.shield.blue")
-        .atLocation(target)
-        .scale(0.5)
-        .scaleIn(0, 500, { ease: "easeOutBack" })
-        .scaleOut(0, 500, { ease: "easeInBack" })
-        .fadeIn(250)
-        .fadeOut(250)
-        .duration(1500)
+            .file("jb2a.icon.shield.blue")
+            .atLocation(target)
+            .scale(0.5)
+            .scaleIn(0, 500, { ease: "easeOutBack" })
+            .scaleOut(0, 500, { ease: "easeInBack" })
+            .fadeIn(250)
+            .fadeOut(250)
+            .duration(1500)
         .sound()
-        .file(GUARD_SOUND)
+            .file(GUARD_SOUND)
         .play();
 }
 
@@ -271,7 +293,6 @@ export async function promptForTarget(
 /**
  * Presents the action menu dialog (Strike, Guard, Push, Change Partner)
  * with MAP penalty and damage type selectors.
- * @returns The user's choices, or undefined if the dialog is closed.
  */
 export async function promptForBladeAction(
     weaponName: string,
@@ -279,59 +300,67 @@ export async function promptForBladeAction(
     isInitialCast: boolean,
     damageTypes: string[],
 ): Promise<{ choice: string; attackNumber: number; damageType?: string } | undefined> {
-    const buttons: {
-        action: string;
-        label: string;
-        icon: string;
-        callback?: (
-            event: Event,
-            button: HTMLButtonElement,
-            dialog: InstanceType<typeof DialogV2>,
-        ) => { choice: string; attackNumber: number; damageType?: string };
-    }[] = [{ action: "strike", label: "Strike", icon: "fa-solid fa-swords" }];
+    const title = isInitialCast ? "Dancing Blade Action" : "Sustain Dancing Blade";
+
+    // Define core actions
+    const buttonConfigs = [
+        { action: "strike", label: "Strike", icon: "fa-solid fa-swords" },
+    ];
 
     if (isAmped) {
-        buttons.push(
+        buttonConfigs.push(
             { action: "guard", label: "Guard", icon: "fa-solid fa-shield-halved" },
             { action: "push", label: "Push", icon: "fa-solid fa-hand-sparkles" },
         );
     }
 
     if (!isInitialCast) {
-        buttons.push({
+        buttonConfigs.push({
             action: "partner",
             label: "Change Partner",
             icon: "fa-solid fa-people-arrows",
         });
     }
 
-    // Add callback to each button to extract MAP penalty and damage type
-    buttons.forEach((b) => {
-        b.callback = (_e: Event, _b: HTMLButtonElement, dialog: InstanceType<typeof DialogV2>) => {
-            const mapValue = dialog.element.querySelector<HTMLInputElement>(
-                'input[name="attackNumber"]:checked',
-            )?.value;
-            const dtValue = dialog.element.querySelector<HTMLSelectElement>(
+    // Build the buttons with a unified callback logic
+    const buttons = buttonConfigs.map((config) => ({
+        ...config,
+        callback: (_e: Event, _b: HTMLButtonElement, dialog: InstanceType<typeof DialogV2>) => {
+            const element = dialog.element;
+            const attackNumber =
+                parseInt(
+                    element.querySelector<HTMLInputElement>('input[name="attackNumber"]:checked')
+                        ?.value ?? "1",
+                    10,
+                ) || 1;
+            const damageType = element.querySelector<HTMLSelectElement>(
                 'select[name="damageTypeSelect"]',
             )?.value;
-            return {
-                choice: b.action,
-                attackNumber: parseInt(mapValue ?? "1", 10) || 1,
-                damageType: dtValue,
-            };
-        };
-    });
 
-    const title = isInitialCast ? "Dancing Blade Action" : "Sustain Dancing Blade";
+            return { choice: config.action, attackNumber, damageType };
+        },
+    }));
 
+    const content = renderActionPromptContent(weaponName, damageTypes);
+
+    return (await DialogV2.wait({
+        window: { title },
+        content,
+        buttons,
+        rejectClose: false,
+    })) as { choice: string; attackNumber: number; damageType?: string } | undefined;
+}
+
+/**
+ * Renders the HTML content for the action selection dialog.
+ */
+function renderActionPromptContent(weaponName: string, damageTypes: string[]): string {
     let damageTypeHtml = "";
     if (damageTypes.length > 1) {
-        const optionsHtml = damageTypes
+        const options = damageTypes
             .map((t) => {
-                const pf2eConfig = CONFIG.PF2E;
-                const label = game.i18n.localize(
-                    pf2eConfig.damageTypes[t as keyof typeof pf2eConfig.damageTypes] ?? t,
-                );
+                const config = CONFIG.PF2E.damageTypes as Record<string, string>;
+                const label = game.i18n.localize(config[t] ?? t);
                 return `<option value="${t}">${label}</option>`;
             })
             .join("");
@@ -340,13 +369,13 @@ export async function promptForBladeAction(
             <div class="form-group" style="width: 75%; margin: 0 auto;">
                 <label style="flex-grow: 0;">Damage&nbsp;Type:</label>
                 <select name="damageTypeSelect" style="width: 100%;">
-                    ${optionsHtml}
+                    ${options}
                 </select>
             </div>
         `;
     }
 
-    const content = `
+    return `
         <p>What do you want to do with your dancing <b>${weaponName}</b>?</p>
         ${damageTypeHtml}
         <div class="map-radio-group" style="display: flex; gap: 10px; justify-content: center;">
@@ -360,16 +389,9 @@ export async function promptForBladeAction(
             <label for="map-3">MAP -10</label>
         </div>
     `;
-
-    return (await DialogV2.wait({
-        window: { title },
-        content,
-        buttons,
-        rejectClose: false,
-    })) as { choice: string; attackNumber: number; damageType?: string } | undefined;
 }
 
-/** Low-level wrapper around Sequencer's Crosshair API for Dancing Blade target selection. */
+/** Prompt for Dancing Blade target selection using Sequencer Crosshair. */
 async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
     const labelText = `Select a target for Dancing Blade (${range} ft range)`;
     const iconTexture = "icons/svg/target.svg";
@@ -425,4 +447,10 @@ export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQu
     } else {
         html.append(buttonContainer);
     }
+}
+
+/** Ends the persistent floating-blade Sequencer animation for a given weapon. */
+export function endBladeAnimation(weaponId: string) {
+    const effectName = `dancing-blade-${weaponId}`;
+    Sequencer.EffectManager.endEffects({ name: effectName });
 }

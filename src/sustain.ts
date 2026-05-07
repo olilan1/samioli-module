@@ -11,7 +11,8 @@ import {
     addOrUpdateEffectOnActor, 
     deleteTemplateById, 
     isEffect, 
-    MODULE_ID 
+    MODULE_ID,
+    isSpellPF2e
 } from "./utils.ts";
 import { 
     runMatchingSustainFunction, 
@@ -28,10 +29,20 @@ export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
     const messageItem = message.item;
     if (!isSpellPF2e(messageItem)) return;
     if (!hasSustainedDuration(messageItem)) return;
-    if (MANUAL_SUSTAIN_SPELLS.has(messageItem.slug ?? "")) return;
+    if (MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(messageItem))) return;
     if (!message.actor) return;
 
-    await addSustainEffectToActor(message.actor, messageItem);
+    // We cast to unknown before SpellPF2e to break deep type recursion
+    await addSustainEffectToActor(message.actor, messageItem as unknown as SpellPF2e);
+}
+
+/**
+ * Safely extracts the slug from a SpellPF2e.
+ * We cast through unknown to break the deep type recursion of the PF2e Spell type,
+ * which otherwise causes "Type instantiation is excessively deep" errors.
+ */
+function getSpellSlug(spell: SpellPF2e): string {
+    return (spell as unknown as { slug: string | null }).slug ?? "";
 }
 
 function hasSustainedDuration(spell: SpellPF2e): boolean {
@@ -39,10 +50,6 @@ function hasSustainedDuration(spell: SpellPF2e): boolean {
     // caused by the complexity of the PF2e system's Spell types.
     const system = spell.system as unknown as { duration?: { sustained?: boolean } };
     return !!system.duration?.sustained;
-}
-
-function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
-    return !!item && item.type === "spell";
 }
 
 /**
