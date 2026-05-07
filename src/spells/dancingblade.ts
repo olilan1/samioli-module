@@ -754,10 +754,15 @@ function getCastContext(message: ChatMessagePF2e): { castRank: number; isAmped: 
  * Checks for an existing Dancing Blade cast for the specified weapon and cleans it up.
  */
 async function handleExistingCasting(actor: ActorPF2e, weapon: WeaponPF2e) {
-    const slug = `sustaining-effect-dancing-blade-${weaponSlugId(weapon.id)}`;
-    const existing = actor.itemTypes.effect.find((e) => e.slug === slug);
+    const fallbackSlug = `sustaining-effect-dancing-blade-${weaponSlugId(weapon.id)}`;
+    
+    const existing = actor.itemTypes.effect.find((e) => {
+        const hasFlagMatch = e.getFlag(MODULE_ID, "weaponId") === weapon.id;
+        const hasSlugMatch = e.slug === fallbackSlug; 
+        return e.slug?.startsWith("sustaining-effect-") && (hasFlagMatch || hasSlugMatch);
+    });
+
     if (existing) {
-        await cleanupDancingBlade(existing);
         await existing.delete();
     }
 }
