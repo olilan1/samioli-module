@@ -73,7 +73,6 @@ export async function selectForceBarrageTargets(token: TokenPF2e, message: ChatM
 async function selectNumberOfActionsDialog(): Promise<number | undefined> {
 
     const actions = await DialogV2.wait({
-        // @ts-expect-error not all parameters are required
         window: {
             title: "How many actions?",
         },
