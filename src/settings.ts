@@ -14,6 +14,9 @@ export const SETTINGS = {
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
     AUTO_CONSERVATION_OF_ENERGY: "automatic_conservation_of_energy_enable",
     DAMAGE_HELPER_BUTTON: "damage_helper_button_enable",
+    MOOD_CLOUD_HAPPY_IMAGE: "mood_cloud_happy_image",
+    MOOD_CLOUD_ANGRY_IMAGE: "mood_cloud_angry_image",
+    MOOD_CLOUD_INSCRUTABLE_IMAGE: "mood_cloud_inscrutable_image",
     DEBUG_LOGGING: "debug_logging"
 } as const;
 
@@ -136,6 +139,36 @@ export function registerSettings() {
         default: false,
         requiresReload: true,
         type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.MOOD_CLOUD_HAPPY_IMAGE, {
+        name: "Happy mood cloud token",
+        hint: "The token image used for a Happy mood cloud",
+        scope: "world",
+        config: true,
+        type: String,
+        //@ts-expect-error filePicker is ok
+        filePicker: "image"
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.MOOD_CLOUD_ANGRY_IMAGE, {
+        name: "Angry mood cloud token",
+        hint: "The token image used for an Angry mood cloud.",
+        scope: "world",
+        config: true,
+        type: String,
+        //@ts-expect-error filePicker is ok
+        filePicker: "image"
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.MOOD_CLOUD_INSCRUTABLE_IMAGE, {
+        name: "Inscrutable mood cloud token",
+        hint: "The token image used for an Inscrutable mood cloud.",
+        scope: "world",
+        config: true,
+        type: String,
+        //@ts-expect-error filePicker is ok
+        filePicker: "image"
     });
 
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.DEBUG_LOGGING, {
