@@ -83,7 +83,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
     }
 
-    // Wraps the application in a Promise so the caller can await the user's weapon selection.
     static async selectWeapon(
         isTwoHanded: boolean, 
         originalBaseWeapon: string | null, 
@@ -111,7 +110,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         const rows = html.querySelectorAll<HTMLTableRowElement>("tbody tr");
 
         if (tbody) {
-            // Event delegation for row clicks
             tbody.addEventListener("click", (event) => {
                 const target = event.target as HTMLElement;
                 // Avoid double-triggering if the user clicked the radio directly
@@ -127,7 +125,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
                 }
             });
 
-            // Event delegation for radio button changes
             tbody.addEventListener("change", (event) => {
                 const target = event.target as HTMLElement;
                 if (
@@ -151,8 +148,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             const hideUntrained = hideUntrainedCheckbox?.checked ?? false;
 
             rows.forEach(row => {
-                // Reading textContent is highly optimized compared to running DOM selectors. It
-                // also means the search can include everything in the row (including e.g. dice)
+                // Reading textContent so that search can include everything in the row.
                 const matchesSearch = !query || 
                     (row.textContent ?? "").toLowerCase().includes(query);
                 
@@ -187,7 +183,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         const pack = game.packs.get(EQUIPMENT_PACK);
         if (!pack) return { ...context, weapons: [] };
 
-        // Fetching the index is significantly faster than loading all full weapon documents.
         const index = (await pack.getIndex({ 
             fields: INDEX_FIELDS 
         })) as unknown as WeaponIndexData[];
@@ -202,10 +197,10 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             item.system.slug in baseWeaponTypes &&
             (this.isTwoHanded || item.system.usage?.value !== "held-in-two-hands") &&
             !item.system.traits?.value?.includes("attached") &&
-            (item.system.range ?? 0) === 0
+            (item.system.range ?? 0) === 0 &&
+            item.system.slug !== this.currentWeaponBaseId
         );
 
-        // Map Data
         const weapons = filteredIndex.map((idx: WeaponIndexData) => {
             const traits = idx.system.traits?.value ?? [];
             
@@ -248,8 +243,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             };
         });
 
-        // Sort alphabetically, but hoist the original form to the top if we aren't 
-        // currently wielding it
+        // Sort alphabetically, but with the original form at the top if present.
         const isCurrentlyOriginal = this.originalBaseWeapon === this.currentWeaponBaseId;
 
         weapons.sort((a, b) => {
@@ -264,7 +258,6 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
     }
 
     private checkWeaponProficiency(idx: WeaponIndexData, traits: string[]): boolean {
-        // Manually evaluate proficiency against raw index data.
         const proficiencies = this.actor.system.proficiencies;
         const categoryRank = proficiencies.attacks[idx.system.category]?.rank ?? 0;
         const groupRank = proficiencies.attacks[`weapon-group-${idx.system.group}`]?.rank ?? 0;
@@ -276,13 +269,12 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             ? (proficiencies.attacks[`weapon-base-${baseWeapon}`]?.rank ?? 0) 
             : 0;
 
-        // Early return if natively proficient via class features (skips expensive synthetic checks)
+        // Early return if natively proficient via class features.
         if (Math.max(categoryRank, groupRank, baseWeaponRank) > 0) {
             return true;
         }
 
-        // Reconstruct the roll options to correctly evaluate rule elements e.g. weapon
-        // familiarity feats.
+        // Reconstruct the roll options to evaluate rule elements e.g. weapon familiarity feats.
         const rollOptions = new Set([
             "item:type:weapon",
             `item:id:${idx._id}`,
@@ -321,11 +313,9 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
 
         if (!weaponId) {
             ui.notifications.warn("No weapon form selected.");
-            return; // Returns without closing the UI so the user can try again!
+            return;
         }
 
-        // We only fetch the full Document from the compendium once the user has 
-        // definitively made a selection.
         const pack = game.packs.get(EQUIPMENT_PACK);
         if (!pack) throw new Error(`Compendium ${EQUIPMENT_PACK} not found`);
         
@@ -336,7 +326,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
 
         this.resolve?.(weaponItem);
-        this.resolve = undefined; // Prevents _onClose from double-resolving with null
+        this.resolve = undefined;
         await this.close();
     }
 

@@ -56,9 +56,8 @@ export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<
         .map(w => new Option(w.name, w.id).outerHTML)
         .join("");
 
-    // Handle multiple shifting weapons scenario
+    // Show dialog if more than one shifting weapon available.
     const weaponId = await DialogV2.wait({
-        // @ts-expect-error Window doesn't need to provide all parameters
         window: { title: "Select Weapon to Shift" },
         content: `
             <form>
@@ -130,12 +129,6 @@ async function displayShiftingWeaponDialogForWeapon(
         return;
     }
 
-    // Prevent unnecessary database writes if selecting the exact same form
-    if (getWeaponBaseId(weapon) === getWeaponBaseId(selectedWeapon)) {
-        ui.notifications.info(`${token.name}'s weapon is already in that form.`);
-        return;
-    }
-
     // Extract the original name before the update potentially mutates the weapon in memory
     const baseName = extractOriginalNameFromShiftedSuffix(weapon.name);
 
@@ -171,12 +164,18 @@ async function updateWeaponStats(
 ): Promise<boolean> {
     const targetBaseWeapon = getWeaponBaseId(postShiftedWeapon);
     const isChangingToOriginalForm = originalBaseWeapon === targetBaseWeapon;
+    const isCurrentlyOriginalForm = originalBaseWeapon === getWeaponBaseId(preShiftedWeapon);
 
-    // Retrieve the original name (fallback to current name if somehow missing)
-    const originalName = getOriginalWeaponName(preShiftedWeapon) 
-        ?? extractOriginalNameFromShiftedSuffix(preShiftedWeapon.name);
+    // Retrieve the original name. If we are currently holding the original form, 
+    // its current name IS the original name (which bypasses stale flags).
+    const originalName = isCurrentlyOriginalForm
+        ? preShiftedWeapon.name
+        : (getOriginalWeaponName(preShiftedWeapon) 
+            ?? extractOriginalNameFromShiftedSuffix(preShiftedWeapon.name));
 
-    const originalImg = getOriginalWeaponImg(preShiftedWeapon);
+    const originalImg = isCurrentlyOriginalForm
+        ? preShiftedWeapon.img
+        : getOriginalWeaponImg(preShiftedWeapon);
 
     const newName = isChangingToOriginalForm 
         ? originalName
@@ -211,7 +210,7 @@ async function updateWeaponStats(
 
     // If we're shifting FROM the original form, save its current name and image in the 
     // same update payload
-    if (originalBaseWeapon === getWeaponBaseId(preShiftedWeapon)) {
+    if (isCurrentlyOriginalForm) {
         updateData[`flags.${MODULE_ID}.${SHIFTING_FLAGS.ORIGINAL_NAME}`] = preShiftedWeapon.name;
         updateData[`flags.${MODULE_ID}.${SHIFTING_FLAGS.ORIGINAL_IMG}`] = preShiftedWeapon.img;
     }
