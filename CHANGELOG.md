@@ -7,6 +7,7 @@
 - Automation for Mood Cloud emote action
 - Add check to require PRs to update the changelog (unless explicitly skipped)
 - Update conservation of energy with remastered spell list
+- Dancing Blade automation
 
 ## [0.61.0] - 2026-04-12
 
