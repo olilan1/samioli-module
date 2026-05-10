@@ -12,6 +12,7 @@ import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shif
 import { deploySnare, removeSnare } from "./actions/snare.ts";
 import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
 import { startDancingBlade } from "./spells/dancingblade.ts";
+import { startEmote } from "./actions/emote.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const CATEGORY_PREFIX = 'origin:item:category:';
@@ -78,6 +79,10 @@ const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "activation-shift-weapon": {
         label: "Shift weapon!",
         function: displayShiftingWeaponDialogFromActivationsModule
+    },
+    "emote": {
+        label: "Emote!",
+        function: startEmote
     }
 }
 

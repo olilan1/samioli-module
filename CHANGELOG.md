@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 - Add animation button for translocate and amped warp step
+- Change dive and breach animation to use Crosshair instead of Portal
+- Automation for Mood Cloud emote action
+- Add check to require PRs to update the changelog (unless explicitly skipped)
+- Update conservation of energy with remastered spell list
 
 ## [0.61.0] - 2026-04-12
 
