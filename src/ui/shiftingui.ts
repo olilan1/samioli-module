@@ -1,13 +1,47 @@
-import { CharacterPF2e, WeaponPF2e } from "foundry-pf2e";
+import { CharacterPF2e, MartialProficiency, WeaponPF2e } from "foundry-pf2e";
 import { ApplicationRenderOptions } from "foundry-pf2e/foundry/client/applications/_module.mjs";
-import { getWeaponProficiencyRank } from "../utils.ts";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2) {
+const EQUIPMENT_PACK = "pf2e.equipment-srd";
 
-    private isTwoHanded: boolean;
-    private originalBaseWeapon: string | null;
-    private actor: CharacterPF2e;
+const USAGE_MAP: Record<string, string> = {
+    "held-in-one-hand": "1H",
+    "held-in-two-hands": "2H",
+    "held-in-one-plus-hands": "1+H"
+};
+
+const INDEX_FIELDS = [
+    "system.category",
+    "system.group",
+    "system.traits",
+    "system.damage",
+    "system.usage",
+    "system.bulk",
+    "system.range",
+    "system.slug",
+    "system.baseItem",
+    "system.level"
+];
+
+interface WeaponIndexData {
+    _id: string;
+    name: string;
+    type: string;
+    system: {
+        category: string;
+        group: string;
+        traits?: { value: string[] };
+        damage?: { die: string; damageType: string };
+        usage?: { value: string };
+        bulk?: { value: string };
+        range?: number | null;
+        slug: string;
+        baseItem?: string;
+        level?: { value: number };
+    };
+}
+
+export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2) {
     private resolve?: (value: WeaponPF2e | null) => void;
 
     static override DEFAULT_OPTIONS = {
@@ -25,7 +59,7 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
             height: 650
         },
         form: {
-            closeOnSubmit: true
+            closeOnSubmit: false
         }
     };
 
@@ -35,78 +69,92 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         }
     };
 
-    constructor(isTwoHanded: boolean, originalBaseWeapon: string | null, actor: CharacterPF2e, options: Partial<foundry.applications.ApplicationConfiguration> = {}) {
+    constructor(
+        private isTwoHanded: boolean, 
+        private originalBaseWeapon: string | null, 
+        private currentWeaponBaseId: string,
+        private actor: CharacterPF2e, 
+        options: Partial<foundry.applications.ApplicationConfiguration> = {}
+    ) {
         super(options);
-        this.isTwoHanded = isTwoHanded;
-        this.originalBaseWeapon = originalBaseWeapon;
-        this.actor = actor;
 
         if (this.options.form) {
             this.options.form.handler = this.formHandler.bind(this);
         }
     }
 
-    static async selectWeapon(isTwoHanded: boolean, originalBaseWeapon: string | null, actor: CharacterPF2e): Promise<WeaponPF2e | null> {
+    static async selectWeapon(
+        isTwoHanded: boolean, 
+        originalBaseWeapon: string | null, 
+        currentWeaponBaseId: string,
+        actor: CharacterPF2e
+    ): Promise<WeaponPF2e | null> {
 
         return new Promise((resolve) => {
-            const app = new ShiftingWeaponApp(isTwoHanded, originalBaseWeapon, actor);
+            const app = new ShiftingWeaponApp(
+                isTwoHanded, originalBaseWeapon, currentWeaponBaseId, actor
+            );
             app.resolve = resolve;
             app.render(true);
         });
     }
 
-    override async _onRender(context: ApplicationRenderOptions, options: any) {
+    override async _onRender(
+        context: Record<string, unknown>, 
+        options: ApplicationRenderOptions
+    ): Promise<void> {
         await super._onRender(context, options);
 
-        // Setup row click listeners
         const html = this.element;
-        const rows = html.querySelectorAll("tbody tr");
+        const tbody = html.querySelector("tbody");
+        const rows = html.querySelectorAll<HTMLTableRowElement>("tbody tr");
 
-        rows.forEach(row => {
-            row.addEventListener("click", (_event) => {
-                // Find the radio inside
-                const radio = row.querySelector('input[type="radio"]') as HTMLInputElement;
-                if (radio) {
-                    radio.checked = true;
-                    // Trigger update of selected class
-                    this.updateSelectedRow(rows, row);
+        if (tbody) {
+            tbody.addEventListener("click", (event) => {
+                const target = event.target as HTMLElement;
+                // Avoid double-triggering if the user clicked the radio directly
+                if (target instanceof HTMLInputElement && target.type === "radio") return;
+
+                const row = target.closest<HTMLTableRowElement>("tr");
+                if (row) {
+                    const radio = row.querySelector<HTMLInputElement>('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                        this.updateSelectedRow(row);
+                    }
                 }
             });
-        });
 
-        // Also listen for direct radio clicks
-        const radios = html.querySelectorAll('input[type="radio"]');
-        radios.forEach(radio => {
-            radio.addEventListener("change", (event) => {
-                const targetRadio = event.target as HTMLInputElement;
-                if (targetRadio.checked) {
-                    const row = targetRadio.closest("tr");
-                    if (row) this.updateSelectedRow(rows, row);
+            tbody.addEventListener("change", (event) => {
+                const target = event.target as HTMLElement;
+                if (
+                    target instanceof HTMLInputElement && 
+                    target.type === "radio" && target.checked
+                ) {
+                    const row = target.closest<HTMLTableRowElement>("tr");
+                    if (row) this.updateSelectedRow(row);
                 }
             });
-        });
+        }
 
         // Search and filter functionality
-        const searchInput = html.querySelector(".shifting-search-input") as HTMLInputElement;
-        const hideUntrainedCheckbox = html.querySelector(".shifting-hide-untrained") as HTMLInputElement;
+        const searchInput = html.querySelector<HTMLInputElement>(".shifting-search-input");
+        const hideUntrainedCheckbox = 
+            html.querySelector<HTMLInputElement>(".shifting-hide-untrained");
 
+        // Re-evaluates row visibility whenever the search query or "Hide Untrained" toggle changes.
         const filterRows = () => {
             const query = searchInput?.value.toLowerCase() || "";
             const hideUntrained = hideUntrainedCheckbox?.checked ?? false;
 
             rows.forEach(row => {
-                const matchesSearch = this.weaponMatchesSearch(row, query);
+                // Reading textContent so that search can include everything in the row.
+                const matchesSearch = !query || 
+                    (row.textContent ?? "").toLowerCase().includes(query);
+                
+                const matchesProficiency = !hideUntrained || row.dataset.isProficient === "true";
 
-                let matchesProficiency = true;
-                if (hideUntrained) {
-                    matchesProficiency = row.getAttribute("data-is-proficient") === "true";
-                }
-
-                if (matchesSearch && matchesProficiency) {
-                    (row as HTMLElement).style.display = "";
-                } else {
-                    (row as HTMLElement).style.display = "none";
-                }
+                row.style.display = matchesSearch && matchesProficiency ? "" : "none";
             });
         };
 
@@ -121,153 +169,170 @@ export class ShiftingWeaponApp extends HandlebarsApplicationMixin(ApplicationV2)
         filterRows();
     }
 
-    private updateSelectedRow(allRows: NodeListOf<Element>, selectedRow: Element) {
-        allRows.forEach(r => r.classList.remove("selected"));
+    private updateSelectedRow(selectedRow: HTMLTableRowElement): void {
+        const currentlySelected = this.element.querySelector<HTMLTableRowElement>("tr.selected");
+        if (currentlySelected && currentlySelected !== selectedRow) {
+            currentlySelected.classList.remove("selected");
+        }
         selectedRow.classList.add("selected");
-    }
-
-    private weaponMatchesSearch(row: Element, query: string): boolean {
-        const nameCell = row.querySelector(".weapon-name strong");
-        const traits = Array.from(row.querySelectorAll(".tags .tag")).map(t => t.textContent?.toLowerCase() || "");
-
-        const nameMatch = nameCell?.textContent?.toLowerCase().includes(query) ?? false;
-        const traitMatch = traits.some(t => t.includes(query));
-        return nameMatch || traitMatch || query === "";
     }
 
     override async _prepareContext(options: ApplicationRenderOptions) {
         const context = await super._prepareContext(options);
-        // Get the PF2e Equipment Compendium
-        const pack = game.packs.get("pf2e.equipment-srd");
+        
+        const pack = game.packs.get(EQUIPMENT_PACK);
         if (!pack) return { ...context, weapons: [] };
 
-        // Get fields we need to display
-        const indexFields = [
-            "system.category",
-            "system.group",
-            "system.traits",
-            "system.damage",
-            "system.usage",
-            "system.bulk",
-            "system.range",
-            "system.slug"
-        ];
+        const index = (await pack.getIndex({ 
+            fields: INDEX_FIELDS 
+        })) as unknown as WeaponIndexData[];
 
-        // Load the index
-        const index = await pack.getIndex({ fields: indexFields });
+        const { 
+            weaponCategories, weaponGroups, weaponTraits, traitsDescriptions, baseWeaponTypes 
+        } = CONFIG.PF2E;
 
-        const baseWeapons = CONFIG.PF2E.baseWeaponTypes;
+        // Restrict the list to valid melee base weapons (accounting for 1H/2H constraints).
+        const filteredIndex = index.filter(item =>
+            item.type === "weapon" &&
+            item.system.slug in baseWeaponTypes &&
+            (this.isTwoHanded || item.system.usage?.value !== "held-in-two-hands") &&
+            !item.system.traits?.value?.includes("attached") &&
+            (item.system.range ?? 0) === 0 &&
+            item.system.slug !== this.currentWeaponBaseId
+        );
 
-        // Filter the index
-        const filteredIndex = index.filter((item) => {
-                // Check if it's in the list of base weapons
-                if (!(item.system.slug in baseWeapons)) return false;
-                // Remove things like ammo by confirming it's a weapon
-                if (item.type !== "weapon") return false;
+        const weapons = filteredIndex.map((idx: WeaponIndexData) => {
+            const traits = idx.system.traits?.value ?? [];
+            
+            const catKey = weaponCategories[idx.system.category as keyof typeof weaponCategories];
+            const categoryLabel = catKey ? game.i18n.localize(catKey) : idx.system.category;
+            
+            const grpKey = weaponGroups[idx.system.group as keyof typeof weaponGroups];
+            const groupLabel = grpKey ? game.i18n.localize(grpKey) : idx.system.group;
+            
+            const isOriginalForm = this.originalBaseWeapon === idx.system.slug;
+            const isProficient = this.checkWeaponProficiency(idx, traits);
 
-                // Filter to exclude two-handed weapons if original weapon is one handed
-                if (!this.isTwoHanded) {
-                    if (item.system.usage?.value === "held-in-two-hands") return false;
-                }
-
-                // Remove anything with the "attached" trait
-                if (item.system.traits?.value?.includes("attached")) return false;
-
-                // Filter to only include melee weapons
-                const isRanged = item.system.range > 0;
-                if (isRanged) return false;
-
-                return true;
-            });
-
-        const progress = ui.notifications.info("Loading weapons...", { progress: true});
-
-        // Fetch full Document objects for the filtered items concurrently
-        const weaponDocuments: WeaponPF2e[] = [];
-        let count = 0;
-        const total = filteredIndex.length;
-
-        const promises = filteredIndex.map(async (idx) => {
-            const weapon = (await pack.getDocument(idx._id)) as WeaponPF2e;
-            count++;
-            progress.update({ 
-                pct: (count / total), 
-                message: `Loading weapons... (${count} of ${total})` 
-            });
-            return weapon;
+            return {
+                id: idx._id,
+                level: idx.system.level?.value ?? 0,
+                name: idx.name,
+                slug: idx.system.slug,
+                rawCategory: idx.system.category,
+                category: categoryLabel,
+                group: groupLabel,
+                traits: traits.map((trait: string) => {
+                    const labelKey = weaponTraits[
+                        trait as keyof typeof weaponTraits
+                    ];
+                    const descKey = traitsDescriptions[
+                        trait as keyof typeof traitsDescriptions
+                    ];
+                    
+                    return {
+                        label: labelKey ? game.i18n.localize(labelKey) : trait,
+                        tooltip: descKey ? game.i18n.localize(descKey) : ""
+                    };
+                }),
+                dice: idx.system.damage?.die,
+                type: idx.system.damage?.damageType,
+                hands: this.formatNumberOfHands(idx.system.usage?.value),
+                bulk: idx.system.bulk?.value,
+                isOriginalForm,
+                isProficient
+            };
         });
 
-        const weaponsRaw = await Promise.all(promises);
-        
-        for (const weapon of weaponsRaw) {
-            if (weapon) weaponDocuments.push(weapon);
-        }
+        // Sort alphabetically, but with the original form at the top if present.
+        const isCurrentlyOriginal = this.originalBaseWeapon === this.currentWeaponBaseId;
 
-        // Map Data
-        const weapons = weaponDocuments.map((weapon) => {
-
-                const traits = weapon.system.traits?.value || [];
-                const categoryLabel = game.i18n.localize(CONFIG.PF2E.weaponCategories[weapon.system.category as keyof typeof CONFIG.PF2E.weaponCategories]) || weapon.system.category;
-                const groupLabel = game.i18n.localize(CONFIG.PF2E.weaponGroups[weapon.system.group as keyof typeof CONFIG.PF2E.weaponGroups]) || weapon.system.group;
-                let isOriginalForm = false;
-                if (this.originalBaseWeapon && this.originalBaseWeapon === weapon.system.slug) {
-                    isOriginalForm = true;
-                }
-
-                return {
-                    id: weapon._id,
-                    name: weapon.name,
-                    slug: weapon.system.slug,
-                    rawCategory: weapon.system.category,
-                    category: categoryLabel,
-                    group: groupLabel,
-                    traits: traits.map((trait: string) => ({
-                        label: game.i18n.localize(CONFIG.PF2E.weaponTraits[trait as keyof typeof CONFIG.PF2E.weaponTraits]),
-                        tooltip: game.i18n.localize(CONFIG.PF2E.traitsDescriptions[trait as keyof typeof CONFIG.PF2E.traitsDescriptions])
-                    })),
-                    dice: weapon.system.damage.die,
-                    type: weapon.system.damage.damageType,
-                    hands: this.formatNumberOfHands(weapon.system.usage?.value),
-                    bulk: weapon.system.bulk?.value,
-                    isOriginalForm: isOriginalForm,
-                    isProficient: getWeaponProficiencyRank(this.actor, weapon) > 0
-                };
-            });
-
-        // Sort alphabetically
-        weapons.sort((a, b) => a.name.localeCompare(b.name));
-
-        ui.notifications.remove(progress);
+        weapons.sort((a, b) => {
+            if (!isCurrentlyOriginal) {
+                if (a.isOriginalForm && !b.isOriginalForm) return -1;
+                if (b.isOriginalForm && !a.isOriginalForm) return 1;
+            }
+            return a.name.localeCompare(b.name);
+        });
 
         return { ...context, weapons };
     }
 
-    private formatNumberOfHands(usage: string) {
-        if (!usage) return "-";
-        if (usage === "held-in-one-hand") return "1H";
-        if (usage === "held-in-two-hands") return "2H";
-        return "n/a";
+    private checkWeaponProficiency(idx: WeaponIndexData, traits: string[]): boolean {
+        const proficiencies = this.actor.system.proficiencies;
+        const categoryRank = proficiencies.attacks[idx.system.category]?.rank ?? 0;
+        const groupRank = proficiencies.attacks[`weapon-group-${idx.system.group}`]?.rank ?? 0;
+        
+        const equivalentWeapons: Record<string, string | undefined> = 
+            CONFIG.PF2E.equivalentWeapons;
+        const baseWeapon = equivalentWeapons[idx.system.baseItem ?? ""] ?? idx.system.baseItem;
+        const baseWeaponRank = baseWeapon 
+            ? (proficiencies.attacks[`weapon-base-${baseWeapon}`]?.rank ?? 0) 
+            : 0;
+
+        // Early return if natively proficient via class features.
+        if (Math.max(categoryRank, groupRank, baseWeaponRank) > 0) {
+            return true;
+        }
+
+        // Reconstruct the roll options to evaluate rule elements e.g. weapon familiarity feats.
+        const rollOptions = new Set([
+            "item:type:weapon",
+            `item:id:${idx._id}`,
+            `item:slug:${idx.system.slug}`,
+            `item:category:${idx.system.category}`,
+            `item:group:${idx.system.group}`,
+            ...traits.map((t: string) => `item:trait:${t}`)
+        ]);
+
+        if (idx.system.baseItem) {
+            rollOptions.add(`item:base:${idx.system.baseItem}`);
+        }
+        if (baseWeapon && baseWeapon !== idx.system.baseItem) {
+            rollOptions.add(`item:base:${baseWeapon}`);
+        }
+
+        const rollOptionRanks = Object.values(proficiencies.attacks)
+            .filter((p): p is MartialProficiency => 
+                !!p?.definition?.test(rollOptions))
+            .map((p) => p.rank);
+
+        return rollOptionRanks.some(rank => rank > 0);
     }
 
-    async formHandler(_event: any, _form: any, formData: any) {
+    private formatNumberOfHands(usage: string | undefined): string {
+        if (!usage) return "-";
+        return USAGE_MAP[usage] ?? usage;
+    }
 
-        const weaponId = formData.object.weaponId;
+    async formHandler(
+        _event: Event, 
+        _form: HTMLFormElement, 
+        formData: { object: Record<string, unknown> }
+    ): Promise<void> {
+        const weaponId = formData.object.weaponId as string | undefined;
 
         if (!weaponId) {
             ui.notifications.warn("No weapon form selected.");
+            return;
         }
 
-        // Fetch the full item document from compendium
-        const pack = game.packs.get("pf2e.equipment-srd");
-        if (!pack) throw new Error("Compendium pf2e.equipment-srd not found");
-        const weaponItem = await pack.getDocument(weaponId) as WeaponPF2e;
+        const pack = game.packs.get(EQUIPMENT_PACK);
+        if (!pack) throw new Error(`Compendium ${EQUIPMENT_PACK} not found`);
+        
+        const weaponItem = await pack.getDocument(weaponId) as WeaponPF2e | undefined;
+        if (!weaponItem) {
+            ui.notifications.error("Could not find the selected weapon in the compendium.");
+            return;
+        }
 
         this.resolve?.(weaponItem);
+        this.resolve = undefined;
+        await this.close();
     }
 
     // Handle closing without submission
-    override _onClose(_options: any) {
-        if (this.resolve) this.resolve(null);
+    override _onClose(_options: Record<string, unknown>) {
+        this.resolve?.(null);
         super._onClose(_options);
     }
 }
