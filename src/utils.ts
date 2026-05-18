@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -101,21 +101,10 @@ export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
  * Returns the User(s) who have ownership or control over a given Actor.
  */
 export function getOwnersFromActor(actor: ActorPF2e, includeGM: boolean = true): User[] {
-    const controllingUsers = [];
-    for (const userId in actor.ownership) {
-        // Skip the "default" entry, which applies to all users unless overridden.
-        if (userId === "default") continue;
-
-        const permissionLevel = actor.ownership[userId] ?? 0;
-        if (permissionLevel >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
-            const user = game.users.get(userId);
-            if (user && (includeGM || !user.isGM)) {
-                controllingUsers.push(user);
-            }
-        }
-    }
-
-    return controllingUsers;
+    return game.users.filter((user) => {
+        if (!includeGM && user.isGM) return false;
+        return actor.testUserPermission(user, "OWNER");
+    });
 }
 
 /**
@@ -153,6 +142,11 @@ export function isEffect(item: ItemPF2e): item is EffectPF2e {
 
 export function isCharacter(actor: ActorPF2e): actor is CharacterPF2e {
     return actor.type === "character";
+}
+
+/** Checks if an item is a spell. */
+export function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
+    return !!item && item.type === "spell";
 }
 
 export async function sendBasicChatMessage(content: string, speaker: ActorPF2e,
@@ -226,19 +220,19 @@ export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: E
 export async function performFlatCheck(actor: ActorPF2e, dc: number, title: string, rollOptions: string[] = []): Promise<void> {
 
     const checkModifierInstance = new game.pf2e.CheckModifier(
-        title, 
+        title,
         { modifiers: [] }
     );
 
     const combinedRollOptions = [
-        'check',       
+        'check',
         'flat-check',
         ...rollOptions,
     ];
 
     const rollContextOptions = {
         actor: actor,
-        dc: { 
+        dc: {
             value: dc,
             slug: 'flat-check',
         },
@@ -282,7 +276,7 @@ export function getLevelBasedDC(level: number): number {
         24: 48,
         25: 50
     };
-    
+
     return DC_LOOKUP[level];
 }
 
@@ -330,7 +324,7 @@ export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWal
     }];
 
     const moveOptions = {
-        method: "api" as TokenMovementMethod, 
+        method: "api" as TokenMovementMethod,
         autoRotate: false,
         showRuler: false,
         constrainOptions: {
@@ -349,9 +343,9 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
 
     const locationGridOffset = canvas.grid.getOffset(location);
     const allTokensOnScene = canvas.tokens.placeables;
-    
+
     const validTokens = allTokensOnScene.filter(token => {
-        
+
         const actorType = token.actor?.type;
         if (actorType === "loot" || actorType === "party") {
             return false;
@@ -365,7 +359,7 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
         return validTokens;
     }
 
-    const visibleTokens = validTokens.filter(token => { 
+    const visibleTokens = validTokens.filter(token => {
         return token.document.hidden === false;
     });
 
@@ -396,4 +390,14 @@ export function getCollidableCallbacks(actionName: string, icon: string): Crossh
         mouseMove: undefined,
         placed: undefined
     };
+}
+
+/**
+ * Resolves a token document UUID to its live Token object on the canvas.
+ * Returns null if the UUID is invalid or the token is not on the active scene.
+ */
+export function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
+    if (!uuid) return null;
+    const doc = fromUuidSync<TokenDocumentPF2e>(uuid);
+    return doc?.object ?? null;
 }

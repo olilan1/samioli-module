@@ -11,6 +11,7 @@ import { selectForceBarrageTargets } from "./spells/forcebarrage.ts";
 import { displayShiftingWeaponDialogFromActivationsModule } from "./actions/shifting.ts";
 import { deploySnare, removeSnare } from "./actions/snare.ts";
 import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
+import { startDancingBlade } from "./spells/dancingblade.ts";
 import { startEmote } from "./actions/emote.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
@@ -94,6 +95,11 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
     "force-barrage": {
         label: "Select Targets",
         function: selectForceBarrageTargets,
+        buttonToReplace: DAMAGE_BUTTON_SPELL
+    },
+    "dancing-blade": {
+        label: "Animate!",
+        function: startDancingBlade,
         buttonToReplace: DAMAGE_BUTTON_SPELL
     }
 };

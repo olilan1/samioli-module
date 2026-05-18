@@ -1,0 +1,20 @@
+/* Dancing Blade MAP Buttons */
+.map-radio-group input[type="radio"] {
+    display: none;
+}
+.map-radio-group label {
+    padding: 4px 12px;
+    border: 1px solid var(--color-border-dark-primary, #7a7971);
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    font-size: var(--font-size-13, 13px);
+    user-select: none;
+    transition: all 0.2s ease;
+}
+.map-radio-group input[type="radio"]:checked + label {
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--color-text-light-highlight, white);
+    border-color: var(--color-border-highlight, #ff6400);
+    box-shadow: 0 0 5px var(--color-shadow-highlight, #ff6400);
+}

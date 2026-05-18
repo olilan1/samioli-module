@@ -35,7 +35,8 @@
       }
     ],
     "styles": [
-      "styles/shifting-weapon.css"
+      "styles/shifting-weapon.css",
+      "styles/samioli-styles.css"
     ],
     "compatibility": {
       "minimum": "12",

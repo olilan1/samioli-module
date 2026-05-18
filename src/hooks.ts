@@ -8,7 +8,7 @@ import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBla
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
 import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
-import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, deleteTemplateLinkedToSustainedEffect, createSpellNotSustainedChatMessage } from "./sustain.ts";
+import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, handleSustainedEffectDeletion, createSpellNotSustainedChatMessage } from "./sustain.ts";
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
 import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlersIfNeeded } from "./chatbuttonhelper.ts";
@@ -22,6 +22,7 @@ import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
+import { addDancingBladeDamageButtons } from "./spells/dancingblade-anim.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
 import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
@@ -47,6 +48,8 @@ Hooks.on('renderChatMessage', async (message: ChatMessagePF2e, html: JQuery<HTML
         .run();
     hook(replaceUnstableCheckWithStrainCheck, message, html)
         .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+        .run();
+    hook(addDancingBladeDamageButtons, message, html)
         .run();
 });
 
@@ -137,7 +140,7 @@ Hooks.on('preDeleteItem', async (item: ItemPF2e, _action, _id) => {
     hook(createSpellNotSustainedChatMessage, item)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .run();
-    hook(deleteTemplateLinkedToSustainedEffect, item)
+    hook(handleSustainedEffectDeletion, item)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .run();
     hook(warnIfDeletedItemIsFrightenedWhileAntagonized, item)

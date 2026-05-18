@@ -1,10 +1,11 @@
+import { TokenDocumentPF2e } from "foundry-pf2e";
 import { logd } from "./utils.ts";
 
 const { DialogV2 } = foundry.applications.api;
 const { renderTemplate } = foundry.applications.handlebars;
 const { FormDataExtended } = foundry.applications.ux;
 
-const DAMAGE_TAG_CONFIG = {
+export const DAMAGE_TAG_CONFIG = {
     persistent: { label: "Persistent", group: 'type', value: 'persistent', hasTag: false },
     precision: { label: "Precision", group: 'modifier', value: 'precision', hasTag: false },
     splash: { label: "Splash", group: 'modifier', value: 'splash', hasTag: false },
@@ -177,42 +178,33 @@ function createDamageRoll(formData: Record<string, unknown>) {
     damageAndMaterialTypes.push(damageType);
     if (material) damageAndMaterialTypes.push(material);
 
-    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll");
+    const formula = damageModifiers.length > 0 
+        ? `{(${value}[${damageModifiers}])[${damageAndMaterialTypes}]}`
+        : `{${value}[${damageAndMaterialTypes}]}`;
+
+    const DamageRoll = CONFIG.Dice.rolls.find((r) => r.name === "DamageRoll") as typeof Roll;
     if (!DamageRoll) return;
-
-    let formula = ``;
-    if (damageModifiers.length > 0) {
-        formula = `{(${value}[${damageModifiers}])[${damageAndMaterialTypes}]}`;
-    } else {
-        formula = `{${value}[${damageAndMaterialTypes}]}`;
-    }
-
-    const newFlavor = getFlavorHtml(damageType, damageTraits, material, isPersistent);
 
     const myRoll = new DamageRoll(formula);
 
-    myRoll.toMessage({
-        flavor: newFlavor,
-        speaker: ChatMessage.getSpeaker(),
-        flags: {
-            pf2e: {
-                context: {
-                    options: damageTraits.map(trait => trait.value)
-                }
-            }
-        }
+    sendDamageRollToChat({
+        roll: myRoll,
+        damageType,
+        traits: damageTraits,
+        material,
+        isPersistent,
+        rollOptions: damageTraits.map(trait => trait.value)
     });
 }
 
-function getFlavorHtml(damageType: string, damageTraits: { key: string; label: string; 
-    group: string; value: string; hasTag: boolean; }[] , material: string, isPersistent: boolean):
-    string {
+function getFlavorHtml(damageType: string, damageTraits: DamageTrait[], 
+    material: string, isPersistent: boolean, title: string = "Damage:", subtitle?: string): string {
 
     const hasTagTraits = damageTraits.filter(trait => trait.hasTag);
     const noTagTraits = damageTraits.filter(trait => !trait.hasTag);
     const headerStart = `
         <h4 class="action">
-        <strong>Damage: 
+        <strong>${title}${subtitle ? " " + subtitle : ""} 
     `;
     const traitLabels = noTagTraits.map(trait => trait.label);
     let headerNoTagTraitsString: string;
@@ -280,4 +272,51 @@ function isIntegerOrRoll(input: string): boolean {
     const simpleRollRegex = /^\d+d\d+$|^\d+$/i;
     
     return simpleRollRegex.test(trimmedInput);
+}
+
+export interface DamageMessageData {
+    roll: Roll;
+    title?: string;
+    subtitle?: string;
+    damageType: string;
+    targetUuid?: string;
+    traits?: DamageTrait[];
+    material?: string;
+    isPersistent?: boolean;
+    speaker?: foundry.documents.ChatSpeakerData;
+    rollOptions?: string[];
+}
+
+export async function sendDamageRollToChat(data: DamageMessageData) {
+    const { 
+        roll, damageType, targetUuid, 
+        traits = [], material, isPersistent = false, speaker, rollOptions = [],
+        title, subtitle
+    } = data;
+
+    const flavor = getFlavorHtml(damageType, traits, material ?? "", isPersistent, title, subtitle);
+    const targetDoc = targetUuid ? fromUuidSync(targetUuid) : null;
+    
+    let targetData = null;
+    if (targetDoc && targetDoc.documentName === "Token") {
+        const tokenDoc = targetDoc as TokenDocumentPF2e;
+        targetData = { actor: tokenDoc.actor?.uuid, token: targetUuid };
+    } else if (targetDoc && targetDoc.documentName === "Actor") {
+        targetData = { actor: targetUuid, token: null };
+    }
+
+    await roll.toMessage({
+        speaker: speaker || ChatMessage.getSpeaker(),
+        flavor,
+        flags: {
+            pf2e: {
+                context: {
+                    type: "damage-roll",
+                    sourceType: "spell",
+                    target: targetData,
+                    options: rollOptions
+                }
+            }
+        }
+    });
 }

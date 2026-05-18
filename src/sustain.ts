@@ -1,32 +1,51 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect } from "./utils.ts";
-import { runMatchingSustainFunction } from "./triggers.ts";
+import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect, MODULE_ID, isSpellPF2e } from "./utils.ts";
+import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_SUSTAIN_SPELLS } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
-    const messageItem: ItemPF2e | null = message.item;
+    const messageItem = message.item;
     if (isSpellPF2e(messageItem)) {
-        if (messageItem.system.duration.sustained) {
+        if (hasSustainedDuration(messageItem)) {
+            if (MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(messageItem))) return;
             if (!message.actor) return;
-            const effect = createEffect(messageItem);
-            await addOrUpdateEffectOnActor(message.actor, effect);
+            await addSustainEffectToActor(message.actor, messageItem as unknown as SpellPF2e);
         }
     }
 }
 
-function isSpellPF2e(item: ItemPF2e | null | undefined): item is SpellPF2e {
-    return !!item && item.type === "spell";
+/**
+ * Safely extracts the slug from a SpellPF2e.
+ * We cast through unknown to break the deep type recursion of the PF2e Spell type,
+ * which otherwise causes "Type instantiation is excessively deep" errors.
+ */
+function getSpellSlug(spell: SpellPF2e): string {
+    return (spell as unknown as { slug: string | null }).slug ?? "";
 }
 
-function createEffect(spell: SpellPF2e) {
+function hasSustainedDuration(spell: SpellPF2e): boolean {
+    // We cast through unknown to avoid "Type instantiation is excessively deep" errors 
+    // caused by the complexity of the PF2e system's Spell types.
+    const system = spell.system as unknown as { duration?: { sustained?: boolean } };
+    return !!system.duration?.sustained;
+}
 
-    const sustainedEffectPrefix = 'Sustaining: '
+export async function addSustainEffectToActor(
+    actor: ActorPF2e,
+    spell: SpellPF2e,
+    extraSlugStr?: string,
+    extraFlags?: Record<string, unknown>,
+    imgOverride?: string,
+) {
 
-    const effectName = `${sustainedEffectPrefix}${spell.name}`;
+    const sustainedEffectPrefix = 'Sustaining: ';
+    const subtitle = extraFlags?.sustainedSubtitle as string | undefined;
+    const effectName = subtitle ? `${sustainedEffectPrefix}${spell.name} (${subtitle})` : `${sustainedEffectPrefix}${spell.name}`;
     const description = spell.system.description.value;
 
     const effectLevel = spell.system.level?.value ?? spell.parent?.level ?? 1;
-    const image = spell.img;
+    const image = imgOverride ?? spell.img;
+    const slugSuffixStr = extraSlugStr ? `-${extraSlugStr}` : "";
 
     const effect = {
         type: 'effect',
@@ -46,16 +65,17 @@ function createEffect(spell: SpellPF2e) {
             },
             unidentified: false,
             level: { value: effectLevel },
-            slug: `sustaining-effect-${spell.system.slug}`
+            slug: `sustaining-effect-${spell.system.slug}${slugSuffixStr}`
         },
         flags: {
-            "samioli-module": {
-                sustainedSpellId: spell.id
+            [MODULE_ID]: {
+                sustainedSpellId: spell.id,
+                ...(extraFlags ?? {})
             }
         }
     };
     
-    return effect as DeepPartial<EffectSource> as EffectSource;
+    return addOrUpdateEffectOnActor(actor, effect as DeepPartial<EffectSource> as EffectSource);
 }
 
 export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
@@ -66,10 +86,10 @@ export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
 
     for (const effect of sustainedEffects) {
         if (!effect.slug) continue;
-        const spellSlug = effect.slug.replace('sustaining-effect-', '');
-        const spell = getSpellBySlug(spellSlug, actor);
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
+        const spell = actor.items.get(spellId) as SpellPF2e;
         if (spell) {
-            await createSustainChatMessage(actor, spell);
+            await createSustainChatMessage(actor, spell, effect as EffectPF2e);
         }
     }
 }
@@ -81,10 +101,6 @@ function getActorSustainedEffects(actor: ActorPF2e) {
         return;
     }
     return sustainedEffects;
-}
-
-function getSpellBySlug(spellSlug: string, actor: ActorPF2e): SpellPF2e | null {
-    return actor.itemTypes.spell.find(s => s.slug === spellSlug) ?? null;
 }
 
 export async function handleSustainSpell(actorId: string, effectSlug: string) {
@@ -101,12 +117,9 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
         return;
     }
 
-    const currentStartValue = effect.system.start.value;
-    const newStartValue = currentStartValue + 6;
-
     await effect.update({
         "system.duration.value": 1,
-        "system.start.value": newStartValue,
+        "system.start.value": game.time.worldTime,
     });
 
     await addSustainedSpellBackIntoChat(effect, actor);
@@ -114,38 +127,42 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
     const template = getTemplateFromEffect(effect);
     if (template) {
         runMatchingSustainFunction(template);
+    } else {
+        runMatchingSustainFunction(effect);
     }
 }
 
 function getTemplateFromEffect(effect: EffectPF2e) {
-    const templateId = effect.getFlag("samioli-module", "sustainedTemplateId");
+    const templateId = effect.getFlag(MODULE_ID, "sustainedTemplateId");
     if (typeof templateId !== "string" || !templateId) return;
-    if (!canvas.scene) return;
-    return canvas.scene.templates.get(templateId);
+    return canvas.scene?.templates.get(templateId);
 }
 
 async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2e) {
-    const spellId = effect.getFlag("samioli-module", "sustainedSpellId");
+    const skipChat = !!effect.getFlag(MODULE_ID, "skipSustainChat");
+    if (skipChat) return;
+
+    const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
     if (typeof spellId !== "string" || !spellId) return;
-    if (!spellId) return;
     const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
     const spell = fromUuidSync(spellUuid);
     if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
     await spell.toMessage();
 }
 
-async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e) {
-    const effectSlug = `sustaining-effect-${spell.slug}`;
-    const content = `
-        <p>Do you want to sustain <strong>${spell.name}</strong>?</p>
-    `;
+async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effect: EffectPF2e) {
+    const effectSlug = effect.slug;
+    const subtitle = effect.getFlag(MODULE_ID, "sustainedSubtitle") as string | undefined;
+
+    const spellNameStr = subtitle ? `${spell.name} (${subtitle})` : spell.name;
+    const content = `<p>Do you want to sustain <strong>${spellNameStr}</strong>?</p>`;
 
     await createChatMessageWithButton({
         slug: "sustain-spell",
         actor: actor,
         content: content,
         button_label: "Sustain",
-        params: [actor.id, effectSlug]
+        params: [actor.id, effectSlug ?? ""]
     });
 }
 
@@ -166,9 +183,7 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
 async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e,
     effect: EffectPF2e) {
     await effect.update({
-        'flags.samioli-module': {
-            sustainedTemplateId: template.id
-        }
+        [`flags.${MODULE_ID}.sustainedTemplateId`]: template.id
     });
 }
 
@@ -182,22 +197,24 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
     const spellSlugFromTemplate = template.item?.slug;
     if (!spellSlugFromTemplate) return;
 
-    const matchingEffect = sustainedEffectsOnActor.find(effect =>
-        effect.slug?.replace('sustaining-effect-', '') === spellSlugFromTemplate);
+    const matchingEffect = sustainedEffectsOnActor.find(effect => {
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
+        const spell = template.actor!.items.get(spellId) as SpellPF2e;
+        return spell?.slug === spellSlugFromTemplate;
+    });
 
     if (matchingEffect) {
         await associateTemplateWithEffect(template, matchingEffect as EffectPF2e);
     }
 }
 
-export async function deleteTemplateLinkedToSustainedEffect(item: ItemPF2e) {
+export async function handleSustainedEffectDeletion(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.getFlag("samioli-module", "sustainedTemplateId"); 
-    if (typeof templateId !== "string" || !templateId) {
-        return;
+    const templateId = item.getFlag(MODULE_ID, "sustainedTemplateId"); 
+    if (typeof templateId === "string" && templateId) {
+        await deleteTemplateById(templateId);
     }
 
-    await deleteTemplateById(templateId);
-
+    runMatchingSustainDeletionFunction(item);
 }

@@ -3,6 +3,7 @@ import { startDazzlingDisplayAsGM } from "./actions/dazzlingdisplay.ts";
 import { demanifestEidolonAsGM, manifestEidolonAsGM } from "./actions/manifesteidolon.ts";
 import { deleteGhostlyCarrierTokenAsGM, summonGhostlyCarrierAsGM } from "./spells/ghostlycarrier.ts";
 import { createSnareAsGM, removeSnareAsGM } from "./actions/snare.ts";
+import { applyTargetEffectAsGM, applyGuardEffectAsGM, cleanupDancingBladeAsGM } from "./spells/dancingblade.ts";
 import { MODULE_ID } from "./utils.ts";
 import { replaceTargets } from "./templatetarget.ts";
 
@@ -17,6 +18,9 @@ export const GHOSTLY_CARRIER_SUMMON = "summonGhostlyCarrier";
 export const GHOSTLY_CARRIER_DELETE = "deleteGhostlyCarrier";
 export const CREATE_SNARE = "createSnare";
 export const REMOVE_SNARE = "removeSnare";
+export const DANCING_BLADE_APPLY_TARGET = "applyTargetEffect";
+export const DANCING_BLADE_APPLY_GUARD = "applyGuardEffect";
+export const DANCING_BLADE_CLEANUP = "cleanupDancingBlade";
 
 export const getSocket = () => {
     if (!socket) throw new Error("Socket not registered");
@@ -36,4 +40,7 @@ export function registerSocket() {
     socket.register(GHOSTLY_CARRIER_DELETE, deleteGhostlyCarrierTokenAsGM);
     socket.register(CREATE_SNARE, createSnareAsGM);
     socket.register(REMOVE_SNARE, removeSnareAsGM);
+    socket.register(DANCING_BLADE_APPLY_TARGET, applyTargetEffectAsGM);
+    socket.register(DANCING_BLADE_APPLY_GUARD, applyGuardEffectAsGM);
+    socket.register(DANCING_BLADE_CLEANUP, cleanupDancingBladeAsGM);
 }
