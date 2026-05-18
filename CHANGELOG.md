@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.63.0] - 2026-05-18
+
+- Dancing Blade automation
+
 ## [0.62.0] - 2026-05-11
 
 - Add animation button for translocate and amped warp step
@@ -10,7 +14,6 @@
 - Add check to require PRs to update the changelog (unless explicitly skipped)
 - Update conservation of energy with remastered spell list
 - Shifting weapon improvements
-- Dancing Blade automation
 
 ## [0.61.0] - 2026-04-12
 
@@ -103,7 +106,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.62.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.63.0...HEAD
+
+[0.63.0]: https://github.com/olilan1/samioli-module/compare/v0.62.0...v0.63.0
 
 [0.62.0]: https://github.com/olilan1/samioli-module/compare/v0.61.0...v0.62.0
 
