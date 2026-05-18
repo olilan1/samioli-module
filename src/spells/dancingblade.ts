@@ -26,7 +26,7 @@ import {
     promptForTarget,
     promptForWeapon,
     startDancingBladePersistentAnimation,
-} from "./dancingblade-ui.ts";
+} from "./dancingblade-anim.ts";
 
 const SHORTHAND_DAMAGE_TYPES: Record<string, string> = {
     b: "bludgeoning",
@@ -351,8 +351,6 @@ export async function resolveDancingBladeStrike(
         return;
     }
 
-    await playDancingBladeAttackAnimation(target, "strike");
-
     const materialType = weapon.system.material?.type;
     const strikeTraits = ["attack"];
     if (materialType) strikeTraits.push(materialType);
@@ -386,6 +384,8 @@ export async function resolveDancingBladeStrike(
         attackNumber,
         extraRollOptions,
     });
+
+    await playDancingBladeAttackAnimation(target, "strike");
 }
 
 /**
@@ -435,8 +435,6 @@ export async function resolveDancingBladePush(
         return;
     }
 
-    await playDancingBladeAttackAnimation(target, "push");
-
     await statistic.roll({
         target: target.actor ?? null,
         dc: { value: fortitudeDc },
@@ -461,6 +459,8 @@ export async function resolveDancingBladePush(
             },
         ],
     });
+
+    await playDancingBladeAttackAnimation(target, "push");
 }
 
 /**
@@ -729,8 +729,8 @@ export async function cleanupDancingBladeAsGM(targetUuid: string, weaponId?: str
 
     const slugs = weaponId
         ? ["target-dancing-blade", "dancing-blade-guard"].map(
-              (s) => `${s}-${weaponSlugId(weaponId)}`,
-          )
+            (s) => `${s}-${weaponSlugId(weaponId)}`,
+        )
         : ["target-dancing-blade", "dancing-blade-guard"];
 
     const effects = targetToken.actor.itemTypes.effect.filter((e) =>
@@ -755,10 +755,10 @@ function getCastContext(message: ChatMessagePF2e): { castRank: number; isAmped: 
  */
 async function handleExistingCasting(actor: ActorPF2e, weapon: WeaponPF2e) {
     const fallbackSlug = `sustaining-effect-dancing-blade-${weaponSlugId(weapon.id)}`;
-    
+
     const existing = actor.itemTypes.effect.find((e) => {
         const hasFlagMatch = e.getFlag(MODULE_ID, "weaponId") === weapon.id;
-        const hasSlugMatch = e.slug === fallbackSlug; 
+        const hasSlugMatch = e.slug === fallbackSlug;
         return e.slug?.startsWith("sustaining-effect-") && (hasFlagMatch || hasSlugMatch);
     });
 

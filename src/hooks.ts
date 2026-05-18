@@ -22,7 +22,7 @@ import { manifestEidolon } from "./actions/manifesteidolon.ts";
 import { registerSocket } from "./sockets.ts";
 import { oscillateEnergy } from "./conservationofenergy.ts";
 import { startImaginaryWeapon } from "./spells/imaginaryweapon.ts";
-import { addDancingBladeDamageButtons } from "./spells/dancingblade-ui.ts";
+import { addDancingBladeDamageButtons } from "./spells/dancingblade-anim.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
 import Module from "foundry-pf2e/foundry/client/packages/module.mjs";

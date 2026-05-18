@@ -78,7 +78,7 @@ function getPersistentAnimation(weapon: WeaponPF2e): string {
  * Orchestrates the Dancing Blade animation sequence, including optional transit from
  * a previous location and the final persistent floating effect.
  */
-export function playBladeAnimationSequence(config: {
+export async function playBladeAnimationSequence(config: {
     weapon: WeaponPF2e;
     effectName: string;
     target: TokenPF2e;
@@ -100,7 +100,7 @@ export function playBladeAnimationSequence(config: {
 
     addPersistentEffect(seq, animFile, target, effectName, isTransiting, tieToEffect);
 
-    seq.play();
+    await seq.play();
 }
 
 /**
@@ -117,7 +117,7 @@ function addTransitEffect(
     // prettier-ignore
     seq.sound()
         .file(TRANSIT_SOUND)
-    .effect()
+        .effect()
         .file(animFile)
         .atLocation({
             x: source.center.x + offset.x * grid,
@@ -174,7 +174,7 @@ function addPersistentEffect(
  * Starts the persistent floating weapon animation tied to the target's tracking effect.
  * Delegates to {@link playBladeAnimationSequence} with transit from the previous location.
  */
-export function startDancingBladePersistentAnimation(
+export async function startDancingBladePersistentAnimation(
     target: TokenPF2e,
     effect: EffectPF2e,
     weapon: WeaponPF2e,
@@ -182,7 +182,7 @@ export function startDancingBladePersistentAnimation(
     weaponId: string,
 ) {
     const effectName = `dancing-blade-${weaponId}`;
-    playBladeAnimationSequence({
+    await playBladeAnimationSequence({
         weapon,
         effectName,
         target,
@@ -194,37 +194,38 @@ export function startDancingBladePersistentAnimation(
 /**
  * Plays a quick impact animation on the target for a strike or push action.
  */
-export function playDancingBladeAttackAnimation(target: TokenPF2e, type: "strike" | "push") {
+export async function playDancingBladeAttackAnimation(target: TokenPF2e, type: "strike" | "push") {
     // prettier-ignore
-    new Sequence()
+    await new Sequence()
+        .wait(500)
         .effect()
-            .file(type === "strike" ? STRIKE_ANIM : PUSH_ANIM)
-            .atLocation(target)
-            .spriteOffset({ x: 0.3, y: -0.3 }, { gridUnits: true })
-            .scale(0.5)
-            .playbackRate(0.6)
+        .file(type === "strike" ? STRIKE_ANIM : PUSH_ANIM)
+        .atLocation(target)
+        .spriteOffset({ x: 0.3, y: -0.3 }, { gridUnits: true })
+        .scale(0.5)
+        .playbackRate(0.6)
         .sound()
-            .file(type === "strike" ? STRIKE_SOUND : PUSH_SOUND)
+        .file(type === "strike" ? STRIKE_SOUND : PUSH_SOUND)
         .play();
 }
 
 /**
  * Plays a shield flash and sound effect on the target when the Guard action is chosen.
  */
-export function playDancingBladeGuardAnimation(target: TokenPF2e) {
+export async function playDancingBladeGuardAnimation(target: TokenPF2e) {
     // prettier-ignore
-    new Sequence()
+    await new Sequence()
         .effect()
-            .file("jb2a.icon.shield.blue")
-            .atLocation(target)
-            .scale(0.5)
-            .scaleIn(0, 500, { ease: "easeOutBack" })
-            .scaleOut(0, 500, { ease: "easeInBack" })
-            .fadeIn(250)
-            .fadeOut(250)
-            .duration(1500)
+        .file("jb2a.icon.shield.blue")
+        .atLocation(target)
+        .scale(0.5)
+        .scaleIn(0, 500, { ease: "easeOutBack" })
+        .scaleOut(0, 500, { ease: "easeInBack" })
+        .fadeIn(250)
+        .fadeOut(250)
+        .duration(1500)
         .sound()
-            .file(GUARD_SOUND)
+        .file(GUARD_SOUND)
         .play();
 }
 
