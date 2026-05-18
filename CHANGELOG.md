@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.63.0] - 2026-05-
+## [0.63.0] - 2026-05-18
 
 - Dancing Blade automation
 
