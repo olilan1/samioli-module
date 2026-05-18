@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, MartialProficiency, WeaponPF2e, ZeroToFour, SpellPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -220,19 +220,19 @@ export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: E
 export async function performFlatCheck(actor: ActorPF2e, dc: number, title: string, rollOptions: string[] = []): Promise<void> {
 
     const checkModifierInstance = new game.pf2e.CheckModifier(
-        title, 
+        title,
         { modifiers: [] }
     );
 
     const combinedRollOptions = [
-        'check',       
+        'check',
         'flat-check',
         ...rollOptions,
     ];
 
     const rollContextOptions = {
         actor: actor,
-        dc: { 
+        dc: {
             value: dc,
             slug: 'flat-check',
         },
@@ -276,7 +276,7 @@ export function getLevelBasedDC(level: number): number {
         24: 48,
         25: 50
     };
-    
+
     return DC_LOOKUP[level];
 }
 
@@ -324,7 +324,7 @@ export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWal
     }];
 
     const moveOptions = {
-        method: "api" as TokenMovementMethod, 
+        method: "api" as TokenMovementMethod,
         autoRotate: false,
         showRuler: false,
         constrainOptions: {
@@ -343,9 +343,9 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
 
     const locationGridOffset = canvas.grid.getOffset(location);
     const allTokensOnScene = canvas.tokens.placeables;
-    
+
     const validTokens = allTokensOnScene.filter(token => {
-        
+
         const actorType = token.actor?.type;
         if (actorType === "loot" || actorType === "party") {
             return false;
@@ -359,7 +359,7 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
         return validTokens;
     }
 
-    const visibleTokens = validTokens.filter(token => { 
+    const visibleTokens = validTokens.filter(token => {
         return token.document.hidden === false;
     });
 
