@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-## [0.63.0] - 2026-05-18
+## [0.63.0] - 2026-05-
+
+- Dancing Blade automation
 
 ## [0.62.0] - 2026-05-11
 
@@ -12,7 +14,6 @@
 - Add check to require PRs to update the changelog (unless explicitly skipped)
 - Update conservation of energy with remastered spell list
 - Shifting weapon improvements
-- Dancing Blade automation
 
 ## [0.61.0] - 2026-04-12
 
