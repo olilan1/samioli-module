@@ -1,5 +1,5 @@
 import type { ChatMessagePF2e, EffectPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
-import { getCollidableCallbacks, getTokensAtLocation, MODULE_ID } from "../utils.ts";
+import { getTokensAtLocation, MODULE_ID } from "../utils.ts";
 import type { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollDancingBladeDamage } from "./dancingblade.ts";
 
@@ -396,23 +396,18 @@ function renderActionPromptContent(weaponName: string, damageTypes: string[]): s
 async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
     const labelText = `Select a target for Dancing Blade (${range} ft range)`;
     const iconTexture = "icons/svg/target.svg";
-    const placementRestrictions = Sequencer.Crosshair.PLACEMENT_RESTRICTIONS;
 
-    return await Sequencer.Crosshair.show(
-        {
-            distance: 0,
-            fillColor: "#000000ff",
-            label: { text: labelText, dy: -100 },
-            location: {
-                obj: token,
-                limitMaxRange: range,
-                wallBehavior: placementRestrictions.NO_COLLIDABLES,
-            },
-            icon: { texture: iconTexture },
-            snap: { position: CONST.GRID_SNAPPING_MODES.CENTER },
+    return await Sequencer.Crosshair.show({
+        distance: 0,
+        fillColor: "#000000ff",
+        label: { text: labelText, dy: -100 },
+        location: {
+            obj: token,
+            limitMaxRange: range,
         },
-        getCollidableCallbacks("Dancing Blade", iconTexture),
-    );
+        icon: { texture: iconTexture },
+        snap: { position: CONST.GRID_SNAPPING_MODES.CENTER },
+    });
 }
 
 /**
