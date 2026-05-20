@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Automated and Animated Mirror Image
+
 ## [0.64.0] - 2026-05-30
 
 - Second test change
