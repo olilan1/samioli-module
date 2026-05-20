@@ -1,6 +1,6 @@
 import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
 import { addOrUpdateEffectOnActor, delay, sendBasicChatMessage } from "./utils.ts";
-import { getTemplateTokens, isTokenInTemplateArea } from "./templatetarget.ts";
+import { getTemplateTokens, isTokenInTemplateArea, replaceTargets } from "./templatetarget.ts";
 
 const START_OF_TURN_SPELLS = [
         'ash-cloud',
@@ -23,12 +23,21 @@ export async function addEffectsToTokensInStartOfTurnTemplates(template: Measure
     
     // @ts-expect-error slug is valid
     const spellSlug = template.flags.pf2e?.origin?.slug;
-
     const spellUuid = template.flags.pf2e?.origin?.uuid as string;
 
     if (!START_OF_TURN_SPELLS.includes(spellSlug)) return;
 
-    const spell = fromUuidSync(spellUuid) as SpellPF2e;
+    let spell = fromUuidSync(spellUuid) as SpellPF2e;
+
+    // for spells cast from item activations (pf2e-dailies), get the spell object from the message
+    if (!spell || spell.slug !== spellSlug) {
+        const messageId = template.flags.pf2e?.messageId as string;
+        if (messageId) {
+            const message = game.messages.get(messageId);
+            spell = message?.item as SpellPF2e;
+        }
+    }
+
     if (!spell) return;
 
     await template.setFlag("samioli-module", 'isStartOfTurnSpell', true);
@@ -133,6 +142,9 @@ export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
         const spellUuid = effect.flags["samioli-module"]?.startOfTurnSpellUuid as string;
         const spell = fromUuidSync(spellUuid) as SpellPF2e;
         const content = `${combatant.name} has started their turn within ${spell?.name}`
+        if (combatant.tokenId) {
+            await replaceTargets([combatant.tokenId]);
+        }
         await sendBasicChatMessage(content, speaker);
         await spell?.toMessage();
     }
