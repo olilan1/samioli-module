@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Workaround for start of turn spells not triggering for players when casting from activations tab
+
 ## [0.63.0] - 2026-05-18
 
 - Dancing Blade automation
