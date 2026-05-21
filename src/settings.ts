@@ -14,6 +14,7 @@ export const SETTINGS = {
     AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK: "automatic_frightened_check_enable",
     AUTO_CONSERVATION_OF_ENERGY: "automatic_conservation_of_energy_enable",
     DAMAGE_HELPER_BUTTON: "damage_helper_button_enable",
+    AUTO_MIRROR_IMAGE: "automatic_mirror_image_enable",
     MOOD_CLOUD_HAPPY_IMAGE: "mood_cloud_happy_image",
     MOOD_CLOUD_ANGRY_IMAGE: "mood_cloud_angry_image",
     MOOD_CLOUD_INSCRUTABLE_IMAGE: "mood_cloud_inscrutable_image",
@@ -125,6 +126,15 @@ export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_CONSERVATION_OF_ENERGY, {
         name: "Conservation of Energy Automation",
         hint: "Automatically toggle Conservation of Energy for Oscillating Wave Psychics when relevant spells are cast.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_MIRROR_IMAGE, {
+        name: "Mirror Image Automation",
+        hint: "Automatically track Mirror Image spell effects and prompt defense rolls.",
         scope: "world",
         config: true,
         default: false,

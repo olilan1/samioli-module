@@ -6,7 +6,7 @@ import { checkForBravado, checkForExtravagantParryOrElegantBuckler, checkForFini
 import { startHuntPrey } from "./actions/huntprey.ts";
 import { targetTokensUnderTemplate, deleteTemplateTargets, setTemplateColorToBlack } from "./templatetarget.ts";
 import { checkForUnstableCheck } from "./effects/unstablecheck.ts";
-import { ChatMessagePF2e, CombatantPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, CombatantPF2e, EffectPF2e, EncounterPF2e, ItemPF2e, MeasuredTemplateDocumentPF2e, TokenDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { runMatchingTemplateDeletionFunction, runMatchingTemplateFunctionAsCreator, runMatchingTemplateFunctionAsGm } from "./triggers.ts";
 import { ifActorHasSustainEffectCreateMessage, checkIfSpellInChatIsSustain, checkIfTemplatePlacedHasSustainEffect, handleSustainedEffectDeletion, createSpellNotSustainedChatMessage } from "./sustain.ts";
 import { applyAntagonizeIfValid, createChatMessageOnTurnStartIfTokenIsAntagonized, warnIfDeletedItemIsFrightenedWhileAntagonized } from "./actions/antagonize.ts";
@@ -26,6 +26,13 @@ import { addDancingBladeDamageButtons } from "./spells/dancingblade-anim.ts";
 import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffectDeletion, moveGhostlyCarrierToCaster } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
 import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
+import {
+    checkForMirrorImage,
+    handleMirrorImageCreated,
+    handleMirrorImageUpdated,
+    handleMirrorImageDeleted,
+    resolveMirrorImageRoll
+} from "./spells/mirrorimage.ts";
 
 Hooks.on("init", () => {
     registerSettings();
@@ -166,6 +173,29 @@ Hooks.on('moveToken', (token: TokenPF2e, movement, _action, _user: UserPF2e) => 
         .run();
 });
 
+Hooks.on("createItem", (item: ItemPF2e, _context: unknown, userId: string) => {
+    hook(handleMirrorImageCreated, item as EffectPF2e)
+        .ifUser(userId)
+        .run();
+});
+
+Hooks.on("updateItem", (
+    item: ItemPF2e,
+    changes: Record<string, unknown>,
+    _context: unknown,
+    userId: string
+) => {
+    hook(handleMirrorImageUpdated, item as EffectPF2e, changes)
+        .ifUser(userId)
+        .run();
+});
+
+Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
+    hook(handleMirrorImageDeleted, item as EffectPF2e)
+        .ifUser(userId)
+        .run();
+});
+
 // V13 Only
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
     _data, _options) => {
@@ -219,6 +249,10 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                 .run();
             hook(checkForBravado, message)
                 .ifEnabled(SETTINGS.AUTO_PANACHE)
+                .ifGM()
+                .run();
+            hook(checkForMirrorImage, message)
+                .ifEnabled(SETTINGS.AUTO_MIRROR_IMAGE)
                 .ifGM()
                 .run();
             break;
@@ -277,6 +311,11 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             hook(runBoostEidolonAutomation, message)
                 .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
                 .ifMessagePosterAndActorOwner()
+                .run();
+            break;
+        case "mirror-image-roll":
+            hook(resolveMirrorImageRoll, message)
+                .ifGM()
                 .run();
             break;
     }
