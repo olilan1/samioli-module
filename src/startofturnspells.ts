@@ -129,7 +129,7 @@ export async function addOrRemoveWithinEffectIfNeeded(token: TokenPF2e, costInFe
                     "casterUuid"
                 ) as string | undefined;
                 const spell = getSpellOrFallback(spellUuid, spellSource, casterUuid);
-                if (!spell) return;
+                if (!spell) continue;
                 await addWithinEffectToTokenActor(token, spell, template.document);
             }
         } else {
@@ -168,12 +168,26 @@ export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
 
 export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateDocumentPF2e) {
     const effectUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
-    if (!effectUuids || effectUuids.length === 0) return;
+    if (effectUuids && effectUuids.length > 0) {
+        for (const effectUuid of effectUuids) {
+            const effect = fromUuidSync(effectUuid) as ItemPF2e;
+            if (!effect) continue;
+            await effect.delete();
+        }
+    }
 
-    for (const effectUuid of effectUuids) {
-        const effect = fromUuidSync(effectUuid) as ItemPF2e;
-        if (!effect) continue;
-        await effect.delete();
+    const spellSource = template.getFlag(
+        "samioli-module",
+        "spellSource"
+    ) as SpellSource | undefined;
+    
+    if (spellSource) {
+        const casterUuid = template.flags.pf2e?.origin?.actor as string
+            || template.getFlag("samioli-module", "casterUuid") as string;
+        const caster = casterUuid ? fromUuidSync(casterUuid) as ActorPF2e : null;
+        if (caster && spellSource._id) {
+            (caster.items as unknown as Map<string, ItemPF2e>).delete(spellSource._id);
+        }
     }
 }
 
