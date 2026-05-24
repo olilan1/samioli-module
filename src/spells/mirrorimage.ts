@@ -148,23 +148,23 @@ export async function handleMirrorImageCreated(item: EffectPF2e): Promise<void> 
 
     const seq = new Sequence()
         .effect()
-        .file("jb2a.impact.004.blue")
-        .atLocation(token)
-        .fadeIn(500)
-        .tieToDocuments([item])
-        .randomRotation()
-        .fadeOut(1500)
+            .file("jb2a.impact.004.blue")
+            .atLocation(token)
+            .fadeIn(500)
+            .tieToDocuments([item])
+            .randomRotation()
+            .fadeOut(1500)
         .effect()
-        .file("jb2a.extras.tmfx.runes.circle.simple.illusion")
-        .atLocation(token)
-        .duration(2000)
-        .fadeIn(500)
-        .fadeOut(1500)
-        .tieToDocuments([item])
-        .scale(0.5)
-        .filter("Glow", { color: 0x0096ff })
-        .scaleIn(0, 500, { ease: "easeOutCubic" })
-        .waitUntilFinished(-1000);
+            .file("jb2a.extras.tmfx.runes.circle.simple.illusion")
+            .atLocation(token)
+            .duration(2000)
+            .fadeIn(500)
+            .fadeOut(1500)
+            .tieToDocuments([item])
+            .scale(0.5)
+            .filter("Glow", { color: 0x0096ff })
+            .scaleIn(0, 500, { ease: "easeOutCubic" })
+            .waitUntilFinished(-1000);
 
     for (let i = 0; i < imagesCount; i++) {
         seq.addSequence(getMirrorImageSequence(i, item, token));
@@ -215,29 +215,29 @@ function getMirrorImageSequence(number: number, item: EffectPF2e, token: TokenPF
 
     return new Sequence()
         .effect()
-        .name(`Mirror Image Nr.${1 + number}`)
-        .copySprite(token)
-        .origin(item.uuid)
-        .fadeIn(1000)
-        .tieToDocuments([item])
-        .fadeOut(1000)
-        .attachTo(token, { followRotation })
-        .persist(true, { persistTokenPrototype: true })
-        .loopProperty("spriteContainer", "rotation", {
-            from: 0,
-            to: 360,
-            duration: 4000,
-        })
-        .loopProperty("sprite", "position.x", {
-            values: [0, -1],
-            duration: Math.floor(Math.random() * (4000 - 500 + 1)) + 500,
-            gridUnits: true,
-            pingPong: true,
-        })
-        .spriteOffset({ x: 0.5, y: 0 }, { gridUnits: true })
-        .rotate(120 * (1 + number))
-        .spriteRotation(120 * (1 + number))
-        .zeroSpriteRotation()
-        .scaleToObject(scaleX)
-        .opacity(0.5);
+            .name(`Mirror Image Nr.${1 + number}`)
+            .copySprite(token)
+            .origin(item.uuid)
+            .fadeIn(1000)
+            .tieToDocuments([item])
+            .fadeOut(1000)
+            .attachTo(token, { followRotation })
+            .persist(true, { persistTokenPrototype: true })
+            .loopProperty("spriteContainer", "rotation", {
+                from: 0,
+                to: 360,
+                duration: 4000,
+            })
+            .loopProperty("sprite", "position.x", {
+                values: [0, -1],
+                duration: Math.floor(Math.random() * (4000 - 500 + 1)) + 500,
+                gridUnits: true,
+                pingPong: true,
+            })
+            .spriteOffset({ x: 0.5, y: 0 }, { gridUnits: true })
+            .rotate(120 * (1 + number))
+            .spriteRotation(120 * (1 + number))
+            .zeroSpriteRotation()
+            .scaleToObject(scaleX)
+            .opacity(0.5);
 }
