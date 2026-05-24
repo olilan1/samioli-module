@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Remove wall collision checking from Dancing Blade target selection
+
 ## [0.63.0] - 2026-05-18
 
 - Dancing Blade automation
