@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Remove wall collision checking from Dancing Blade target selection
 - Pre-production release handling in changelog
 
 ## [0.63.0] - 2026-05-18
