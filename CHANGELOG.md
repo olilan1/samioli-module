@@ -2,16 +2,10 @@
 
 ## [Unreleased]
 
-## [0.64.0-beta.2] - 2026-05-30
+## [0.64.0] - 2026-05-30
 
 - Second test change
-
-## [0.64.0-beta.1] - 2026-05-30
-
 - Test change
-
-## [0.64.0-beta.0] - 2026-05-29
-
 - Remove wall collision checking from Dancing Blade target selection
 - Pre-production release handling in changelog
 
@@ -119,13 +113,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.2...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.64.0...HEAD
 
-[0.64.0-beta.2]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.1...v0.64.0-beta.2
-
-[0.64.0-beta.1]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.0...v0.64.0-beta.1
-
-[0.64.0-beta.0]: https://github.com/olilan1/samioli-module/compare/v0.63.0...v0.64.0-beta.0
+[0.64.0]: https://github.com/olilan1/samioli-module/compare/v0.63.0...v0.64.0
 
 [0.63.0]: https://github.com/olilan1/samioli-module/compare/v0.62.0...v0.63.0
 
