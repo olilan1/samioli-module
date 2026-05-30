@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.64.0-beta.2] - 2026-05-30
+
 - Second test change
 
 ## [0.64.0-beta.1] - 2026-05-30
@@ -117,7 +119,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.1...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.2...HEAD
+
+[0.64.0-beta.2]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.1...v0.64.0-beta.2
 
 [0.64.0-beta.1]: https://github.com/olilan1/samioli-module/compare/v0.64.0-beta.0...v0.64.0-beta.1
 
