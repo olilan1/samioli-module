@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Typo fixed in Antagonize automation
+
 ## [0.64.0] - 2026-05-30
 
 - Second test change
