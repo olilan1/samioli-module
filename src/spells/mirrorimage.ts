@@ -1,13 +1,5 @@
-import { ChatMessagePF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, EffectPF2e, EffectSource, TokenPF2e } from "foundry-pf2e";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
-
-interface MirrorImageChanges {
-    system?: {
-        badge?: {
-            value?: number;
-        };
-    };
-}
 
 interface MirrorImageRollFlags {
     type: "mirror-image-roll";
@@ -16,17 +8,7 @@ interface MirrorImageRollFlags {
     imagesCount: number;
 }
 
-/** Decrements the mirror image badge count, or deletes the effect if it reaches 0. */
-async function decrementOrDeleteEffect(effect: EffectPF2e): Promise<void> {
-    const badgeVal = Number(effect.system.badge?.value ?? 0);
-    if (badgeVal > 1) {
-        await effect.update({ "system.badge.value": badgeVal - 1 });
-    } else {
-        await effect.delete();
-    }
-}
-
-export async function checkForMirrorImage(chatMessage: ChatMessagePF2e): Promise<void> {
+export async function checkForMirrorImageOnAttack(chatMessage: ChatMessagePF2e): Promise<void> {
     const context = chatMessage.flags.pf2e.context;
     if (!context || context.type !== "attack-roll") return;
 
@@ -46,7 +28,7 @@ export async function checkForMirrorImage(chatMessage: ChatMessagePF2e): Promise
     if (outcome === "criticalFailure") return;
 
     if (outcome === "failure") {
-        await decrementOrDeleteEffect(effect);
+        await effect.decrease();
 
         const updatedImageCount = imagesCount - 1;
         let msgContent = `The attack missed but destroys a <strong>Mirror Image</strong>.`;
@@ -120,7 +102,7 @@ export async function resolveMirrorImageRoll(message: ChatMessagePF2e): Promise<
             (e) => e.slug === "spell-effect-mirror-image"
         );
         if (effect) {
-            await decrementOrDeleteEffect(effect);
+            await effect.decrease();
         }
 
         let msgContent = `A Mirror Image was destroyed!`;
@@ -175,7 +157,7 @@ export async function handleMirrorImageCreated(item: EffectPF2e): Promise<void> 
 
 export async function handleMirrorImageUpdated(
     item: EffectPF2e,
-    changes: MirrorImageChanges
+    changes: DeepPartial<EffectSource>
 ): Promise<void> {
     if (item.slug !== "spell-effect-mirror-image") return;
     const rawBadgeValue = changes?.system?.badge?.value;

@@ -27,7 +27,7 @@ import { deleteGhostlyCarrierEffectFromCaster, deleteGhostlyCarrierTokenOnEffect
 import { samiOliModuleAPI } from "./api.ts";
 import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
 import {
-    checkForMirrorImage,
+    checkForMirrorImageOnAttack,
     handleMirrorImageCreated,
     handleMirrorImageUpdated,
     handleMirrorImageDeleted,
@@ -251,7 +251,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                 .ifEnabled(SETTINGS.AUTO_PANACHE)
                 .ifGM()
                 .run();
-            hook(checkForMirrorImage, message)
+            hook(checkForMirrorImageOnAttack, message)
                 .ifEnabled(SETTINGS.AUTO_MIRROR_IMAGE)
                 .ifGM()
                 .run();
