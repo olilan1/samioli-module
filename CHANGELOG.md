@@ -6,6 +6,8 @@
 
 ## [0.64.0] - 2026-05-30
 
+- Second test change
+- Test change
 - Remove wall collision checking from Dancing Blade target selection
 - Pre-production release handling in changelog
 
