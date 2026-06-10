@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Shifting automation maintains staff trait on weapons when shifting
+
 ## [0.64.0] - 2026-05-30
 
 - Second test change
