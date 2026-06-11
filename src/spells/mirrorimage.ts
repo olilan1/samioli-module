@@ -173,9 +173,11 @@ export async function handleMirrorImageUpdated(
     const currentOnScreen = activeEffects.length;
 
     if (badgeValue < currentOnScreen) {
-        const effectToEnd = activeEffects[activeEffects.length - 1];
-        if (effectToEnd) {
-            await Sequencer.EffectManager.endEffects({ effects: effectToEnd });
+        for (let i = currentOnScreen - 1; i >= badgeValue; i--) {
+            const effectToEnd = activeEffects[i];
+            if (effectToEnd) {
+                await Sequencer.EffectManager.endEffects({ effects: effectToEnd });
+            }
         }
     } else if (badgeValue > currentOnScreen) {
         for (let i = currentOnScreen; i < badgeValue; i++) {
@@ -193,7 +195,6 @@ export async function handleMirrorImageDeleted(item: EffectPF2e): Promise<void> 
 
 function getMirrorImageSequence(number: number, item: EffectPF2e, token: TokenPF2e) {
     const scaleX = token.document.texture.scaleX;
-    const followRotation = !token.document.lockRotation;
 
     return new Sequence()
         .effect()
@@ -203,7 +204,7 @@ function getMirrorImageSequence(number: number, item: EffectPF2e, token: TokenPF
             .fadeIn(1000)
             .tieToDocuments([item])
             .fadeOut(1000)
-            .attachTo(token, { followRotation })
+            .attachTo(token)
             .persist(true, { persistTokenPrototype: true })
             .loopProperty("spriteContainer", "rotation", {
                 from: 0,
