@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Typo fixed in Antagonize automation
+- Shifting automation maintains staff trait on weapons when shifting
 
 ## [0.64.0] - 2026-05-30
 
