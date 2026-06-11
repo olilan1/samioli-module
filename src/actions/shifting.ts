@@ -74,6 +74,7 @@ export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<
             label: "Shift",
             default: true,
             callback: async (_event, _button, dialog) => {
+                // @ts-expect-error querySelector is valid on dialog
                 const selectElement = dialog.querySelector<HTMLSelectElement>(
                     '[name="shiftingWeaponSelect"]'
                 );
@@ -185,6 +186,9 @@ async function updateWeaponStats(
         ? (originalImg ?? postShiftedWeapon.img)
         : postShiftedWeapon.img;
 
+    // If the shifting weapon has the staff trait, maintain the trait across shiftings
+    const isStaff = preShiftedWeapon.system.traits.value.includes("staff");
+
     const { damage, baseItem, category, group, traits, bulk, usage } = postShiftedWeapon.system;
 
     const updateData: Record<string, unknown> = {
@@ -192,7 +196,9 @@ async function updateWeaponStats(
         "system.baseItem": baseItem,
         "system.category": category,
         "system.group": group,
-        "system.traits.value": traits?.value ?? [],
+        "system.traits.value": isStaff 
+            ? [...traits?.value ?? [], "staff"]
+            : traits?.value ?? [],
         "system.bulk": bulk,
         "system.usage": usage,
         "name": newName,
