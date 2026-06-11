@@ -203,17 +203,26 @@ export async function createTemplateAtPoint(point: Point, userId: string, radius
     return template;
 }
 
-export async function addOrUpdateEffectOnActor(actor: ActorPF2e, effectSource: EffectSource):
-    Promise<EffectPF2e | void> {
-    const existingEffect = actor.items.find(item => item.slug === effectSource.system.slug
-        && item.type === 'effect');
+export async function addOrUpdateEffectOnActor(
+    actor: ActorPF2e,
+    effectSource: EffectSource
+): Promise<EffectPF2e | void> {
+    const sourceClone = foundry.utils.deepClone(effectSource);
+    const existingEffect = actor.items.find(
+        item => item.slug === sourceClone.system.slug && item.type === "effect"
+    ) as EffectPF2e | undefined;
     if (existingEffect) {
-        await existingEffect.update(effectSource);
-        return existingEffect as EffectPF2e;
+        if (existingEffect.isExpired || existingEffect.remainingDuration.expired) {
+            await existingEffect.delete();
+        } else {
+            await existingEffect.update(sourceClone);
+            return existingEffect;
+        }
     }
-    await actor.createEmbeddedDocuments('Item', [effectSource]);
-    const newEffect = actor.items.find(item => item.slug === effectSource.system.slug
-        && item.type === 'effect');
+    await actor.createEmbeddedDocuments("Item", [sourceClone]);
+    const newEffect = actor.items.find(
+        item => item.slug === sourceClone.system.slug && item.type === "effect"
+    );
     return newEffect as EffectPF2e;
 }
 

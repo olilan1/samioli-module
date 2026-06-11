@@ -22,21 +22,6 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
         return;
     }
 
-    const effectSource = await getCourageousAnthemEffectSource();
-    if (!effectSource) {
-        ui.notifications.error("Could not find Spell Effect: Courageous Anthem.");
-        return;
-    }
-
-    // Set the origin context so the duration tracks the caster's turn
-    effectSource.system.context = {
-        origin: {
-            actor: casterActor.uuid,
-            item: spell.uuid,
-            token: token.document.uuid,
-        }
-    } as unknown as EffectSource["system"]["context"];
-
     // Find all allies within 60 feet on the current scene who have line of effect and are alive
     const allTokens = canvas.tokens.placeables as TokenPF2e[];
     const targetTokens = allTokens.filter(t => {
@@ -64,17 +49,36 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
     animateCourageousAnthem(token);
 
     // Send payload to GM client via socket to apply effects
-    await getSocket().executeAsGM(COURAGEOUS_ANTHEM_APPLY, targetActorUuids, effectSource);
+    await getSocket().executeAsGM(
+        COURAGEOUS_ANTHEM_APPLY,
+        casterActor.uuid,
+        spell.uuid,
+        token.document.uuid,
+        targetActorUuids
+    );
 }
 
 /**
  * GM-side handler to apply Courageous Anthem effect on multiple actors.
  */
 export async function applyCourageousAnthemEffectAsGM(
-    actorUuids: string[],
-    effectSource: EffectSource
+    casterActorUuid: string,
+    spellUuid: string,
+    casterTokenUuid: string,
+    targetActorUuids: string[]
 ): Promise<void> {
-    for (const uuid of actorUuids) {
+    const effectSource = await getCourageousAnthemEffectSource();
+    if (!effectSource) return;
+
+    effectSource.system.context = {
+        origin: {
+            actor: casterActorUuid,
+            item: spellUuid,
+            token: casterTokenUuid,
+        }
+    } as unknown as EffectSource["system"]["context"];
+
+    for (const uuid of targetActorUuids) {
         const actor = fromUuidSync(uuid) as ActorPF2e | null;
         if (actor) {
             await addOrUpdateEffectOnActor(actor, effectSource);
