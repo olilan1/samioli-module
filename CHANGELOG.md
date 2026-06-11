@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Workaround for start of turn spells not triggering for players when casting from activations tab
 - Typo fixed in Antagonize automation
 - Shifting automation maintains staff trait on weapons when shifting
 
