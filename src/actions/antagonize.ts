@@ -108,7 +108,7 @@ async function createAntagonizedChatMessage(token: TokenPF2e, antagonizedEffects
 
     const recipients = getOwnersFromActor(token.actor).map(user => user.id);
     const content = 
-        `<p><strong>${token.name}</strong> is antangonized by <strong>${antagonizerNamesAsString}</strong>.</p>`;
+        `<p><strong>${token.name}</strong> is antagonized by <strong>${antagonizerNamesAsString}</strong>.</p>`;
 
     await sendBasicChatMessage(content, token.actor, recipients);
 }
