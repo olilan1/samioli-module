@@ -1,5 +1,11 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource, TokenPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor } from "../utils.ts";
+import {
+    addOrUpdateEffectOnActor,
+    hasLineOfEffect,
+    isAlly,
+    isConsciousAndAlive,
+    isWithinDistance
+} from "../utils.ts";
 import { getSocket, COURAGEOUS_ANTHEM_APPLY } from "../sockets.ts";
 import { ActorUUID } from "foundry-pf2e/foundry/common/documents/_module.mjs";
 
@@ -31,38 +37,6 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
         }
     } as unknown as EffectSource["system"]["context"];
 
-    const isAlly = (targetToken: TokenPF2e) => {
-        const targetActor = targetToken.actor;
-        if (!targetActor) return false;
-
-        // Check alliance if set
-        if (targetActor.alliance && casterActor.alliance) {
-            return targetActor.alliance === casterActor.alliance;
-        }
-
-        // Fall back to disposition
-        return targetToken.document.disposition === token.document.disposition;
-    };
-
-    const isConsciousAndAlive = (actor: ActorPF2e) => {
-        const hp = actor.system.attributes.hp?.value ?? 0;
-        const isDead = actor.conditions.has("dead") || hp <= 0;
-        const isUnconscious = actor.conditions.has("unconscious");
-        return !isDead && !isUnconscious;
-    };
-
-    const hasLineOfEffect = (targetToken: TokenPF2e) => {
-        const hasCollision = CONFIG.Canvas.polygonBackends.move.testCollision(
-            token.center,
-            targetToken.center,
-            {
-                type: "move",
-                mode: "any",
-            }
-        );
-        return !hasCollision;
-    };
-
     // Find all allies within 60 feet on the current scene who have line of effect and are alive
     const allTokens = canvas.tokens.placeables as TokenPF2e[];
     const targetTokens = allTokens.filter(t => {
@@ -73,10 +47,10 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
             return false;
         }
 
-        if (!isAlly(t)) return false;
-        if (token.distanceTo(t) > 60) return false;
+        if (!isAlly(t, casterActor, token)) return false;
+        if (!isWithinDistance(token, t, 60)) return false;
         if (!isConsciousAndAlive(actor)) return false;
-        if (!hasLineOfEffect(t)) return false;
+        if (!hasLineOfEffect(token, t)) return false;
 
         return true;
     });
