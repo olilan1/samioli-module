@@ -61,6 +61,8 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
 
     if (targetActorUuids.length === 0) return;
 
+    animateCourageousAnthem(token);
+
     // Send payload to GM client via socket to apply effects
     await getSocket().executeAsGM(COURAGEOUS_ANTHEM_APPLY, targetActorUuids, effectSource);
 }
@@ -104,4 +106,30 @@ async function getCourageousAnthemEffectSource(): Promise<EffectSource | null> {
         }
     }
     return null;
+}
+
+function animateCourageousAnthem(caster: TokenPF2e) {
+
+    const anim = 'jb2a.bardic_inspiration.blueyellow';
+    const sounds = [
+        "sound/NWN2-Sounds/bardsong_lute_01.WAV",
+        "sound/NWN2-Sounds/bardsong_lute_02.WAV",
+        "sound/NWN2-Sounds/bardsong_lute_03.WAV",
+        "sound/NWN2-Sounds/bardsong_lute_04.WAV"
+    ];
+
+    const sequence = new Sequence()
+        .effect()
+            .file(anim)
+            .atLocation(caster)
+            .scale(1)
+            .fadeIn(300)
+            .fadeOut(500)
+        .sound()
+            .file(Sequencer.Helpers.random_array_element(sounds))
+            .volume(0.5)
+            .fadeInAudio(100)
+            .fadeOutAudio(300)
+    sequence.play();
+
 }
