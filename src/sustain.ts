@@ -9,6 +9,8 @@ export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
         if (hasSustainedDuration(messageItem)) {
             if (MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(messageItem))) return;
             if (!message.actor) return;
+            // Do not follow through with sustain logic if the spell is a summon spell
+            if (messageItem.traits.has('summon')) return;
             await addSustainEffectToActor(message.actor, messageItem as unknown as SpellPF2e);
         }
     }
