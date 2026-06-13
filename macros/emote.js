@@ -1,21 +1,21 @@
-/* {"name":"Emote","img":"icons/magic/air/weather-clouds.webp"} */
+/* {"name":"Emote","img":"icons/magic/air/weather-clouds.webp","_id":"LdagGQcMGgWGYNg0"} */
 
-if (canvas.tokens.controlled.length !== 1) {
-    ui.notifications.warn("Please select a token");
+const ownedFamiliars = canvas.tokens.placeables.filter(
+    t => t.actor?.type === "familiar" && t.actor?.isOwner
+);
+
+if (ownedFamiliars.length === 0) {
+    ui.notifications.warn("No owned familiar tokens found.");
     return;
 }
 
-const selectedToken = canvas.tokens.controlled[0];
-
-if (selectedToken.actor?.type !== "familiar") {
-    ui.notifications.warn("Please select a familiar token");
+if (ownedFamiliars.length > 1) {
+    ui.notifications.warn(
+        "Multiple owned familiar tokens found. Please ensure only one is on the canvas."
+    );
     return;
 }
 
-if (!selectedToken.actor?.isOwner) {
-    ui.notifications.warn(`You do not have permission to perform an emote with ${selectedToken.name}.`);
-    return;
-}
-
+const tokenToUse = ownedFamiliars[0];
 const myApi = game.modules.get("samioli-module").api;
-myApi.handleEmote(selectedToken);
+myApi.handleEmote(tokenToUse);
