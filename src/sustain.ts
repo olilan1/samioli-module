@@ -9,8 +9,6 @@ export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
         if (hasSustainedDuration(messageItem)) {
             if (MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(messageItem))) return;
             if (!message.actor) return;
-            // Do not follow through with sustain logic if the spell is a summon spell
-            if (messageItem.traits.has('summon')) return;
             await addSustainEffectToActor(message.actor, messageItem as unknown as SpellPF2e);
         }
     }
@@ -149,6 +147,18 @@ async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2
     const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
     const spell = fromUuidSync(spellUuid);
     if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
+
+    // Do not add spell message back into chat if spell is a summon
+    // Instead, we add a message to confirm that it's been sustained
+    if (spell.traits.has('summon')) {
+        const content = `<p><strong>${spell.name}</strong> was sustained.</p>`;
+        await ChatMessage.create({
+            content: content,
+            speaker: ChatMessage.getSpeaker({ actor: spell.actor })
+        });
+        return;
+    }
+
     await spell.toMessage();
 }
 
