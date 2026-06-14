@@ -1,6 +1,7 @@
-import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, TokenPF2e, EffectSource } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
-import { delay, logd } from "../utils.ts";
+import { delay, logd, addOrUpdateEffectOnActor } from "../utils.ts";
+import { getSetting, SETTINGS } from "../settings.ts";
 
 const wooshSound1 = "sound/NWN2-Sounds/cb_sw_unarmed04.WAV";
 const wooshSound2 = "sound/NWN2-Sounds/cb_sw_unarmed01.WAV";
@@ -36,29 +37,39 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     const targetPositionY = target.document.y;
     const targetHeight = target.document.height;
     const targetWidth = target.document.width;
-    if (!canvas.scene){
+    if (!canvas.scene) {
         return;
     }
-    const targetLocationBuffer = canvas.scene.grid.size/2;
+    const targetLocationBuffer = canvas.scene.grid.size / 2;
 
     let x = targetPositionX - originalTokenPositionX
     let y = targetPositionY - originalTokenPositionY
 
-    x += (targetHeight - 1) * targetLocationBuffer;  
-    y += (targetWidth - 1) * targetLocationBuffer;  
+    x += (targetHeight - 1) * targetLocationBuffer;
+    y += (targetWidth - 1) * targetLocationBuffer;
 
     const rotationValue = (x < 0) ? -720 : 720
     const context = chatMessage.flags.pf2e.context;
 
     //check if the skillroll was successful
-    if (context?.outcome === "criticalSuccess"|| context?.outcome === "success") {
+    if (context?.outcome === "criticalSuccess" || context?.outcome === "success") {
 
         await animateSuccessfulTumble(token, target, rotationValue, x, y);
 
         checkIfProvidesPanache(chatMessage);
 
-    } else if (chatMessage.flags.pf2e.context?.outcome === "criticalFailure" 
-    || chatMessage.flags.pf2e.context?.outcome === "failure") {
+        const actor = token.actor;
+        const hasTumbleBehind = actor?.itemTypes.feat.some(
+            (feat) => feat.slug === "tumble-behind-rogue" || feat.slug === "tumble-behind-swashbuckler"
+        );
+        const autoEnabled = getSetting(SETTINGS.AUTO_TUMBLE_BEHIND);
+
+        if (actor && hasTumbleBehind && autoEnabled) {
+            await applyTumbleBehindEffect(target, token);
+        }
+
+    } else if (chatMessage.flags.pf2e.context?.outcome === "criticalFailure"
+        || chatMessage.flags.pf2e.context?.outcome === "failure") {
 
         await animateFailureTumble(x, y, token, target, rotationValue, originalTokenPositionX, originalTokenPositionY);
 
@@ -69,18 +80,18 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     }
 }
 
-async function animateFailureTumble(x: number, y: number, token: TokenPF2e, target: TokenPF2e, 
+async function animateFailureTumble(x: number, y: number, token: TokenPF2e, target: TokenPF2e,
     rotationValue: number, originalTokenPositionX: number, originalTokenPositionY: number) {
-    
+
     const fallDownX = (x / 2);
     const fallDownY = (y / 2);
 
     const rollOutAnimTime = 2000;
     const knockedBackAnimTime = 1000;
     const flatOnFloorTime = 2000;
-    
+
     const fallFlatAngle = (x < 0) ? 90 : -90;
-    
+
     const sequence = new Sequence()
         .animation()
             .on(token)
@@ -105,7 +116,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .file(wooshSound2)
             .delay(rollOutAnimTime / 1.5)
             .fadeOutAudio(200)
-            .sound()
+        .sound()
             .file(wooshSound3)
             .delay(rollOutAnimTime / 1.1)
             .fadeOutAudio(200)
@@ -126,27 +137,27 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .opacity(0.3)
             .fadeOut(200)
         .effect()
-        .copySprite(target)
-        .loopProperty("sprite", "scale.x", {
-            values: [1, 1.3],
-            duration: 100,
-            pingPong: true,
-            ease: "easeInExpo"
-        })
-        .loopProperty("sprite", "scale.y", {
-            values: [1, 1.3],
-            duration: 100,
-            pingPong: true,
-            gridUnits: false,
-            ease: "easeInExpo"
-        })
-        .duration(100)
+            .copySprite(target)
+            .loopProperty("sprite", "scale.x", {
+                values: [1, 1.3],
+                duration: 100,
+                pingPong: true,
+                ease: "easeInExpo"
+            })
+            .loopProperty("sprite", "scale.y", {
+                values: [1, 1.3],
+                duration: 100,
+                pingPong: true,
+                gridUnits: false,
+                ease: "easeInExpo"
+            })
+            .duration(100)
         .effect()
             .file(impactAnimation)
             .atLocation(target)
             .scaleToObject(3)
             .zIndex(1000)
-            .sound()
+        .sound()
             .file(deflectSound)
             .fadeOutAudio(200)
         .effect()
@@ -275,4 +286,46 @@ async function animateSuccessfulTumble(token: TokenPF2e, target: TokenPF2e, rota
             .duration(250);
     sequence.play();
     await delay(animationTime);
+}
+
+export async function applyTumbleBehindEffect(
+    target: TokenPF2e,
+    attacker: TokenPF2e
+) {
+    if (!target.actor || !attacker.actor) return;
+
+    const targetSignature = target.actor.signature;
+
+    const attackerEffectSource = {
+        type: "effect",
+        name: "Tumble Behind (Attacker)",
+        img: "systems/pf2e/icons/abilities/blue-person-running.webp",
+        system: {
+            slug: "tumble-behind-attacker",
+            tokenIcon: { show: false },
+            duration: {
+                value: 0,
+                unit: "rounds",
+                expiry: "turn-end"
+            },
+            rules: [
+                {
+                    key: "EphemeralEffect",
+                    selectors: ["attack-roll"],
+                    uuid: "Compendium.pf2e.conditionitems.Item.AJh5ex99aV6VTggg",
+                    predicate: [`target:signature:${targetSignature}`]
+                },
+                {
+                    key: "FlatModifier",
+                    selector: "attack-roll",
+                    value: 0,
+                    type: "untyped",
+                    predicate: [`target:signature:${targetSignature}`],
+                    removeAfterRoll: "if-enabled"
+                }
+            ]
+        }
+    } as unknown as EffectSource;
+
+    await addOrUpdateEffectOnActor(attacker.actor, attackerEffectSource);
 }

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Automated Off guard application for Tumble Behind
 - Updated Sustain Logic to work with Summons
 - Courageous Anthem automation
 - Automated and Animated Mirror Image
