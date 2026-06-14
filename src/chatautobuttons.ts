@@ -13,6 +13,7 @@ import { deploySnare, removeSnare } from "./actions/snare.ts";
 import { startTranslocate, startWarpStep } from "./spells/translocate.ts";
 import { startDancingBlade } from "./spells/dancingblade.ts";
 import { startEmote } from "./actions/emote.ts";
+import { startCourageousAnthem } from "./spells/courageousanthem.ts";
 
 const SLUG_PREFIX = 'origin:item:slug:';
 const CATEGORY_PREFIX = 'origin:item:category:';
@@ -101,6 +102,11 @@ const AUTO_SWAP_BUTTONS_SPELLS: Record<string, ButtonSwapSpec> = {
         label: "Animate!",
         function: startDancingBlade,
         buttonToReplace: DAMAGE_BUTTON_SPELL
+    },
+    "courageous-anthem": {
+        label: "Inspire!",
+        function: startCourageousAnthem,
+        buttonToReplace: TEMPLATE_BUTTON_SPELL
     }
 };
 
