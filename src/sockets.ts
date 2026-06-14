@@ -6,6 +6,7 @@ import { createSnareAsGM, removeSnareAsGM } from "./actions/snare.ts";
 import { applyTargetEffectAsGM, applyGuardEffectAsGM, cleanupDancingBladeAsGM } from "./spells/dancingblade.ts";
 import { MODULE_ID } from "./utils.ts";
 import { replaceTargets } from "./templatetarget.ts";
+import { deleteSummonAsGM } from "./sustain.ts";
 import { applyCourageousAnthemEffectAsGM } from "./spells/courageousanthem.ts";
 
 let socket: SocketlibSocket | undefined;
@@ -22,6 +23,7 @@ export const REMOVE_SNARE = "removeSnare";
 export const DANCING_BLADE_APPLY_TARGET = "applyTargetEffect";
 export const DANCING_BLADE_APPLY_GUARD = "applyGuardEffect";
 export const DANCING_BLADE_CLEANUP = "cleanupDancingBlade";
+export const DELETE_SUMMON = "deleteSummon";
 export const COURAGEOUS_ANTHEM_APPLY = "applyCourageousAnthem";
 
 export const getSocket = () => {
@@ -45,5 +47,6 @@ export function registerSocket() {
     socket.register(DANCING_BLADE_APPLY_TARGET, applyTargetEffectAsGM);
     socket.register(DANCING_BLADE_APPLY_GUARD, applyGuardEffectAsGM);
     socket.register(DANCING_BLADE_CLEANUP, cleanupDancingBladeAsGM);
+    socket.register(DELETE_SUMMON, deleteSummonAsGM);
     socket.register(COURAGEOUS_ANTHEM_APPLY, applyCourageousAnthemEffectAsGM);
 }

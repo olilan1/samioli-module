@@ -3,7 +3,7 @@ import { getOwnersFromActor, logd } from "./utils.ts";
 import { removeFrightenedAndAntagonize } from "./effects/frightened.ts";
 import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
-import { handleSustainSpell } from "./sustain.ts";
+import { handleSustainSpell, handleRemoveSummon } from "./sustain.ts";
 import { extendBoostEidolon } from "./spells/boosteidolon.ts";
 import { addSnareToChatAndTarget } from "./actions/snare.ts";
 import { handleMirrorImageRoll } from "./spells/mirrorimage.ts";
@@ -16,6 +16,7 @@ const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonFunctionDescription> = {
     "remove-antagonize": { func: removeAntagonizeEffect, takesMsg: false },
     "remove-panache": { func: onClearPanacheButtonClick, takesMsg: true },
     "sustain-spell": { func: handleSustainSpell, takesMsg: false },
+    "remove-summon": { func: handleRemoveSummon, takesMsg: false },
     "extend-boost-eidolon": { func: extendBoostEidolon, takesMsg: true },
     "trigger-snare": { func: addSnareToChatAndTarget, takesMsg: false },
     "roll-mirror-image": { func: handleMirrorImageRoll, takesMsg: true }

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Updated Sustain Logic to work with Summons
 - Courageous Anthem automation
 - Automated and Animated Mirror Image
 - Workaround for start of turn spells not triggering for players when casting from activations tab
