@@ -327,11 +327,11 @@ function getMessageType(message: ChatMessagePF2e) {
         ?? message.flags?.[MODULE_ID]?.type;
 }
 
-function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): HookRunner<T> {
+export function hook<T extends unknown[]>(func: (...args: T) => void, ...args: T): HookRunner<T> {
     return new HookRunner<T>(func, ...args);
 }
 
-class HookRunner<T extends unknown[]> {
+export class HookRunner<T extends unknown[]> {
     func: (...args: T) => boolean | void;
     args: T;
     shouldRun: boolean;
