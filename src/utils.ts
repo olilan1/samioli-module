@@ -219,10 +219,7 @@ export async function addOrUpdateEffectOnActor(
             return existingEffect;
         }
     }
-    await actor.createEmbeddedDocuments("Item", [sourceClone]);
-    const newEffect = actor.items.find(
-        item => item.slug === sourceClone.system.slug && item.type === "effect"
-    );
+    const [newEffect] = await actor.createEmbeddedDocuments("Item", [sourceClone]) as EffectPF2e[];
     return newEffect as EffectPF2e;
 }
 
