@@ -1,7 +1,6 @@
 import { ChatMessagePF2e, TokenPF2e, EffectSource } from "foundry-pf2e";
 import { checkIfProvidesPanache } from "../effects/panache.ts";
-import { delay, logd, addOrUpdateEffectOnActor, getTokenFromUuid } from "../utils.ts";
-import { getSocket, TUMBLE_BEHIND_APPLY_EFFECT } from "../sockets.ts";
+import { delay, logd, addOrUpdateEffectOnActor } from "../utils.ts";
 import { getSetting, SETTINGS } from "../settings.ts";
 
 const wooshSound1 = "sound/NWN2-Sounds/cb_sw_unarmed04.WAV";
@@ -66,14 +65,7 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
         const autoEnabled = getSetting(SETTINGS.AUTO_TUMBLE_BEHIND);
 
         if (actor && hasTumbleBehind && autoEnabled) {
-            await getSocket().executeAsGM(
-                TUMBLE_BEHIND_APPLY_EFFECT,
-                target.document.uuid,
-                token.document.uuid,
-                actor.id,
-                token.name,
-                actor.signature
-            );
+            await applyTumbleBehindEffect(target, token);
         }
 
     } else if (chatMessage.flags.pf2e.context?.outcome === "criticalFailure"
@@ -106,7 +98,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .opacity(0)
             .fadeIn(200)
             .duration(rollOutAnimTime + knockedBackAnimTime)
-            .effect()
+        .effect()
             .file(puffSideAnimation)
             .atLocation(token)
             // @ts-expect-error rotationOffset is correct
@@ -116,7 +108,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .fadeIn(100)
             .opacity(0.3)
             .fadeOut(200)
-            .sound()
+        .sound()
             .file(wooshSound1)
             .delay(rollOutAnimTime / 2.2)
             .fadeOutAudio(200)
@@ -124,11 +116,11 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .file(wooshSound2)
             .delay(rollOutAnimTime / 1.5)
             .fadeOutAudio(200)
-            .sound()
+        .sound()
             .file(wooshSound3)
             .delay(rollOutAnimTime / 1.1)
             .fadeOutAudio(200)
-            .effect()
+        .effect()
             .copySprite(token)
             .animateProperty("sprite", "position.x", { from: 0, to: x, duration: rollOutAnimTime, ease: "easeInBack" })
             .animateProperty("sprite", "position.y", { from: 0, to: y, duration: rollOutAnimTime, ease: "easeInBack" })
@@ -165,7 +157,7 @@ async function animateFailureTumble(x: number, y: number, token: TokenPF2e, targ
             .atLocation(target)
             .scaleToObject(3)
             .zIndex(1000)
-            .sound()
+        .sound()
             .file(deflectSound)
             .fadeOutAudio(200)
         .effect()
@@ -296,60 +288,20 @@ async function animateSuccessfulTumble(token: TokenPF2e, target: TokenPF2e, rota
     await delay(animationTime);
 }
 
-export async function applyTumbleBehindEffectAsGM(
-    targetUuid: string,
-    attackerUuid: string,
-    attackerId: string,
-    attackerName: string,
-    attackerSignature: string
+export async function applyTumbleBehindEffect(
+    target: TokenPF2e,
+    attacker: TokenPF2e
 ) {
-    const targetToken = getTokenFromUuid(targetUuid);
-    const attackerToken = getTokenFromUuid(attackerUuid);
-    if (!targetToken?.actor || !attackerToken?.actor) return;
+    if (!target.actor || !attacker.actor) return;
 
-    const sluggifiedId = game.pf2e?.system?.sluggify(attackerId)
-        || attackerId.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+    const targetSignature = target.actor.signature;
 
-    // Apply AC penalty effect on target
-    const targetEffectSource = {
-        type: "effect",
-        name: `Off-Guard to ${attackerName} (Tumble Behind)`,
-        img: "systems/pf2e/icons/conditions/off-guard.webp",
-        system: {
-            slug: `tumble-behind-off-guard-${sluggifiedId}`,
-            tokenIcon: { show: true },
-            duration: {
-                value: 0,
-                unit: "rounds",
-                expiry: "turn-end"
-            },
-            context: {
-                origin: {
-                    actor: attackerToken.actor.uuid,
-                    token: attackerToken.document.uuid
-                }
-            },
-            rules: [
-                {
-                    key: "FlatModifier",
-                    selector: "ac",
-                    value: -2,
-                    type: "circumstance",
-                    predicate: [`origin:signature:${attackerSignature}`]
-                }
-            ]
-        }
-    } as unknown as EffectSource;
-
-    await addOrUpdateEffectOnActor(targetToken.actor, targetEffectSource);
-
-    // Apply companion roll option effect on attacker
     const attackerEffectSource = {
         type: "effect",
-        name: `Tumble Behind (Attacker)`,
-        img: "systems/pf2e/icons/conditions/off-guard.webp",
+        name: "Tumble Behind (Attacker)",
+        img: "systems/pf2e/icons/abilities/blue-person-running.webp",
         system: {
-            slug: `tumble-behind-attacker`,
+            slug: "tumble-behind-attacker",
             tokenIcon: { show: false },
             duration: {
                 value: 0,
@@ -358,14 +310,22 @@ export async function applyTumbleBehindEffectAsGM(
             },
             rules: [
                 {
-                    key: "RollOption",
-                    domain: "all",
-                    option: "target:condition:off-guard",
-                    predicate: [`target:effect:tumble-behind-off-guard-${sluggifiedId}`]
+                    key: "EphemeralEffect",
+                    selectors: ["attack-roll"],
+                    uuid: "Compendium.pf2e.conditionitems.Item.AJh5ex99aV6VTggg",
+                    predicate: [`target:signature:${targetSignature}`]
+                },
+                {
+                    key: "FlatModifier",
+                    selector: "attack-roll",
+                    value: 0,
+                    type: "untyped",
+                    predicate: [`target:signature:${targetSignature}`],
+                    removeAfterRoll: "if-enabled"
                 }
             ]
         }
     } as unknown as EffectSource;
 
-    await addOrUpdateEffectOnActor(attackerToken.actor, attackerEffectSource);
+    await addOrUpdateEffectOnActor(attacker.actor, attackerEffectSource);
 }
