@@ -1,8 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource, TokenPF2e } from "foundry-pf2e";
-import {
-    addOrUpdateEffectOnActor,
-    isConsciousAndAlive
-} from "../utils.ts";
+import { addOrUpdateEffectOnActor, isConsciousAndAlive } from "../utils.ts";
 import { getSocket, COURAGEOUS_ANTHEM_APPLY } from "../sockets.ts";
 import { ActorUUID } from "foundry-pf2e/foundry/common/documents/_module.mjs";
 
@@ -25,10 +22,7 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
         if (t === token) return true; // Caster is always included
 
         const actor = t.actor;
-        if (!actor || (actor.type !== "character" && actor.type !== "npc")) {
-            return false;
-        }
-
+        if (!actor?.isOfType("creature")) return false;
         if (!actor.isAllyOf(casterActor)) return false;
         if (token.distanceTo(t) > 60) return false;
         if (!isConsciousAndAlive(actor)) return false;
