@@ -3,10 +3,13 @@
 ## [Unreleased]
 
 - Automated Off guard application for Tumble Behind
+- Updated Sustain Logic to work with Summons
+- Courageous Anthem automation
 - Automated and Animated Mirror Image
 - Workaround for start of turn spells not triggering for players when casting from activations tab
 - Typo fixed in Antagonize automation
 - Shifting automation maintains staff trait on weapons when shifting
+- Emote macro fix
 
 ## [0.64.0] - 2026-05-30
 

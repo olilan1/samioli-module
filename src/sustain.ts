@@ -1,7 +1,8 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect, MODULE_ID, isSpellPF2e } from "./utils.ts";
+import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect, MODULE_ID, isSpellPF2e, sendBasicChatMessage } from "./utils.ts";
 import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_SUSTAIN_SPELLS } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
+import { getSocket, DELETE_SUMMON } from "./sockets.ts";
 
 export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
     const messageItem = message.item;
@@ -74,7 +75,7 @@ export async function addSustainEffectToActor(
             }
         }
     };
-    
+
     return addOrUpdateEffectOnActor(actor, effect as DeepPartial<EffectSource> as EffectSource);
 }
 
@@ -122,7 +123,7 @@ export async function handleSustainSpell(actorId: string, effectSlug: string) {
         "system.start.value": game.time.worldTime,
     });
 
-    await addSustainedSpellBackIntoChat(effect, actor);
+    await postSustainChatMessage(effect);
 
     const template = getTemplateFromEffect(effect);
     if (template) {
@@ -138,16 +139,29 @@ function getTemplateFromEffect(effect: EffectPF2e) {
     return canvas.scene?.templates.get(templateId);
 }
 
-async function addSustainedSpellBackIntoChat(effect: EffectPF2e, actor: ActorPF2e) {
-    const skipChat = !!effect.getFlag(MODULE_ID, "skipSustainChat");
-    if (skipChat) return;
+async function postSustainChatMessage(effect: EffectPF2e) {
 
+    const spell = getSpellFromEffect(effect)
+    if (!spell) return;
+
+    const skipChat = !!effect.getFlag(MODULE_ID, "skipSustainChat");
+    // Do not add spell message back into chat if spell is a summon
+    // Instead, we add a message to confirm that it's been sustained
+    if (spell.traits.has('summon') || skipChat) {
+        const content = `<p><strong>${spell.name}</strong> was sustained.</p>`;
+        sendBasicChatMessage(content, spell.actor!);
+        return;
+    }
+    await spell.toMessage();
+}
+
+function getSpellFromEffect(effect: EffectPF2e): SpellPF2e | undefined {
     const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
     if (typeof spellId !== "string" || !spellId) return;
-    const spellUuid = 'Actor.' + actor.id + '.Item.' + spellId;
+    const spellUuid = 'Actor.' + effect.actor!.id + '.Item.' + spellId;
     const spell = fromUuidSync(spellUuid);
     if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
-    await spell.toMessage();
+    return spell;
 }
 
 async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effect: EffectPF2e) {
@@ -167,17 +181,110 @@ async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effe
 }
 
 export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
-    
     if (!isEffect(item)) return;
 
     if (!item.slug?.startsWith('sustaining-effect-')) return;
 
     const spellName = item.name.replace('Sustaining: ', '');
     const content = `<p><strong>${spellName}</strong> was not sustained.</p>`;
+
+    const spell = getSpellFromEffect(item as EffectPF2e)
+    if (!spell) return;
+
+    const isSummonAssistantEnabled = game.modules.get('pf2e-summons-assistant')?.active;
+    const isSpellASummon = spell.traits.has('summon');
+    const casterHasActiveSummons = !!getSummonedTokensFromCanvas(item.actor?.id!)
+
+    // if spell is a summon, module is active and there are relevant summons on the canvas 
+    // create a chat with a button to remove the summoned token    
+    if (isSummonAssistantEnabled && isSpellASummon && casterHasActiveSummons) {
+        if (!item.actor) return;
+        await createChatMessageWithButton({
+            slug: "remove-summon",
+            actor: item.actor,
+            content: content,
+            button_label: "Remove summon?",
+            params: [item.actor.id]
+        });
+        return;
+    }
+
     await ChatMessage.create({
         content: content,
         speaker: ChatMessage.getSpeaker({ actor: item.actor })
     });
+}
+
+function getSummonedTokensFromCanvas(casterId: string) {
+    const tokens = canvas.tokens?.placeables ?? [];
+    const summons = tokens.filter(token => {
+        const actor = token.actor;
+        if (!actor) return false;
+        const summonerId = actor.getFlag("pf2e-summons-assistant", "summoner.id");
+        return actor.traits.has("summoned") && summonerId === casterId;
+    });
+    return summons;
+}
+
+export async function handleRemoveSummon(casterId: string) {
+    if (typeof casterId !== "string" || !casterId) return;
+
+    const summons = getSummonedTokensFromCanvas(casterId);
+
+    if (summons.length === 0) {
+        ui.notifications?.info("No matching summoned tokens found on the canvas.");
+        return;
+    }
+
+    if (summons.length === 1) {
+        const summon = summons[0];
+        if (summon.id) {
+            getSocket().executeAsGM(DELETE_SUMMON, summon.id);
+        }
+        return;
+    }
+
+    const { DialogV2 } = foundry.applications.api;
+    const optionsHtml = summons
+        .map(s => new Option(s.name, s.id).outerHTML)
+        .join("");
+
+    const summonId = await DialogV2.wait({
+        window: { title: "Which Summon was not sustained?" },
+        content: `
+            <form>
+                <div class="form-group">
+                    <select name="summonSelect">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            </form>
+        `,
+        buttons: [{
+            action: "remove",
+            label: "Remove",
+            default: true,
+            callback: async (_event, _button, dialog) => {
+                const selectElement = dialog.element.querySelector<HTMLSelectElement>(
+                    '[name="summonSelect"]'
+                );
+                return selectElement?.value;
+            }
+        }],
+        rejectClose: false
+    }) as string | undefined;
+
+    if (summonId) {
+        getSocket().executeAsGM(DELETE_SUMMON, summonId);
+    }
+}
+
+export async function deleteSummonAsGM(summonId: string) {
+    if (typeof summonId !== "string") return;
+    const tokenDocument = canvas.scene?.tokens.get(summonId);
+    if (tokenDocument) {
+        await tokenDocument.delete();
+    }
 }
 
 async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e,
@@ -211,7 +318,7 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
 export async function handleSustainedEffectDeletion(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.getFlag(MODULE_ID, "sustainedTemplateId"); 
+    const templateId = item.getFlag(MODULE_ID, "sustainedTemplateId");
     if (typeof templateId === "string" && templateId) {
         await deleteTemplateById(templateId);
     }

@@ -145,9 +145,7 @@ async function applyMasterMoodEffect(
                     value: bonusValue,
                     type: "circumstance",
                     label: `Aided by ${familiarName}`,
-                    // Currently this removes after any roll
-                    // TODO: See if there's a way to have this only removed after a relevant roll
-                    removeAfterRoll: true
+                    removeAfterRoll: "if-enabled"
                 }
             ]
         }
