@@ -16,6 +16,9 @@ import { GamePF2e } from 'foundry-pf2e';
       FormDataExtended: class {},
     },
   },
+  utils: {
+    deepClone: <T>(val: T): T => structuredClone(val),
+  },
 } as unknown as typeof foundry;
 
 // Define global Hooks mock

@@ -341,7 +341,7 @@ describe('Baseline Hook Handlers', () => {
     it('checkIfSpellInChatIsSustain: should add sustain effect if spell has sustained duration', async () => {
       const mockActor = {
         items: Object.assign([], { find: vi.fn().mockReturnValue(undefined) }),
-        createEmbeddedDocuments: vi.fn()
+        createEmbeddedDocuments: vi.fn().mockResolvedValue([ { name: 'Sustaining: Bless' } ])
       } as unknown as ActorPF2e;
 
       const mockSpell = {
