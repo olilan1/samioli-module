@@ -409,15 +409,6 @@ export function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
 }
 
 /**
- * Checks if a target token is an ally of the caster.
- * Compares alliance values, falling back to disposition if not set.
- * 
- * Note on disposition fallback:
- * In Foundry, token disposition indicates allegiance (Friendly = 1, Neutral = 0, Hostile = -1).
- * If actor alliance information is missing or unconfigured, tokens with matching disposition
- * values (e.g. friendly caster targeting a friendly ally) are considered allies.
- */
-/**
  * Checks if an actor is conscious and alive based on their HP and conditions.
  */
 export function isConsciousAndAlive(actor: ActorPF2e): boolean {
