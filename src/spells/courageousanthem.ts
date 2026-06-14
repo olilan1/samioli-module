@@ -1,10 +1,7 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource, TokenPF2e } from "foundry-pf2e";
 import {
     addOrUpdateEffectOnActor,
-    hasLineOfEffect,
-    isAlly,
-    isConsciousAndAlive,
-    isWithinDistance
+    isConsciousAndAlive
 } from "../utils.ts";
 import { getSocket, COURAGEOUS_ANTHEM_APPLY } from "../sockets.ts";
 import { ActorUUID } from "foundry-pf2e/foundry/common/documents/_module.mjs";
@@ -22,7 +19,7 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
         return;
     }
 
-    // Find all allies within 60 feet on the current scene who have line of effect and are alive
+    // Find all allies within 60 feet on the current scene who are alive
     const allTokens = canvas.tokens.placeables as TokenPF2e[];
     const targetTokens = allTokens.filter(t => {
         if (t === token) return true; // Caster is always included
@@ -32,10 +29,9 @@ export async function startCourageousAnthem(token: TokenPF2e, message: ChatMessa
             return false;
         }
 
-        if (!isAlly(t, casterActor, token)) return false;
-        if (!isWithinDistance(token, t, 60)) return false;
+        if (!actor.isAllyOf(casterActor)) return false;
+        if (token.distanceTo(t) > 60) return false;
         if (!isConsciousAndAlive(actor)) return false;
-        if (!hasLineOfEffect(token, t)) return false;
 
         return true;
     });
