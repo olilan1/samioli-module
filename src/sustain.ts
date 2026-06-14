@@ -193,7 +193,7 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
 
     const isSummonAssistantEnabled = game.modules.get('pf2e-summons-assistant')?.active;
     const isSpellASummon = spell.traits.has('summon');
-    const casterHasActiveSummons = getSummonedTokensFromCanvas(item.actor?.id!)
+    const casterHasActiveSummons = !!getSummonedTokensFromCanvas(item.actor?.id!)
 
     // if spell is a summon, module is active and there are relevant summons on the canvas 
     // create a chat with a button to remove the summoned token    
@@ -254,7 +254,6 @@ export async function handleRemoveSummon(casterId: string) {
         content: `
             <form>
                 <div class="form-group">
-                    <label>Select Summon:</label>
                     <select name="summonSelect">
                         ${optionsHtml}
                     </select>
@@ -263,7 +262,7 @@ export async function handleRemoveSummon(casterId: string) {
         `,
         buttons: [{
             action: "remove",
-            label: "Banish",
+            label: "Remove",
             default: true,
             callback: async (_event, _button, dialog) => {
                 const selectElement = dialog.element.querySelector<HTMLSelectElement>(
