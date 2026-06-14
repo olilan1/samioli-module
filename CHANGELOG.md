@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.65.0] - 2026-06-14
+
 - Automated Off guard application for Tumble Behind
 - Updated Sustain Logic to work with Summons
 - Courageous Anthem automation
@@ -122,7 +124,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.64.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.65.0...HEAD
+
+[0.65.0]: https://github.com/olilan1/samioli-module/compare/v0.64.0...v0.65.0
 
 [0.64.0]: https://github.com/olilan1/samioli-module/compare/v0.63.0...v0.64.0
 
