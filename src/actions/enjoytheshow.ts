@@ -22,9 +22,6 @@ export function editEnjoyTheShowSkillRoll(
     }
 }
 
-export async function startEnjoyTheShow(message: ChatMessagePF2e) {
-    animateEnjoyTheShow(message);
-}
 
 function randomRetort(outcome: DegreeOfSuccessString): string {
 
@@ -65,7 +62,7 @@ function checkIfSuccess(outcome: DegreeOfSuccessString): boolean {
         }
 }
 
-async function animateEnjoyTheShow(message: ChatMessagePF2e) {
+export async function startEnjoyTheShow(message: ChatMessagePF2e) {
     const actor = message.actor;
     if (!actor) return;
 

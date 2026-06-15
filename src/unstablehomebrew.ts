@@ -9,7 +9,9 @@ export function replaceUnstableCheckWithStrainCheck(
 ) {
     const flatCheckLink = html.find('a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]');
     if (!flatCheckLink.length) return;
-    const strainDC = getStrainDC(chatMessage.actor!);
+    const actor = chatMessage.actor;
+    if (!actor) return;
+    const strainDC = getStrainDC(actor);
 
     const button = $(
         `<a class="inline-check unstable-action-button">` +
@@ -18,7 +20,7 @@ export function replaceUnstableCheckWithStrainCheck(
     );
 
     button.on("click", async () => {
-        rollAgainstStrainDC(chatMessage.actor!);
+        rollAgainstStrainDC(actor);
     });
 
     flatCheckLink.replaceWith(button);
@@ -38,8 +40,8 @@ async function rollAgainstStrainDC(actor: ActorPF2e) {
 }
 
 export function handleHomebrewUnstableCheckResult(chatMessage: ChatMessagePF2e) {
-    
-    const actor = chatMessage.actor!;
+    const actor = chatMessage.actor;
+    if (!actor) return;
     const outcome = chatMessage.flags.pf2e?.context?.outcome;
 
     if (outcome === "failure" || outcome === "criticalFailure" ) {

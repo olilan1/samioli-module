@@ -323,7 +323,7 @@ function handleChatMessageWithRoll(message: ChatMessagePF2e) {
         case "attack-roll":
             hook(startImaginaryWeapon, message)
                 .ifMessagePosterAndActorOwner()
-                .ifMessageItemSlug("imaginary-weapon")
+                .ifMessageOption("item:imaginary-weapon")
                 .run();
             break;
         case "damage-roll":
