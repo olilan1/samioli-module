@@ -1,5 +1,6 @@
 import { ChatMessagePF2e, DegreeOfSuccessString } from "foundry-pf2e";
 import { delay } from "../utils.ts";
+import { applyPanacheForOutcome } from "../effects/panache.ts";
 
 export function editEnjoyTheShowSkillRoll(
     chatMessagePF2e: ChatMessagePF2e,
@@ -65,6 +66,9 @@ function checkIfSuccess(outcome: DegreeOfSuccessString): boolean {
 }
 
 async function animateEnjoyTheShow(message: ChatMessagePF2e) {
+    const actor = message.actor;
+    if (!actor) return;
+
     const tokenId = message.speaker.token;
     const token = canvas.tokens.placeables.find(t => t.id === tokenId);
     const outcome = message.flags.pf2e.context?.outcome;
@@ -127,4 +131,7 @@ async function animateEnjoyTheShow(message: ChatMessagePF2e) {
         .playIf(checkIfSuccess(outcome))
     sequence.play();
     await delay(animationTime);
+    if (outcome === "success" || outcome === "failure" || outcome === "criticalSuccess") {
+        await applyPanacheForOutcome(actor, outcome);
+    }
 }

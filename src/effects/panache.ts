@@ -10,13 +10,16 @@ export async function applyPanacheForActor(chatMessage: ChatMessagePF2e) {
     | "criticalSuccess"
     | undefined;
   if (actor && outcome) {
-    await applyPanache(actor, outcome);
+    await applyPanacheForOutcome(actor, outcome);
   }
 }
 
 let isApplyingPanache = false;
 
-async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
+export async function applyPanacheForOutcome(
+  actor: ActorPF2e,
+  outcome: "success" | "failure" | "criticalSuccess"
+) {
   
   if (isApplyingPanache) {
     return;
@@ -172,7 +175,7 @@ export function isParryOrBuckleEligible(chatMessage: ChatMessagePF2e): boolean {
 export async function applyPanacheForParryOrBuckler(chatMessage: ChatMessagePF2e) {
   const target = chatMessage.target?.actor;
   if (target) {
-    await applyPanache(target, "failure");
+    await applyPanacheForOutcome(target, "failure");
   }
 }
 

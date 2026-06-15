@@ -1,6 +1,7 @@
 import { ChatMessagePF2e, TokenPF2e, EffectSource } from "foundry-pf2e";
 import { delay, logd, addOrUpdateEffectOnActor } from "../utils.ts";
 import { getSetting, SETTINGS } from "../settings.ts";
+import { applyPanacheForOutcome } from "../effects/panache.ts";
 
 const wooshSound1 = "sound/NWN2-Sounds/cb_sw_unarmed04.WAV";
 const wooshSound2 = "sound/NWN2-Sounds/cb_sw_unarmed01.WAV";
@@ -16,6 +17,8 @@ const puffRingAnimation2 = "jb2a.smoke.puff.ring.01.white.1";
 const impactAnimation = "jb2a.impact.008.orange";
 
 export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
+    const actor = chatMessage.actor;
+    if (!actor) return;
 
     //set up for the animations
     const token = chatMessage.token?.object;
@@ -43,29 +46,45 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
 
     const rotationValue = (x < 0) ? -720 : 720
     const context = chatMessage.flags.pf2e.context;
+    const outcome = context?.outcome;
 
     //check if the skillroll was successful
-    if (context?.outcome === "criticalSuccess" || context?.outcome === "success") {
+    if (outcome === "criticalSuccess" || outcome === "success") {
 
         await animateSuccessfulTumble(token, target, rotationValue, x, y);
+        if (outcome === "success" || outcome === "criticalSuccess") {
+            await applyPanacheForOutcome(actor, outcome);
+        }
 
-        const actor = token.actor;
-        const hasTumbleBehind = actor?.itemTypes.feat.some(
-            (feat) => feat.slug === "tumble-behind-rogue" || feat.slug === "tumble-behind-swashbuckler"
+        const tokenActor = token.actor;
+        const hasTumbleBehind = tokenActor?.itemTypes.feat.some(
+            (feat) =>
+                feat.slug === "tumble-behind-rogue" ||
+                feat.slug === "tumble-behind-swashbuckler"
         );
         const autoEnabled = getSetting(SETTINGS.AUTO_TUMBLE_BEHIND);
 
-        if (actor && hasTumbleBehind && autoEnabled) {
+        if (tokenActor && hasTumbleBehind && autoEnabled) {
             await applyTumbleBehindEffect(target, token);
         }
 
-    } else if (chatMessage.flags.pf2e.context?.outcome === "criticalFailure"
-        || chatMessage.flags.pf2e.context?.outcome === "failure") {
+    } else if (outcome === "criticalFailure" || outcome === "failure") {
 
-        await animateFailureTumble(x, y, token, target, rotationValue, originalTokenPositionX, originalTokenPositionY);
+        await animateFailureTumble(
+            x,
+            y,
+            token,
+            target,
+            rotationValue,
+            originalTokenPositionX,
+            originalTokenPositionY
+        );
+        if (outcome === "failure") {
+            await applyPanacheForOutcome(actor, "failure");
+        }
 
     } else {
-        logd(`did you target anyone? ${chatMessage.flags.pf2e.context?.outcome}`)
+        logd(`did you target anyone? ${outcome}`)
     }
 }
 
