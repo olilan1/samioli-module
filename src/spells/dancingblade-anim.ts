@@ -1,5 +1,5 @@
 import type { ChatMessagePF2e, EffectPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
-import { getTokensAtLocation, MODULE_ID } from "../utils.ts";
+import { getTokensAtLocation } from "../utils.ts";
 import type { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollDancingBladeDamage } from "./dancingblade.ts";
 
@@ -414,12 +414,6 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
  * Injects Damage and Critical buttons into the attack roll card footer.
  */
 export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const context = message.flags.pf2e.context;
-    if (context?.type !== "attack-roll") return;
-
-    const isDancingBlade = context.options?.includes(`${MODULE_ID}:dancing-blade-attack`);
-    if (!isDancingBlade) return;
-
     const damageButton = $('<button type="button" data-action="damage">Damage</button>');
     const criticalButton = $('<button type="button" data-action="critical">Critical</button>');
 

@@ -1,16 +1,16 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
-  checkForBravado,
-  checkIfProvidesPanache,
-  checkForFinisherAttack,
-  checkForFinisherDamage,
-  checkForExtravagantParryOrElegantBuckler
+  applyPanacheForActor,
+  handleFinisherAttack,
+  clearPanacheForActor,
+  applyPanacheForParryOrBuckler,
+  isParryOrBuckleEligible
 } from '../src/effects/panache.ts';
-import { checkForMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
-import { checkForUnstableCheck } from '../src/effects/unstablecheck.ts';
+import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
+import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
 import {
-  checkIfSpellInChatIsSustain,
-  checkIfTemplatePlacedHasSustainEffect
+  addSustainEffectToCaster,
+  associateTemplateWithSustainedEffect
 } from '../src/sustain.ts';
 import { ActorPF2e, ChatMessagePF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from 'foundry-pf2e';
 
@@ -76,29 +76,7 @@ describe('Baseline Hook Handlers', () => {
   });
 
   describe('Panache Handlers', () => {
-    it('checkForBravado: should not apply panache if trait bravado is missing', async () => {
-      const mockActor = {
-        items: Object.assign([], { contents: [] }),
-        createEmbeddedDocuments: vi.fn()
-      } as unknown as ActorPF2e;
-
-      const mockMessage = {
-        actor: mockActor,
-        flags: {
-          pf2e: {
-            context: {
-              options: ['some-other-option'],
-              outcome: 'success'
-            }
-          }
-        }
-      } as unknown as ChatMessagePF2e;
-
-      await checkForBravado(mockMessage);
-      expect(mockActor.createEmbeddedDocuments).not.toHaveBeenCalled();
-    });
-
-    it('checkForBravado: should apply panache if bravado option is present and outcome is success', async () => {
+    it('applyPanacheForActor: should apply panache if outcome is success', async () => {
       const mockActor = {
         items: Object.assign([], { contents: [], find: vi.fn() }),
         createEmbeddedDocuments: vi.fn()
@@ -109,18 +87,17 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              options: ['item:trait:bravado'],
               outcome: 'success'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkForBravado(mockMessage);
+      await applyPanacheForActor(mockMessage);
       expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
     });
 
-    it('checkIfProvidesPanache: should apply failure panache if outcome is failure', async () => {
+    it('applyPanacheForActor: should apply failure panache if outcome is failure', async () => {
       const mockPanacheEffect = {
         id: 'effect-id',
         name: 'Effect: Panache (1 round)',
@@ -142,28 +119,26 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              options: ['item:trait:bravado'],
               outcome: 'failure'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkIfProvidesPanache(mockMessage);
+      await applyPanacheForActor(mockMessage);
       expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
       expect(mockActor.updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
         expect.objectContaining({ _id: 'effect-id', name: 'Effect: Panache (1 round)' })
       ]);
     });
 
-    it('checkForFinisherAttack: should prompt removing panache on failure', async () => {
+    it('handleFinisherAttack: should prompt removing panache on failure', async () => {
       const mockActor = {} as unknown as ActorPF2e;
       const mockMessage = {
         actor: mockActor,
         flags: {
           pf2e: {
             context: {
-              options: ['finisher'],
               outcome: 'failure'
             }
           }
@@ -171,13 +146,13 @@ describe('Baseline Hook Handlers', () => {
       } as unknown as ChatMessagePF2e;
 
       const { createChatMessageWithButton } = await import('../src/chatbuttonhelper.ts');
-      await checkForFinisherAttack(mockMessage);
+      await handleFinisherAttack(mockMessage);
       expect(createChatMessageWithButton).toHaveBeenCalledWith(
         expect.objectContaining({ slug: 'remove-panache', actor: mockActor })
       );
     });
 
-    it('checkForFinisherDamage: should clear panache when damage is rolled', async () => {
+    it('clearPanacheForActor: should clear panache when damage is rolled', async () => {
       const deleteMock = vi.fn();
       const mockPanache = {
         type: 'effect',
@@ -193,18 +168,37 @@ describe('Baseline Hook Handlers', () => {
         actor: mockActor,
         flags: {
           pf2e: {
+            context: {}
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      clearPanacheForActor(mockMessage);
+      expect(deleteMock).toHaveBeenCalled();
+    });
+
+    it('isParryOrBuckleEligible: should return true if dueling-parry option + failure', () => {
+      const mockTargetActor = {
+        items: Object.assign([], { contents: [] })
+      } as unknown as ActorPF2e;
+
+      const mockMessage = {
+        target: { actor: mockTargetActor },
+        flags: {
+          pf2e: {
             context: {
-              options: ['finisher']
+              type: 'attack-roll',
+              options: ['target:effect:dueling-parry'],
+              outcome: 'failure'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkForFinisherDamage(mockMessage);
-      expect(deleteMock).toHaveBeenCalled();
+      expect(isParryOrBuckleEligible(mockMessage)).toBe(true);
     });
 
-    it('checkForExtravagantParryOrElegantBuckler: should apply panache to target on shield raised + crit failure if they have feat', async () => {
+    it('applyPanacheForParryOrBuckler: should apply failure panache to target actor', async () => {
       const mockPanacheEffect = {
         id: 'effect-id',
         type: 'effect',
@@ -212,9 +206,10 @@ describe('Baseline Hook Handlers', () => {
       };
 
       const mockTargetActor = {
-        items: Object.assign([mockPanacheEffect], { contents: [
-          { type: 'feat', system: { category: 'class', slug: 'elegant-buckler' } }
-        ], find: () => mockPanacheEffect }),
+        items: Object.assign([mockPanacheEffect], {
+          contents: [],
+          find: () => mockPanacheEffect
+        }),
         createEmbeddedDocuments: vi.fn(),
         updateEmbeddedDocuments: vi.fn()
       } as unknown as ActorPF2e;
@@ -226,22 +221,19 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              type: 'attack-roll',
-              options: ['target:effect:raise-a-shield'],
-              outcome: 'criticalFailure',
-              target: { actor: 'Actor.1234' }
+              outcome: 'failure'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkForExtravagantParryOrElegantBuckler(mockMessage);
+      await applyPanacheForParryOrBuckler(mockMessage);
       expect(mockTargetActor.createEmbeddedDocuments).toHaveBeenCalled();
     });
   });
 
   describe('Mirror Image Handlers', () => {
-    it('checkForMirrorImageOnAttack: should decrease image count on failure', async () => {
+    it('resolveMirrorImageOnAttack: should decrease image count on failure', async () => {
       const decreaseMock = vi.fn();
       const mockEffect = {
         slug: 'spell-effect-mirror-image',
@@ -262,21 +254,22 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              type: 'attack-roll',
               outcome: 'failure'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkForMirrorImageOnAttack(mockMessage);
+      await resolveMirrorImageOnAttack(mockMessage);
       expect(decreaseMock).toHaveBeenCalled();
       expect(ChatMessage.create).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringContaining('destroys a <strong>Mirror Image</strong>') })
+        expect.objectContaining({
+          content: expect.stringContaining('destroys a <strong>Mirror Image</strong>')
+        })
       );
     });
 
-    it('checkForMirrorImageOnAttack: should prompt image roll on success', async () => {
+    it('resolveMirrorImageOnAttack: should prompt image roll on success', async () => {
       const mockEffect = {
         slug: 'spell-effect-mirror-image',
         system: { badge: { value: 3 } }
@@ -295,7 +288,6 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              type: 'attack-roll',
               outcome: 'success'
             }
           }
@@ -303,7 +295,7 @@ describe('Baseline Hook Handlers', () => {
       } as unknown as ChatMessagePF2e;
 
       const { createChatMessageWithButton } = await import('../src/chatbuttonhelper.ts');
-      await checkForMirrorImageOnAttack(mockMessage);
+      await resolveMirrorImageOnAttack(mockMessage);
       expect(createChatMessageWithButton).toHaveBeenCalledWith(
         expect.objectContaining({ slug: 'roll-mirror-image', actor: mockTargetActor })
       );
@@ -311,7 +303,7 @@ describe('Baseline Hook Handlers', () => {
   });
 
   describe('Unstable Check Handlers', () => {
-    it('checkForUnstableCheck: should apply unstable effect on flat-check failure', async () => {
+    it('applyUnstableEffectOnFailure: should apply unstable effect on failure', async () => {
       const mockActor = {
         createEmbeddedDocuments: vi.fn()
       } as unknown as ActorPF2e;
@@ -322,23 +314,20 @@ describe('Baseline Hook Handlers', () => {
         flags: {
           pf2e: {
             context: {
-              type: 'flat-check',
-              options: ['unstable-check'],
-              outcome: 'failure',
               actor: 'actor-id'
             }
           }
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkForUnstableCheck(mockMessage);
+      await applyUnstableEffectOnFailure(mockMessage);
       expect(game.actors.get).toHaveBeenCalledWith('actor-id');
       expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
     });
   });
 
   describe('Sustain Spell Handlers', () => {
-    it('checkIfSpellInChatIsSustain: should add sustain effect if spell has sustained duration', async () => {
+    it('addSustainEffectToCaster: should add sustain effect if spell has sustained duration', async () => {
       const mockActor = {
         items: Object.assign([], { find: vi.fn().mockReturnValue(undefined) }),
         createEmbeddedDocuments: vi.fn().mockResolvedValue([ { name: 'Sustaining: Bless' } ])
@@ -363,7 +352,7 @@ describe('Baseline Hook Handlers', () => {
         }
       } as unknown as ChatMessagePF2e;
 
-      await checkIfSpellInChatIsSustain(mockMessage);
+      await addSustainEffectToCaster(mockMessage);
       expect(mockActor.createEmbeddedDocuments).toHaveBeenCalledWith(
         'Item',
         expect.arrayContaining([
@@ -375,7 +364,7 @@ describe('Baseline Hook Handlers', () => {
       );
     });
 
-    it('checkIfTemplatePlacedHasSustainEffect: should associate template with effect if slugs match', async () => {
+    it('associateTemplateWithSustainedEffect: should associate template with effect', async () => {
       const mockEffect = {
         type: 'effect',
         slug: 'sustaining-effect-bless',
@@ -399,7 +388,7 @@ describe('Baseline Hook Handlers', () => {
         update: vi.fn()
       } as unknown as MeasuredTemplateDocumentPF2e;
 
-      await checkIfTemplatePlacedHasSustainEffect(mockTemplate);
+      await associateTemplateWithSustainedEffect(mockTemplate);
       expect(mockEffect.update).toHaveBeenCalledWith({
         'flags.samioli-module.sustainedTemplateId': 'template-id'
       });

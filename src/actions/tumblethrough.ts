@@ -1,5 +1,4 @@
 import { ChatMessagePF2e, TokenPF2e, EffectSource } from "foundry-pf2e";
-import { checkIfProvidesPanache } from "../effects/panache.ts";
 import { delay, logd, addOrUpdateEffectOnActor } from "../utils.ts";
 import { getSetting, SETTINGS } from "../settings.ts";
 
@@ -17,12 +16,6 @@ const puffRingAnimation2 = "jb2a.smoke.puff.ring.01.white.1";
 const impactAnimation = "jb2a.impact.008.orange";
 
 export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
-
-    //check if the skill check was for a tumblethrough
-    const messageOptions = chatMessage.flags.pf2e.context?.options;
-    if (!messageOptions?.includes("action:tumble-through")) {
-        return;
-    }
 
     //set up for the animations
     const token = chatMessage.token?.object;
@@ -56,8 +49,6 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
 
         await animateSuccessfulTumble(token, target, rotationValue, x, y);
 
-        checkIfProvidesPanache(chatMessage);
-
         const actor = token.actor;
         const hasTumbleBehind = actor?.itemTypes.feat.some(
             (feat) => feat.slug === "tumble-behind-rogue" || feat.slug === "tumble-behind-swashbuckler"
@@ -72,8 +63,6 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
         || chatMessage.flags.pf2e.context?.outcome === "failure") {
 
         await animateFailureTumble(x, y, token, target, rotationValue, originalTokenPositionX, originalTokenPositionY);
-
-        checkIfProvidesPanache(chatMessage);
 
     } else {
         logd(`did you target anyone? ${chatMessage.flags.pf2e.context?.outcome}`)

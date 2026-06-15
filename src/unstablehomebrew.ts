@@ -3,28 +3,25 @@ import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { addOrUpdateEffectOnActor, performFlatCheck } from "./utils.ts";
 import { replaceTargets } from "./templatetarget.ts";
 
-export function replaceUnstableCheckWithStrainCheck(chatMessage: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+export function replaceUnstableCheckWithStrainCheck(
+    chatMessage: ChatMessagePF2e,
+    html: JQuery<HTMLElement>
+) {
+    const flatCheckLink = html.find('a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]');
+    if (!flatCheckLink.length) return;
+    const strainDC = getStrainDC(chatMessage.actor!);
 
-    const rollOptions = chatMessage.flags.pf2e?.context?.options 
-        ?? chatMessage.flags.pf2e?.origin?.rollOptions;
-    if (!rollOptions) return;
+    const button = $(
+        `<a class="inline-check unstable-action-button">` +
+        `<i class="fa-solid fa-screwdriver-wrench"></i> ` +
+        `Strain Check DC ${strainDC}</a>`
+    );
 
-    if (rollOptions.includes("origin:item:trait:unstable") 
-        || rollOptions.includes("self:action:trait:unstable")) {
+    button.on("click", async () => {
+        rollAgainstStrainDC(chatMessage.actor!);
+    });
 
-        const flatCheckLink = html.find('a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]');
-
-        if (!flatCheckLink.length) return;
-        const strainDC = getStrainDC(chatMessage.actor!);
-
-        const button = $(`<a class="inline-check unstable-action-button"><i class="fa-solid fa-screwdriver-wrench"></i> Strain Check DC ${strainDC}</a>`);
-
-        button.on("click", async () => {
-            rollAgainstStrainDC(chatMessage.actor!);
-        });
-
-        flatCheckLink.replaceWith(button);
-    }
+    flatCheckLink.replaceWith(button);
 }
 
 function getStrainDC(actor: ActorPF2e) : number {
@@ -41,9 +38,6 @@ async function rollAgainstStrainDC(actor: ActorPF2e) {
 }
 
 export function handleHomebrewUnstableCheckResult(chatMessage: ChatMessagePF2e) {
-
-    const rollOptions = chatMessage.flags.pf2e?.context?.options;
-    if (!rollOptions || !rollOptions.includes("samioli-unstable-check")) return;
     
     const actor = chatMessage.actor!;
     const outcome = chatMessage.flags.pf2e?.context?.outcome;

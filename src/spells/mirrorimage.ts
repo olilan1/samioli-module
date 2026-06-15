@@ -8,10 +8,7 @@ interface MirrorImageRollFlags {
     imagesCount: number;
 }
 
-export async function checkForMirrorImageOnAttack(chatMessage: ChatMessagePF2e): Promise<void> {
-    const context = chatMessage.flags.pf2e.context;
-    if (!context || context.type !== "attack-roll") return;
-
+export async function resolveMirrorImageOnAttack(chatMessage: ChatMessagePF2e): Promise<void> {
     const targetToken = chatMessage.target?.token?.object;
     const targetActor = targetToken?.actor;
     if (!targetActor || !targetToken) return;
@@ -24,8 +21,7 @@ export async function checkForMirrorImageOnAttack(chatMessage: ChatMessagePF2e):
     const imagesCount = effect.system.badge?.value;
     if (typeof imagesCount !== "number" || imagesCount <= 0) return;
 
-    const outcome = context.outcome;
-    if (outcome === "criticalFailure") return;
+    const outcome = chatMessage.flags.pf2e.context?.outcome;
 
     if (outcome === "failure") {
         await effect.decrease();

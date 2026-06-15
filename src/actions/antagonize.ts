@@ -73,7 +73,7 @@ function isAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: Tok
     return antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id);
 }
 
-export async function createChatMessageOnTurnStartIfTokenIsAntagonized(combatant: CombatantPF2e) {
+export async function postAntagonizedTurnStartMessage(combatant: CombatantPF2e) {
 
     const token = combatant.token?.object;
     if (!token) return;

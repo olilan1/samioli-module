@@ -48,9 +48,13 @@ export async function targetTokensUnderTemplate(
     };
 }
 
-export function deleteTemplateTargets(template: MeasuredTemplateDocumentPF2e) {
+export function isLastTargetedTemplate(templateId: string): boolean {
+    return lastTemplateDetails?.templateId === templateId;
+}
+
+export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e) {
     const lastDetails = lastTemplateDetails;
-    if (!lastDetails || lastDetails?.templateId != template.id) {
+    if (!lastDetails) {
         return;
     }
 

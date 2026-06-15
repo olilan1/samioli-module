@@ -2,7 +2,7 @@ import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocum
 import { addOrUpdateEffectOnActor, delay, sendBasicChatMessage } from "./utils.ts";
 import { getTemplateTokens, isTokenInTemplateArea, replaceTargets } from "./templatetarget.ts";
 
-const START_OF_TURN_SPELLS = [
+export const START_OF_TURN_SPELLS = [
     'ash-cloud',
     'field-of-life',
     'sea-of-thought',

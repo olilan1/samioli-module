@@ -6,12 +6,8 @@ type Tradition = "arcane" | "divine" | "occult" | "primal";
 type MagicSkill = "arcana" | "religion" | "occultism" | "nature";
 
 export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
-
-    // Check if the spell is Boost Eidolon
-    if (!chatMessage.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:slug:boost-eidolon")) return;
-
-    const summonerActor = chatMessage.actor;
-    if (!summonerActor || !isCharacter(summonerActor)) return;
+    const summonerActor = chatMessage.actor!;
+    if (!isCharacter(summonerActor)) return;
     
     // Don't add button if summoner has no focus points remaining
     const hasFocusPoints = summonerActor.system.resources.focus.value > 0;

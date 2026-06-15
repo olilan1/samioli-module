@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e"
-import { getOwnersFromActor, logd } from "./utils.ts";
+import { getOwnersFromActor, logd, MODULE_ID } from "./utils.ts";
 import { removeFrightenedAndAntagonize } from "./effects/frightened.ts";
 import { removeAntagonizeEffect } from "./actions/antagonize.ts";
 import { onClearPanacheButtonClick } from "./effects/panache.ts";
@@ -62,7 +62,7 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
         whisper: spec.gmOnly ? gms : getOwnersFromActor(spec.actor).map(user => user.id),
         speaker: ChatMessage.getSpeaker({ actor: spec.actor }),
         flags: {
-            samioli: {
+            [MODULE_ID]: {
                 buttonSlug: spec.slug,
                 ...spec.flags
             }
@@ -70,9 +70,8 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
     });
 }
 
-export function addButtonClickHandlersIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const slug = message.flags.samioli?.buttonSlug as string | undefined;
-    if (!slug) return;
+export function addButtonClickHandlers(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const slug = message.flags[MODULE_ID]!.buttonSlug as string;
     const funcDesc = BUTTON_FUNCTION_MAPPINGS[slug];
     if (!funcDesc) {
         logd(`Button slug ${slug} has no function mapping.`);
