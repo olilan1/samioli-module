@@ -47,12 +47,14 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     const rotationValue = (x < 0) ? -720 : 720
     const context = chatMessage.flags.pf2e.context;
     const outcome = context?.outcome;
+    const options = context?.options ?? chatMessage.flags.pf2e.origin?.rollOptions ?? [];
+    const hasBravado = options.includes("item:trait:bravado");
 
     //check if the skillroll was successful
     if (outcome === "criticalSuccess" || outcome === "success") {
 
         await animateSuccessfulTumble(token, target, rotationValue, x, y);
-        if (outcome === "success" || outcome === "criticalSuccess") {
+        if ((outcome === "success" || outcome === "criticalSuccess") && hasBravado) {
             await applyPanacheForOutcome(actor, outcome);
         }
 
@@ -79,7 +81,7 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
             originalTokenPositionX,
             originalTokenPositionY
         );
-        if (outcome === "failure") {
+        if (outcome === "failure" && hasBravado) {
             await applyPanacheForOutcome(actor, "failure");
         }
 

@@ -131,7 +131,14 @@ async function animateEnjoyTheShow(message: ChatMessagePF2e) {
         .playIf(checkIfSuccess(outcome))
     sequence.play();
     await delay(animationTime);
-    if (outcome === "success" || outcome === "failure" || outcome === "criticalSuccess") {
+    const options = message.flags.pf2e.context?.options
+        ?? message.flags.pf2e.origin?.rollOptions
+        ?? [];
+    const hasBravado = options.includes("item:trait:bravado");
+    if (
+        hasBravado &&
+        (outcome === "success" || outcome === "failure" || outcome === "criticalSuccess")
+    ) {
         await applyPanacheForOutcome(actor, outcome);
     }
 }
