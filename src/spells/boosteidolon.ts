@@ -6,8 +6,8 @@ type Tradition = "arcane" | "divine" | "occult" | "primal";
 type MagicSkill = "arcana" | "religion" | "occultism" | "nature";
 
 export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
-    const summonerActor = chatMessage.actor!;
-    if (!isCharacter(summonerActor)) return;
+    const summonerActor = chatMessage.actor;
+    if (!summonerActor || !isCharacter(summonerActor)) return;
     
     // Don't add button if summoner has no focus points remaining
     const hasFocusPoints = summonerActor.system.resources.focus.value > 0;

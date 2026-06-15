@@ -19,7 +19,8 @@ export async function removeAndApplyHuntPreyAsGM(rangerUuid: string, targetUuids
 }
 
 export async function startHuntPrey(message: ChatMessagePF2e) {
-    const ranger = message.actor!;
+    const ranger = message.actor;
+    if (!ranger) return;
     const targets = message.author?.targets;
 
     if (!targets || targets.size === 0) {

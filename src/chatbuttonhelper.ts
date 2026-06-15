@@ -71,7 +71,8 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
 }
 
 export function addButtonClickHandlers(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const slug = message.flags[MODULE_ID]!.buttonSlug as string;
+    const slug = message.flags[MODULE_ID]?.buttonSlug as string | undefined;
+    if (!slug) return;
     const funcDesc = BUTTON_FUNCTION_MAPPINGS[slug];
     if (!funcDesc) {
         logd(`Button slug ${slug} has no function mapping.`);
