@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, EffectPF2e, ItemPF2e, TokenPF2e } from "foundry-pf2e"
-import { getOwnersFromActor, isCondition, sendBasicChatMessage, logd, returnStringOfNamesFromArray } from "../utils.ts";
+import { getOwnersFromActor, isCondition, sendBasicChatMessage, logd, returnStringOfNamesFromArray, MODULE_ID } from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
 export async function applyAntagonizeIfValid(chatMessage: ChatMessagePF2e) {
@@ -46,7 +46,7 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
             }
         },
         flags: {
-            samioli: {
+            [MODULE_ID]: {
                 antagonizerTokenId: antagonizerToken.id
             }
         }
@@ -58,7 +58,9 @@ async function applyAntagonizedEffect(targetToken: TokenPF2e, antagonizerToken: 
 
 function isAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: TokenPF2e) {
     const antagonizedEffects = getActorAntagonizedEffects(actorToken.actor!);
-    return antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id);
+    return antagonizedEffects.some(
+        effect => effect.getFlag(MODULE_ID, "antagonizerTokenId") === demoralizerToken.id
+    );
 }
 
 export async function postAntagonizedTurnStartMessage(combatant: CombatantPF2e) {
@@ -86,7 +88,7 @@ async function createAntagonizedChatMessage(token: TokenPF2e, antagonizedEffects
     const antagonizerNames = [];
 
     for (const effect of antagonizedEffects) {
-        const antagonizerTokenId = effect.flags.samioli?.antagonizerTokenId as string;
+        const antagonizerTokenId = effect.getFlag(MODULE_ID, "antagonizerTokenId") as string;
         const antagonizerName = canvas.scene?.tokens.get(antagonizerTokenId)?.name;
         if (!antagonizerName) return;
         antagonizerNames.push(antagonizerName);

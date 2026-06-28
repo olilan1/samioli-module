@@ -1,6 +1,7 @@
 import { ActorPF2e, ChatMessagePF2e, ScenePF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { REMOVE_AND_APPLY_HUNT_PREY, getSocket } from "../sockets.ts";
+import { MODULE_ID } from "../utils.ts";
 
 export async function removeAndApplyHuntPreyAsGM(rangerUuid: string, targetUuids: string[]) {
 
@@ -53,7 +54,7 @@ async function applyHuntPrey(rangerActor: ActorPF2e, targetTokens: TokenDocument
             tokenIcon: { show: true }
         },
         flags: {
-            samioli: {
+            [MODULE_ID]: {
                 hunterActorId: rangerActor.id
             }
         }
@@ -96,7 +97,7 @@ async function removeHuntPreyFromOtherTokens(hunterActor: ActorPF2e) {
         );
         
         for (const huntPreyEffect of huntPreyEffects) {
-            if (huntPreyEffect.flags?.samioli?.hunterActorId === hunterActor.id) {
+            if (huntPreyEffect.getFlag(MODULE_ID, "hunterActorId") === hunterActor.id) {
                 await huntPreyEffect.delete();
             }
         }
