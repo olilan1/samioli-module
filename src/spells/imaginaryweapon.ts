@@ -6,7 +6,7 @@ export async function startImaginaryWeapon(message: ChatMessagePF2e) {
 
     // check if attack roll is Imaginary Weapon
     const contextOptions = message.flags.pf2e.context?.options;
-    if (!contextOptions?.includes("item:imaginary-weapon")) return;
+    if (!contextOptions) return;
 
     // determine what type of Imaginary Weapon has been cast
     const isAmped = contextOptions.includes("item:tag:amped");
@@ -20,8 +20,10 @@ export async function startImaginaryWeapon(message: ChatMessagePF2e) {
     }
 
     // get player who is doing the attack roll and capture targets
-    const user = message.author!;
-    const caster = message.token!;
+    const user = message.author;
+    if (!user) return;
+    const caster = message.token;
+    if (!caster) return;
     const targets = Array.from(user.targets)
     if (targets.length === 0) return;
 

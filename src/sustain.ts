@@ -4,15 +4,16 @@ import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 import { getSocket, DELETE_SUMMON } from "./sockets.ts";
 
-export async function checkIfSpellInChatIsSustain(message: ChatMessagePF2e) {
-    const messageItem = message.item;
-    if (isSpellPF2e(messageItem)) {
-        if (hasSustainedDuration(messageItem)) {
-            if (MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(messageItem))) return;
-            if (!message.actor) return;
-            await addSustainEffectToActor(message.actor, messageItem as unknown as SpellPF2e);
-        }
+export async function addSustainEffectToCaster(message: ChatMessagePF2e) {
+    if (message.actor && isSpellPF2e(message.item)) {
+        await addSustainEffectToActor(message.actor, message.item as unknown as SpellPF2e);
     }
+}
+
+export function isAutomaticSustainSpell(item: ItemPF2e | null): boolean {
+    if (!isSpellPF2e(item)) return false;
+    const spell = item as unknown as SpellPF2e;
+    return hasSustainedDuration(spell) && !MANUAL_SUSTAIN_SPELLS.has(getSpellSlug(spell));
 }
 
 /**
@@ -24,7 +25,7 @@ function getSpellSlug(spell: SpellPF2e): string {
     return (spell as unknown as { slug: string | null }).slug ?? "";
 }
 
-function hasSustainedDuration(spell: SpellPF2e): boolean {
+export function hasSustainedDuration(spell: SpellPF2e): boolean {
     // We cast through unknown to avoid "Type instantiation is excessively deep" errors 
     // caused by the complexity of the PF2e system's Spell types.
     const system = spell.system as unknown as { duration?: { sustained?: boolean } };
@@ -79,7 +80,7 @@ export async function addSustainEffectToActor(
     return addOrUpdateEffectOnActor(actor, effect as DeepPartial<EffectSource> as EffectSource);
 }
 
-export async function ifActorHasSustainEffectCreateMessage(actor: ActorPF2e) {
+export async function postSustainMessagesForActor(actor: ActorPF2e) {
     const sustainedEffects = getActorSustainedEffects(actor);
     if (!sustainedEffects) {
         return;
@@ -294,11 +295,13 @@ async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2
     });
 }
 
-export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTemplateDocumentPF2e) {
+export async function associateTemplateWithSustainedEffect(
+    template: MeasuredTemplateDocumentPF2e
+) {
+    const actor = template.actor;
+    if (!actor) return;
 
-    if (!template.actor) return;
-
-    const sustainedEffectsOnActor = getActorSustainedEffects(template.actor);
+    const sustainedEffectsOnActor = getActorSustainedEffects(actor);
     if (!sustainedEffectsOnActor) return;
 
     const spellSlugFromTemplate = template.item?.slug;
@@ -306,7 +309,7 @@ export async function checkIfTemplatePlacedHasSustainEffect(template: MeasuredTe
 
     const matchingEffect = sustainedEffectsOnActor.find(effect => {
         const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
-        const spell = template.actor!.items.get(spellId) as SpellPF2e;
+        const spell = actor.items.get(spellId) as SpellPF2e;
         return spell?.slug === spellSlugFromTemplate;
     });
 
@@ -324,4 +327,13 @@ export async function handleSustainedEffectDeletion(item: ItemPF2e) {
     }
 
     runMatchingSustainDeletionFunction(item);
+}
+
+/**
+ * Checks if the actor associated with the template has any active sustaining effects.
+ */
+export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e): boolean {
+    return template.actor?.items.some(
+        i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
+    ) ?? false;
 }

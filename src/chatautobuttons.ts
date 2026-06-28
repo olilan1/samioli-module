@@ -127,17 +127,35 @@ const AUTO_SWAP_BUTTONS_CONSUMABLES: Record<string, ButtonSwapSpec> = {
     }
 };
 
+export function canAddAutoButton(message: ChatMessagePF2e): boolean {
+    const rollOptions = message.flags.pf2e?.origin?.rollOptions;
+    if (!rollOptions || !message.token?.object) return false;
+
+    const slug = rollOptions.find(o => o.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
+    const category = rollOptions
+        .find(o => o.startsWith(CATEGORY_PREFIX))
+        ?.slice(CATEGORY_PREFIX.length);
+
+    if (slug) {
+        if (message.flags.pf2e.casting) {
+            if (AUTO_BUTTONS_SPELLS[slug] || AUTO_SWAP_BUTTONS_SPELLS[slug]) return true;
+        }
+        if (AUTO_BUTTONS_ACTIONS[slug]) return true;
+    }
+    if (category) {
+        if (AUTO_SWAP_BUTTONS_CONSUMABLES[category]) return true;
+    }
+    return false;
+}
+
 /**
  * Checks a chat message for specific roll options (slugs or categories) 
  * and triggers the addition or swapping of custom UI buttons on the chat card.
  */
-export function addAutoButtonIfNeeded(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const origin = message.flags.pf2e.origin;
-    const rollOptions = origin?.rollOptions;
-    if (!rollOptions) return;
-
+export function addAutoButtonToMessage(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    const rollOptions = message.flags.pf2e.origin?.rollOptions;
     const token = message.token?.object;
-    if (!token) return;
+    if (!rollOptions || !token) return;
 
     const slug = rollOptions.find(item => item.startsWith(SLUG_PREFIX))?.slice(SLUG_PREFIX.length);
     if (slug) {

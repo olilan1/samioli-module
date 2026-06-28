@@ -4,9 +4,6 @@ import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { DEMANIFEST_EIDOLON, getSocket, MANIFEST_EIDOLON } from "../sockets.ts";
 
 export async function manifestEidolon(message: ChatMessagePF2e) {
-
-    if (!message.flags.pf2e.origin?.rollOptions?.includes("origin:item:slug:manifest-eidolon")) return;
-
     const summonerActor = message.actor;
     const summonerToken = message.token;
     if (!summonerActor || !isCharacter(summonerActor) || !summonerToken) return;

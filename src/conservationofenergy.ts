@@ -15,26 +15,19 @@ const SPELL_SLUGS = new Set([
     `frostbite`
 ]);
 
-export async function oscillateEnergy(message: ChatMessagePF2e) {
+export function isOscillateSpellCast(message: ChatMessagePF2e): boolean {
     const options = message.flags?.pf2e?.context?.options ?? [];
-    const psychicActor = message.actor as ActorPF2e;
-
-    if (!psychicActor || !options.includes("class:psychic") 
-        || !options.includes("feature:the-oscillating-wave")) {
-        return;
-    }
-
-    // Check if a relevant spell
-    const prefix = "item:";
-    const isRelevantSpell = options.some(o => o.startsWith(prefix) 
-        && SPELL_SLUGS.has(o.substring(prefix.length))
+    const isRelevantSpell = options.some(o =>
+        o.startsWith("item:") && SPELL_SLUGS.has(o.substring("item:".length))
     );
-
-    // Check if mind shift action with add remove energy enabled
     const isMindShiftWithAddRemoveEnergy = options.includes("mindshift:add-remove-energy")
         && options.includes("item:tag:mindshifted");
+    return isRelevantSpell || isMindShiftWithAddRemoveEnergy;
+}
 
-    if (!isRelevantSpell && !isMindShiftWithAddRemoveEnergy) return;
+export async function oscillateEnergy(message: ChatMessagePF2e) {
+    const psychicActor = message.actor as ActorPF2e;
+    if (!psychicActor) return;
 
     // Get the Oscillating Wave Feat
     const oscillatingWaveFeat = psychicActor.itemTypes.feat.find(

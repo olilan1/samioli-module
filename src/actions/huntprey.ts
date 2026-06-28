@@ -21,11 +21,6 @@ export async function removeAndApplyHuntPreyAsGM(rangerUuid: string, targetUuids
 export async function startHuntPrey(message: ChatMessagePF2e) {
     const ranger = message.actor;
     if (!ranger) return;
-
-    if (!message.flags?.pf2e?.origin?.rollOptions?.includes("origin:item:hunt-prey")) {
-        return;
-    }
-
     const targets = message.author?.targets;
 
     if (!targets || targets.size === 0) {

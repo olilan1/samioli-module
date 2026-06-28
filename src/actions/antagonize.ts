@@ -1,22 +1,10 @@
-import { ActorPF2e, ChatMessagePF2e, CheckContextChatFlag, CombatantPF2e, EffectPF2e, ItemPF2e, TokenPF2e } from "foundry-pf2e"
+import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, EffectPF2e, ItemPF2e, TokenPF2e } from "foundry-pf2e"
 import { getOwnersFromActor, isCondition, sendBasicChatMessage, logd, returnStringOfNamesFromArray } from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 
 export async function applyAntagonizeIfValid(chatMessage: ChatMessagePF2e) {
-    const context = chatMessage.flags.pf2e.context as CheckContextChatFlag;
-
-    if (!context?.options?.includes("action:demoralize")) return;
-
-    if (!(context.outcome === "success" || context.outcome === "criticalSuccess")) {
-        return;
-    }
-
     const demoralizer = chatMessage.token?.object;
-
-    if (!demoralizer?.actor?.items.some(item => item.type === "feat" 
-        && item.system.slug === "antagonize")) {
-        return;
-    }
+    if (!demoralizer) return;
 
     const target = chatMessage.target?.token?.object;
     if (!target) return;
@@ -73,7 +61,7 @@ function isAntagonizedByDemoralizer(actorToken: TokenPF2e, demoralizerToken: Tok
     return antagonizedEffects.some(effect => effect.flags.samioli?.antagonizerTokenId === demoralizerToken.id);
 }
 
-export async function createChatMessageOnTurnStartIfTokenIsAntagonized(combatant: CombatantPF2e) {
+export async function postAntagonizedTurnStartMessage(combatant: CombatantPF2e) {
 
     const token = combatant.token?.object;
     if (!token) return;

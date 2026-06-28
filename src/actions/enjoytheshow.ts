@@ -1,32 +1,27 @@
-import { ActorPF2e, ChatMessagePF2e, DegreeOfSuccessString } from "foundry-pf2e";
-import { checkIfProvidesPanache } from "../effects/panache.ts";
+import { ChatMessagePF2e, DegreeOfSuccessString } from "foundry-pf2e";
 import { delay } from "../utils.ts";
+import { applyPanacheForOutcome } from "../effects/panache.ts";
 
-export function editEnjoyTheShowSkillRollIfNeeded(
-    chatMessagePF2e: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const rollOptions = chatMessagePF2e.flags.pf2e.origin?.rollOptions;
-    if (!rollOptions?.includes("origin:item:slug:enjoy-the-show")) return;
-    editSkillRoll(html, chatMessagePF2e.actor!);
-}
-
-function editSkillRoll(html: JQuery<HTMLElement>, actor: ActorPF2e) {
+export function editEnjoyTheShowSkillRoll(
+    chatMessagePF2e: ChatMessagePF2e,
+    html: JQuery<HTMLElement>
+) {
     html.find('.inline-check.with-repost').attr('data-against', 'will');
     
-    if (actor.items.find(entry => (entry.system.slug === "acrobatic-performer" && entry.type === "feat"))){
+    const actor = chatMessagePF2e.actor;
+    const hasFeat = actor?.items.some(
+        entry => entry.system.slug === "acrobatic-performer" && entry.type === "feat"
+    );
+    if (hasFeat) {
         const elementToClone = html.find('.inline-check.with-repost');
         const clonedElement = elementToClone.clone();
         clonedElement.attr('data-pf2-check', 'acrobatics');
         clonedElement.find('.label').text('Perform with Acrobatics');
-        elementToClone.after(clonedElement)
-        elementToClone.after(' or ') 
+        elementToClone.after(clonedElement);
+        elementToClone.after(' or ');
     }
 }
 
-export async function startEnjoyTheShow(message: ChatMessagePF2e) {
-    if (message.flags.pf2e.context?.options?.includes("item:slug:enjoy-the-show")) {
-        animateEnjoyTheShow(message);
-    }
-}
 
 function randomRetort(outcome: DegreeOfSuccessString): string {
 
@@ -67,7 +62,10 @@ function checkIfSuccess(outcome: DegreeOfSuccessString): boolean {
         }
 }
 
-async function animateEnjoyTheShow(message: ChatMessagePF2e) {
+export async function startEnjoyTheShow(message: ChatMessagePF2e) {
+    const actor = message.actor;
+    if (!actor) return;
+
     const tokenId = message.speaker.token;
     const token = canvas.tokens.placeables.find(t => t.id === tokenId);
     const outcome = message.flags.pf2e.context?.outcome;
@@ -128,7 +126,16 @@ async function animateEnjoyTheShow(message: ChatMessagePF2e) {
         .scale(0.4)
         .opacity(0.5)
         .playIf(checkIfSuccess(outcome))
-    sequence.play()
+    sequence.play();
     await delay(animationTime);
-    checkIfProvidesPanache(message);
+    const options = message.flags.pf2e.context?.options
+        ?? message.flags.pf2e.origin?.rollOptions
+        ?? [];
+    const hasBravado = options.includes("item:trait:bravado");
+    if (
+        hasBravado &&
+        (outcome === "success" || outcome === "failure" || outcome === "criticalSuccess")
+    ) {
+        await applyPanacheForOutcome(actor, outcome);
+    }
 }

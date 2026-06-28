@@ -2,7 +2,7 @@ import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocum
 import { addOrUpdateEffectOnActor, delay, sendBasicChatMessage } from "./utils.ts";
 import { getTemplateTokens, isTokenInTemplateArea, replaceTargets } from "./templatetarget.ts";
 
-const START_OF_TURN_SPELLS = [
+export const START_OF_TURN_SPELLS = [
     'ash-cloud',
     'field-of-life',
     'sea-of-thought',
@@ -262,4 +262,20 @@ function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDo
 
     return effect as DeepPartial<EffectSource> as EffectSource;
 
+}
+
+/**
+ * Determines if the template originates from a known start-of-turn spell.
+ */
+export function isStartOfTurnSpellTemplate(template: MeasuredTemplateDocumentPF2e): boolean {
+    const slug = (template.flags.pf2e?.origin as { slug?: string } | undefined)?.slug;
+    return !!slug && START_OF_TURN_SPELLS.includes(slug);
+}
+
+/**
+ * Checks if the template has flags indicating it was placed for a start-of-turn spell.
+ */
+export function hasStartOfTurnFlags(template: MeasuredTemplateDocumentPF2e): boolean {
+    return !!template.getFlag("samioli-module", "startOfTurnEffectUuid")
+        || !!template.getFlag("samioli-module", "spellSource");
 }

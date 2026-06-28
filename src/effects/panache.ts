@@ -2,31 +2,24 @@ import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 import { logd } from "../utils.ts";
 
-export function checkForBravado(chatMessage: ChatMessagePF2e) {
-  // don't run if tumble through or enjoy the show
-  // those hooks will call this function after the animation
-  if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado")
-    && !chatMessage.flags?.pf2e?.context?.options?.includes("action:tumble-through")
-    && !chatMessage.flags?.pf2e?.context?.options?.includes("item:slug:enjoy-the-show")) {
-      checkIfProvidesPanache(chatMessage);
-    }
-}
-  
-export async function checkIfProvidesPanache(chatMessage: ChatMessagePF2e) {
-  const outcome = chatMessage.flags?.pf2e?.context?.outcome;
-  if (chatMessage.flags?.pf2e?.context?.options?.includes("item:trait:bravado") 
-    && (outcome === "criticalSuccess" || outcome === "success" || outcome === "failure")) {
-    const actor = chatMessage.actor;
-    if (!actor) {
-      return;
-    }
-  await applyPanache(actor, outcome);
+export async function applyPanacheForActor(chatMessage: ChatMessagePF2e) {
+  const actor = chatMessage.actor;
+  const outcome = chatMessage.flags.pf2e.context?.outcome as
+    | "success"
+    | "failure"
+    | "criticalSuccess"
+    | undefined;
+  if (actor && outcome) {
+    await applyPanacheForOutcome(actor, outcome);
   }
 }
 
 let isApplyingPanache = false;
 
-async function applyPanache(actor: ActorPF2e, outcome: "success" | "failure" | "criticalSuccess") {
+export async function applyPanacheForOutcome(
+  actor: ActorPF2e,
+  outcome: "success" | "failure" | "criticalSuccess"
+) {
   
   if (isApplyingPanache) {
     return;
@@ -110,34 +103,22 @@ async function editPanacheEffect(actor: ActorPF2e, outcome: "success" | "failure
   }
 }
 
-export async function checkForFinisherAttack(chatMessage: ChatMessagePF2e) {
-  const context = chatMessage.flags?.pf2e?.context;
-  if (!context?.options?.includes("finisher")) {
-    return;
-  }
+export async function handleFinisherAttack(chatMessage: ChatMessagePF2e) {
   const actor = chatMessage.actor;
-  if (!actor) {
-    return;
-  }
-  
-  if (context?.outcome === "failure" || context?.outcome === "criticalFailure") {
+  if (!actor) return;
+  const outcome = chatMessage.flags.pf2e.context?.outcome;
+  if (outcome === "failure" || outcome === "criticalFailure") {
     await createRemovePanacheChatMessage(actor);
   } else {
     removeDemoralizeImmunity(chatMessage);
   }
 }
 
-export async function checkForFinisherDamage(chatMessage: ChatMessagePF2e) {
-  if (!chatMessage.flags?.pf2e?.context?.options?.includes("finisher")) {
-    return;
-  }
-
+export function clearPanacheForActor(chatMessage: ChatMessagePF2e) {
   const actor = chatMessage.actor;
-  if (!actor) {
-    return;
+  if (actor) {
+    clearPanache(actor);
   }
-
-  clearPanache(actor);
 }
 
 async function createRemovePanacheChatMessage(actor: ActorPF2e) {
@@ -173,35 +154,30 @@ function getPanacheItems(actor: ActorPF2e) {
   return items.filter(item => item.type === "effect" && item.system.slug === "effect-panache");
 }
 
-export async function checkForExtravagantParryOrElegantBuckler(chatMessage: ChatMessagePF2e) {
+export function isPanacheGeneratingParryOrBuckler(chatMessage: ChatMessagePF2e): boolean {
   const context = chatMessage.flags.pf2e.context;
-
-  if (!context || context.type !== "attack-roll" || !context.target?.actor) {
-    return;
-  }
-
-  const targetActorId = context.target.actor.split('.').pop();
-  if (!targetActorId) {
-    return;
-  }
   const target = chatMessage.target?.actor;
+  if (!context || !target) return false;
 
-  if (!target) {
-    return;
-  }
-
-  const hasDuelingParry = context.options.includes("target:effect:dueling-parry");
-  const hasShieldRaised = context.options.includes("target:effect:raise-a-shield");
+  const hasExtravagantParry =
+    (context.options?.includes("target:effect:dueling-parry") ||
+    context.options?.includes("target:effect:extravagant-parry")) ?? false;
+  const hasShieldRaised = context.options?.includes("target:effect:raise-a-shield") ?? false;
   const isFailure = context.outcome === "failure";
   const isCriticalFailure = context.outcome === "criticalFailure";
 
-  const hasElegantBuckler = hasElegantBucklerFeat(target); 
+  const hasElegantBuckler = hasElegantBucklerFeat(target);
 
-  if (
-    (hasDuelingParry && (isFailure || isCriticalFailure)) ||
+  return (
+    (hasExtravagantParry && (isFailure || isCriticalFailure)) ||
     (hasElegantBuckler && hasShieldRaised && isCriticalFailure)
-  ) {
-    applyPanache(target, "failure");
+  );
+}
+
+export async function applyPanacheForParryOrBuckler(chatMessage: ChatMessagePF2e) {
+  const target = chatMessage.target?.actor;
+  if (target) {
+    await applyPanacheForOutcome(target, "failure");
   }
 }
 
