@@ -181,6 +181,40 @@ describe('HookRunner & hook helper', () => {
     });
   });
 
+  describe('ifMessageType', () => {
+    it('should run callback if context type matches target type', () => {
+      const callback = vi.fn();
+      const mockMessage = {
+        flags: {
+          pf2e: {
+            context: {
+              type: 'attack-roll'
+            }
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      hook(callback, mockMessage).ifMessageType('attack-roll').run();
+      expect(callback).toHaveBeenCalled();
+    });
+
+    it('should NOT run callback if type does not match', () => {
+      const callback = vi.fn();
+      const mockMessage = {
+        flags: {
+          pf2e: {
+            context: {
+              type: 'damage-roll'
+            }
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      hook(callback, mockMessage).ifMessageType('attack-roll').run();
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Semantic guards (isGuarded = true)', () => {
     it('should satisfy isGuarded check with ifMessageOption', () => {
       const callback = vi.fn();

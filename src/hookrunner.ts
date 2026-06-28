@@ -1,5 +1,6 @@
 import { ActorPF2e, ChatMessagePF2e, ItemPF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { getSetting, SettingsKey } from "./settings.ts";
+import { logd } from "./utils.ts";
 
 export function hook<T extends unknown[]>(
     func: (...args: T) => void,
@@ -41,7 +42,7 @@ export class HookRunner<T extends unknown[]> {
                 return (arg as { actor?: ActorPF2e }).actor;
             }
         }
-        console.warn(
+        logd(
             `HookRunner: Could not resolve actor from hook arguments ` +
             `for function "${this.func.name}".`
         );
@@ -59,7 +60,7 @@ export class HookRunner<T extends unknown[]> {
                 return item;
             }
         }
-        console.warn(
+        logd(
             `HookRunner: Could not resolve item from hook arguments ` +
             `for function "${this.func.name}".`
         );
@@ -75,7 +76,7 @@ export class HookRunner<T extends unknown[]> {
             const nestedToken = extractTokenDocument((arg as { token?: unknown }).token);
             if (nestedToken) return nestedToken;
         }
-        console.warn(
+        logd(
             `HookRunner: Could not resolve token document from hook arguments ` +
             `for function "${this.func.name}".`
         );
@@ -127,6 +128,18 @@ export class HookRunner<T extends unknown[]> {
 
     ifV12(): this {
         if (!game.version.startsWith("12.")) {
+            this.shouldRun = false;
+        }
+        return this;
+    }
+
+    ifMessageType(type: string): this {
+        this.isGuarded = true;
+        const message = this.args[0] as ChatMessagePF2e | undefined;
+        const msgType = message?.flags?.pf2e?.context?.type
+            ?? message?.flags?.pf2e?.origin?.type
+            ?? message?.flags?.["samioli-module"]?.type;
+        if (msgType !== type) {
             this.shouldRun = false;
         }
         return this;

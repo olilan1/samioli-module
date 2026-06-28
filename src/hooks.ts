@@ -110,6 +110,7 @@ Hooks.on("renderChatMessage", async (message: ChatMessagePF2e, html: JQuery<HTML
         .ifMessageOptionAny("origin:item:trait:unstable", "self:action:trait:unstable")
         .run();
     hook(addDancingBladeDamageButtons, message, html)
+        .ifMessageType("attack-roll")
         .ifMessageOption("samioli-module:dancing-blade-attack")
         .run();
 });
@@ -426,12 +427,12 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             hook(startHuntPrey, message)
                 .ifEnabled(SETTINGS.AUTO_HUNT_PREY)
                 .ifMessagePosterAndActorOwner()
-                .ifMessageItemSlug("hunt-prey")
+                .ifMessageOption("origin:item:hunt-prey")
                 .run();
             hook(manifestEidolon, message)
                 .ifEnabled(SETTINGS.AUTO_MANIFEST_EIDOLON)
                 .ifMessagePosterAndActorOwner()
-                .ifMessageItemSlug("manifest-eidolon")
+                .ifMessageOption("origin:item:slug:manifest-eidolon")
                 .run();
             break;
         case "spell":
@@ -444,7 +445,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
             hook(runBoostEidolonAutomation, message)
                 .ifEnabled(SETTINGS.AUTO_BOOST_EIDOLON)
                 .ifMessagePosterAndActorOwner()
-                .ifMessageItemSlug("boost-eidolon")
+                .ifMessageOption("origin:item:slug:boost-eidolon")
                 .run();
             break;
         case "mirror-image-roll":
