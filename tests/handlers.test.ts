@@ -198,6 +198,27 @@ describe('Baseline Hook Handlers', () => {
       expect(isParryOrBuckleEligible(mockMessage)).toBe(true);
     });
 
+    it('isParryOrBuckleEligible: should return true if extravagant-parry option + failure', () => {
+      const mockTargetActor = {
+        items: Object.assign([], { contents: [] })
+      } as unknown as ActorPF2e;
+
+      const mockMessage = {
+        target: { actor: mockTargetActor },
+        flags: {
+          pf2e: {
+            context: {
+              type: 'attack-roll',
+              options: ['target:effect:extravagant-parry'],
+              outcome: 'failure'
+            }
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      expect(isParryOrBuckleEligible(mockMessage)).toBe(true);
+    });
+
     it('applyPanacheForParryOrBuckler: should apply failure panache to target actor', async () => {
       const mockPanacheEffect = {
         id: 'effect-id',

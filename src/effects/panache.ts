@@ -159,7 +159,9 @@ export function isParryOrBuckleEligible(chatMessage: ChatMessagePF2e): boolean {
   const target = chatMessage.target?.actor;
   if (!context || !target) return false;
 
-  const hasDuelingParry = context.options.includes("target:effect:dueling-parry");
+  const hasDuelingParry =
+    context.options.includes("target:effect:dueling-parry") ||
+    context.options.includes("target:effect:extravagant-parry");
   const hasShieldRaised = context.options.includes("target:effect:raise-a-shield");
   const isFailure = context.outcome === "failure";
   const isCriticalFailure = context.outcome === "criticalFailure";
