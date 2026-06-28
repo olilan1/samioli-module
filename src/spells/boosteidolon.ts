@@ -1,5 +1,5 @@
-import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e } from "foundry-pf2e";
-import { getEidolonActor, getLevelBasedDC, isCharacter, logd } from "../utils.ts";
+import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e } from "foundry-pf2e";
+import { getEidolonActor, getLevelBasedDC, getOwnersFromActor, isCharacter, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 type Tradition = "arcane" | "divine" | "occult" | "primal";
@@ -8,10 +8,6 @@ type MagicSkill = "arcana" | "religion" | "occultism" | "nature";
 export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
     const summonerActor = chatMessage.actor;
     if (!summonerActor || !isCharacter(summonerActor)) return;
-    
-    // Don't add button if summoner has no focus points remaining
-    const hasFocusPoints = summonerActor.system.resources.focus.value > 0;
-    if (!hasFocusPoints) return;
 
     // Find eidolon actor associated with the summoner
     const eidolonActor = getEidolonActor(summonerActor);
@@ -19,6 +15,15 @@ export async function runBoostEidolonAutomation(chatMessage: ChatMessagePF2e) {
 
     // Apply Boost Eidolon effect to the eidolon
     await createBoostEidolonEffectOnActor(eidolonActor);
+    
+    // Don't add button if summoner has no focus points remaining
+    const hasFocusPoints = summonerActor.system.resources.focus.value > 0;
+    if (!hasFocusPoints) {
+        const recipients = getOwnersFromActor(summonerActor).map(user => user.id);
+        const content = "Not enough Focus Points to extend Boost Eidolon.";
+        await sendBasicChatMessage(content, summonerActor, recipients);
+        return;
+    }
 
     // Calculate standard DC based on summoner level
     const standardDCByLevel = getLevelBasedDC(summonerActor.level);
@@ -66,7 +71,9 @@ async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
         return;
     }
 
-    const boostEidolonEffect = await compendiumPack.getDocument(boostEidolonSpellEffectId);
+    const boostEidolonEffect = (await compendiumPack.getDocument(
+        boostEidolonSpellEffectId
+    )) as ItemPF2e | null;
     if (!boostEidolonEffect){
         logd("Boost Eidolon effect not found in Compendium pack.");
         return;
@@ -83,15 +90,9 @@ export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
     const eidolonActor = getEidolonActor(summonerActor);
     if (!eidolonActor) return;
 
-    // Check if Summoner has focus points (technically should not be possible to reach here without focus points)
-    const hasFocusPoints = summonerActor.system.resources.focus.value > 0;
-    if (!hasFocusPoints) {
-        ui.notifications?.warn("Not enough Focus Points to extend Boost Eidolon.");
-        return;
-    }
-
-    const standardDCByLevel = chatMessage.flags?.samioli?.["extend-boost-eidolon-dc"] as number;
-    const skillCheckRequired = chatMessage.flags?.samioli?.["extend-boost-eidolon-skill"] as MagicSkill;
+    const flags = chatMessage.flags?.[MODULE_ID];
+    const standardDCByLevel = flags?.["extend-boost-eidolon-dc"] as number;
+    const skillCheckRequired = flags?.["extend-boost-eidolon-skill"] as MagicSkill;
     if (!standardDCByLevel || !skillCheckRequired) return;
 
     const skill = summonerActor.skills[skillCheckRequired];
