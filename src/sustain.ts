@@ -196,13 +196,12 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
     const spell = getSpellFromEffect(item as EffectPF2e)
     if (!spell) return;
 
-    const isSummonAssistantEnabled = game.modules.get('pf2e-summons-assistant')?.active;
     const isSpellASummon = spell.traits.has('summon');
-    const casterHasActiveSummons = !!getSummonedTokensFromCanvas(item.actor?.id!)
+    const casterHasActiveSummons = !!getSummonedTokensFromCanvas(item.actor?.id!);
 
-    // if spell is a summon, module is active and there are relevant summons on the canvas 
-    // create a chat with a button to remove the summoned token    
-    if (isSummonAssistantEnabled && isSpellASummon && casterHasActiveSummons) {
+    // if spell is a summon check if there are relevant summons
+    // create a chat with a button to remove the summoned token
+    if (isSpellASummon && casterHasActiveSummons) {
         if (!item.actor) return;
         await createChatMessageWithButton({
             slug: "remove-summon",
@@ -221,6 +220,8 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
 }
 
 function getSummonedTokensFromCanvas(casterId: string) {
+    // return empty array if pf2e-summons-assistant is not active
+    if (!game.modules.get('pf2e-summons-assistant')?.active) return [];
     const tokens = canvas.tokens?.placeables ?? [];
     const summons = tokens.filter(token => {
         const actor = token.actor;
