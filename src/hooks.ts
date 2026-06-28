@@ -54,7 +54,6 @@ import {
     deleteWithinEffectsForTemplate,
     addEffectsToTokensInStartOfTurnTemplates,
     addOrRemoveWithinEffectIfNeeded,
-    START_OF_TURN_SPELLS,
     isStartOfTurnSpellTemplate,
     hasStartOfTurnFlags
 } from "./startofturnspells.ts";
