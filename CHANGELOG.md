@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- HookRunner refactor
+
 ## [0.65.0] - 2026-06-14
 
 - Automated Off guard application for Tumble Behind
