@@ -7,7 +7,7 @@ import {
     applyPanacheForParryOrBuckler,
     handleFinisherAttack,
     clearPanacheForActor,
-    isParryOrBuckleEligible
+    isPanacheGeneratingParryOrBuckler
 } from "./effects/panache.ts";
 import { startHuntPrey } from "./actions/huntprey.ts";
 import {
@@ -39,7 +39,8 @@ import {
     associateTemplateWithSustainedEffect,
     handleSustainedEffectDeletion,
     createSpellNotSustainedChatMessage,
-    isAutomaticSustainSpell
+    isAutomaticSustainSpell,
+    hasSustainingEffect
 } from "./sustain.ts";
 import {
     applyAntagonizeIfValid,
@@ -53,7 +54,9 @@ import {
     deleteWithinEffectsForTemplate,
     addEffectsToTokensInStartOfTurnTemplates,
     addOrRemoveWithinEffectIfNeeded,
-    START_OF_TURN_SPELLS
+    START_OF_TURN_SPELLS,
+    isStartOfTurnSpellTemplate,
+    hasStartOfTurnFlags
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
@@ -141,18 +144,13 @@ Hooks.on("createMeasuredTemplate", async (
     hook(associateTemplateWithSustainedEffect, template)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifGM()
-        .if(() => template.actor?.items.some(
-            i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
-        ) ?? false)
+        .if(hasSustainingEffect)
         .run();
 
     hook(addEffectsToTokensInStartOfTurnTemplates, template)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(() => {
-            const slug = (template.flags.pf2e?.origin as { slug?: string } | undefined)?.slug;
-            return !!slug && START_OF_TURN_SPELLS.includes(slug);
-        })
+        .if(isStartOfTurnSpellTemplate)
         .run();
 });
 
@@ -180,8 +178,7 @@ Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
     hook(deleteWithinEffectsForTemplate, template)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(() => !!template.getFlag("samioli-module", "startOfTurnEffectUuid")
-            || !!template.getFlag("samioli-module", "spellSource"))
+        .if(hasStartOfTurnFlags)
         .run();
 });
 
@@ -348,7 +345,7 @@ function handleChatMessagePostRoll(message: ChatMessagePF2e) {
                 .ifEnabled(SETTINGS.AUTO_PANACHE)
                 .ifGM()
                 .ifMessageHasTarget()
-                .if(() => isParryOrBuckleEligible(message))
+                .if(() => isPanacheGeneratingParryOrBuckler(message))
                 .run();
             hook(handleFinisherAttack, message)
                 .ifEnabled(SETTINGS.AUTO_PANACHE)

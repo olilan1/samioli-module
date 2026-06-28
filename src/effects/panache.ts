@@ -154,22 +154,22 @@ function getPanacheItems(actor: ActorPF2e) {
   return items.filter(item => item.type === "effect" && item.system.slug === "effect-panache");
 }
 
-export function isParryOrBuckleEligible(chatMessage: ChatMessagePF2e): boolean {
+export function isPanacheGeneratingParryOrBuckler(chatMessage: ChatMessagePF2e): boolean {
   const context = chatMessage.flags.pf2e.context;
   const target = chatMessage.target?.actor;
   if (!context || !target) return false;
 
-  const hasDuelingParry =
-    context.options.includes("target:effect:dueling-parry") ||
-    context.options.includes("target:effect:extravagant-parry");
-  const hasShieldRaised = context.options.includes("target:effect:raise-a-shield");
+  const hasExtravagantParry =
+    (context.options?.includes("target:effect:dueling-parry") ||
+    context.options?.includes("target:effect:extravagant-parry")) ?? false;
+  const hasShieldRaised = context.options?.includes("target:effect:raise-a-shield") ?? false;
   const isFailure = context.outcome === "failure";
   const isCriticalFailure = context.outcome === "criticalFailure";
 
   const hasElegantBuckler = hasElegantBucklerFeat(target);
 
   return (
-    (hasDuelingParry && (isFailure || isCriticalFailure)) ||
+    (hasExtravagantParry && (isFailure || isCriticalFailure)) ||
     (hasElegantBuckler && hasShieldRaised && isCriticalFailure)
   );
 }

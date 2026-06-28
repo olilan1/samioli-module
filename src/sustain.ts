@@ -328,3 +328,12 @@ export async function handleSustainedEffectDeletion(item: ItemPF2e) {
 
     runMatchingSustainDeletionFunction(item);
 }
+
+/**
+ * Checks if the actor associated with the template has any active sustaining effects.
+ */
+export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e): boolean {
+    return template.actor?.items.some(
+        i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
+    ) ?? false;
+}

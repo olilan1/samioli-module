@@ -4,7 +4,7 @@ import {
   handleFinisherAttack,
   clearPanacheForActor,
   applyPanacheForParryOrBuckler,
-  isParryOrBuckleEligible
+  isPanacheGeneratingParryOrBuckler
 } from '../src/effects/panache.ts';
 import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
@@ -195,7 +195,7 @@ describe('Baseline Hook Handlers', () => {
         }
       } as unknown as ChatMessagePF2e;
 
-      expect(isParryOrBuckleEligible(mockMessage)).toBe(true);
+      expect(isPanacheGeneratingParryOrBuckler(mockMessage)).toBe(true);
     });
 
     it('isParryOrBuckleEligible: should return true if extravagant-parry option + failure', () => {
@@ -216,7 +216,7 @@ describe('Baseline Hook Handlers', () => {
         }
       } as unknown as ChatMessagePF2e;
 
-      expect(isParryOrBuckleEligible(mockMessage)).toBe(true);
+      expect(isPanacheGeneratingParryOrBuckler(mockMessage)).toBe(true);
     });
 
     it('applyPanacheForParryOrBuckler: should apply failure panache to target actor', async () => {
