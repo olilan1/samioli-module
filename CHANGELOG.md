@@ -8,6 +8,7 @@
 - Fix snares (broken after refactor)
 - Simplification of chatbuttonhelper
 - Migrate to renderChatMessageHTML hook and remove jQuery usage
+- Sustain bug fix when initiative is shared
 
 ## [0.65.0] - 2026-06-14
 

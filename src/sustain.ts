@@ -72,6 +72,7 @@ export async function addSustainEffectToActor(
         flags: {
             [MODULE_ID]: {
                 sustainedSpellId: spell.id,
+                sustained: true,
                 ...(extraFlags ?? {})
             }
         }
@@ -85,6 +86,8 @@ export async function postSustainMessagesForActor(actor: ActorPF2e) {
     if (!sustainedEffects) {
         return;
     }
+
+    await resetSustainFlagsForActor(actor);
 
     for (const effect of sustainedEffects) {
         if (!effect.slug) continue;
@@ -126,6 +129,7 @@ export async function onSustainSpellClick(
     await effect.update({
         "system.duration.value": 1,
         "system.start.value": game.time.worldTime,
+        [`flags.${MODULE_ID}.sustained`]: true,
     });
 
     await postSustainChatMessage(effect);
@@ -343,4 +347,26 @@ export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e): boo
     return template.actor?.items.some(
         i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
     ) ?? false;
+}
+
+async function resetSustainFlagsForActor(actor: ActorPF2e) {
+    const sustainedEffects = getActorSustainedEffects(actor);
+    if (!sustainedEffects) return;
+
+    for (const effect of sustainedEffects) {
+        if (effect.getFlag(MODULE_ID, "sustained") !== false) {
+            await effect.update({ [`flags.${MODULE_ID}.sustained`]: false });
+        }
+    }
+}
+
+export async function expireUnsustainedEffectsForActor(actor: ActorPF2e) {
+    const sustainedEffects = getActorSustainedEffects(actor);
+    if (!sustainedEffects) return;
+
+    for (const effect of sustainedEffects) {
+        if (effect.getFlag(MODULE_ID, "sustained") === false) {
+            await effect.delete();
+        }
+    }
 }
