@@ -40,7 +40,8 @@ import {
     handleSustainedEffectDeletion,
     createSpellNotSustainedChatMessage,
     isAutomaticSustainSpell,
-    hasSustainingEffect
+    hasSustainingEffect,
+    expireUnsustainedEffectsForActor
 } from "./sustain.ts";
 import {
     applyAntagonizeIfValid,
@@ -218,6 +219,11 @@ Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e,
 
 // pf2e.endTurn only runs for the GM
 Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+    if (!combatant.actor) return;
+    hook(expireUnsustainedEffectsForActor, combatant.actor)
+        .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
+        .ifActorHasEffectWithSlugPrefix("sustaining-effect-")
+        .run();
     hook(handleFrightenedAtTurnEnd, combatant)
         .ifEnabled(SETTINGS.AUTO_FRIGHTENED_AND_ANTAGONIZE_CHECK)
         .ifActorHasCondition("frightened")
