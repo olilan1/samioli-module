@@ -1,5 +1,5 @@
 import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e } from "foundry-pf2e";
-import { getEidolonActor, getLevelBasedDC, getOwnersFromActor, isCharacter, logd, sendBasicChatMessage } from "../utils.ts";
+import { getEidolonActor, getLevelBasedDC, getOwnersFromActor, isCharacter, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 type Tradition = "arcane" | "divine" | "occult" | "primal";
@@ -90,8 +90,9 @@ export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
     const eidolonActor = getEidolonActor(summonerActor);
     if (!eidolonActor) return;
 
-    const standardDCByLevel = chatMessage.flags?.samioli?.["extend-boost-eidolon-dc"] as number;
-    const skillCheckRequired = chatMessage.flags?.samioli?.["extend-boost-eidolon-skill"] as MagicSkill;
+    const flags = chatMessage.flags?.[MODULE_ID];
+    const standardDCByLevel = flags?.["extend-boost-eidolon-dc"] as number;
+    const skillCheckRequired = flags?.["extend-boost-eidolon-skill"] as MagicSkill;
     if (!standardDCByLevel || !skillCheckRequired) return;
 
     const skill = summonerActor.skills[skillCheckRequired];
