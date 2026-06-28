@@ -4,6 +4,7 @@
 
 - HookRunner refactor
 - Fix to Boost Eidolon requiring a focus point to work
+- Sustain bug fix when initiative is shared
 
 ## [0.65.0] - 2026-06-14
 
