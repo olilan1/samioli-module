@@ -131,7 +131,14 @@ async function createSnareTriggeredChatMessage(deployer: TokenDocumentPF2e, trig
     });
 }
 
-export async function addSnareToChatAndTarget(itemUuid: string, snareId: string, triggererTokenUuid: string, snareX: string, snareY: string) {
+export async function onTriggerSnareClick(
+    _message: ChatMessagePF2e,
+    itemUuid: string,
+    snareId: string,
+    triggererTokenUuid: string,
+    snareX: string,
+    snareY: string
+) {
     animateSnareTrigger(parseInt(snareX), parseInt(snareY));
 
     const item = fromUuidSync(itemUuid) as ConsumablePF2e;

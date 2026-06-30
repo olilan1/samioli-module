@@ -47,7 +47,7 @@ export async function resolveMirrorImageOnAttack(chatMessage: ChatMessagePF2e): 
     }
 }
 
-export async function handleMirrorImageRoll(
+export async function onRollMirrorImageClick(
     _message: ChatMessagePF2e,
     targetTokenId: string,
     outcome: string,
