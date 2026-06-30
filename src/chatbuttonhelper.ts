@@ -2,7 +2,7 @@ import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
 import { getOwnersFromActor, logd, MODULE_ID } from "./utils.ts";
 import { onRemoveFrightenedAndAntagonizeClick } from "./effects/frightened.ts";
 import { onRemoveAntagonizeClick } from "./actions/antagonize.ts";
-import { onClearPanacheClick } from "./effects/panache.ts";
+import { onRemovePanacheClick } from "./effects/panache.ts";
 import { onSustainSpellClick, onRemoveSummonClick } from "./sustain.ts";
 import { onExtendBoostEidolonClick } from "./spells/boosteidolon.ts";
 import { onTriggerSnareClick } from "./actions/snare.ts";
@@ -16,7 +16,7 @@ export type ButtonHandler = (
 const BUTTON_FUNCTION_MAPPINGS: Record<string, ButtonHandler> = {
     "remove-frightened-and-antagonize": onRemoveFrightenedAndAntagonizeClick,
     "remove-antagonize": onRemoveAntagonizeClick,
-    "remove-panache": onClearPanacheClick,
+    "remove-panache": onRemovePanacheClick,
     "sustain-spell": onSustainSpellClick,
     "remove-summon": onRemoveSummonClick,
     "extend-boost-eidolon": onExtendBoostEidolonClick,

@@ -134,7 +134,7 @@ async function createRemovePanacheChatMessage(actor: ActorPF2e) {
     });
 }
 
-export function onClearPanacheClick(chatMessagePF2e: ChatMessagePF2e) {
+export function onRemovePanacheClick(chatMessagePF2e: ChatMessagePF2e) {
   const actor = chatMessagePF2e.actor;
   if (!actor) return;
   clearPanache(actor);

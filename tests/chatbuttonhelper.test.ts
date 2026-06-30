@@ -14,7 +14,7 @@ vi.mock("../src/actions/antagonize.ts", () => ({
     onRemoveAntagonizeClick: vi.fn((_a, _b, _c) => {})
 }));
 vi.mock("../src/effects/panache.ts", () => ({
-    onClearPanacheClick: vi.fn((_a) => {})
+    onRemovePanacheClick: vi.fn((_a) => {})
 }));
 vi.mock("../src/sustain.ts", () => ({
     onSustainSpellClick: vi.fn((_a, _b, _c) => {}),
