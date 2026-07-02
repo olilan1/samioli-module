@@ -143,7 +143,10 @@ export function canAddAutoButton(message: ChatMessagePF2e): boolean {
         if (AUTO_BUTTONS_ACTIONS[slug]) return true;
     }
     if (category) {
-        if (AUTO_SWAP_BUTTONS_CONSUMABLES[category]) return true;
+        const matchesCategory = Object.entries(AUTO_SWAP_BUTTONS_CONSUMABLES).some(
+            ([key, spec]) => (spec.matcher ?? key) === category
+        );
+        if (matchesCategory) return true;
     }
     return false;
 }
