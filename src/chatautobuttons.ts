@@ -152,7 +152,7 @@ export function canAddAutoButton(message: ChatMessagePF2e): boolean {
  * Checks a chat message for specific roll options (slugs or categories) 
  * and triggers the addition or swapping of custom UI buttons on the chat card.
  */
-export function addAutoButtonToMessage(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+export function addAutoButtonToMessage(message: ChatMessagePF2e, html: HTMLElement) {
     const rollOptions = message.flags.pf2e.origin?.rollOptions;
     const token = message.token?.object;
     if (!rollOptions || !token) return;
@@ -173,7 +173,7 @@ export function addAutoButtonToMessage(message: ChatMessagePF2e, html: JQuery<HT
 }
 
 function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
-    containerLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    containerLookup: string, token: TokenPF2e, message: ChatMessagePF2e, html: HTMLElement) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
         
@@ -181,12 +181,14 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
             continue;
         }
 
-        const button = $(`<button type="button">${buttonSpec.label}</button>`);
-        button.on("click", () => buttonSpec.function(token, message));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = buttonSpec.label;
+        button.addEventListener("click", () => buttonSpec.function(token, message));
 
         // If the target container exists, place the new button at the end of it
-        const targetContainer = html.find(containerLookup);
-        if (targetContainer.length > 0) {
+        const targetContainer = html.querySelector(containerLookup);
+        if (targetContainer) {
             targetContainer.after(button);
         }
     }
@@ -198,7 +200,7 @@ function addMatchingButtons(slug: string, mappings: Record<string, ButtonSpec>,
  */
 function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
     divLookup: string, token: TokenPF2e,
-    message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+    message: ChatMessagePF2e, html: HTMLElement) {
     for (const [key, buttonSpec] of Object.entries(mappings)) {
         const matcher = buttonSpec.matcher ?? key;
 
@@ -207,10 +209,16 @@ function swapButtons(slug: string, mappings: Record<string, ButtonSwapSpec>,
         }
 
         const buttonDataAction = buttonSpec.buttonToReplace!;
-        const templateButton = html.find(buttonDataAction);
+        const templateButton = html.querySelector(buttonDataAction);
+        if (!templateButton) continue;
         const parentDiv = templateButton.closest(`div${divLookup}`);
-        const button = $(`<button type="button">${buttonSpec.label}</button>`);
-        button.on("click", () => buttonSpec.function(token, message));
+        if (!parentDiv) continue;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = buttonSpec.label;
+        button.addEventListener("click", () => buttonSpec.function(token, message));
+        
         parentDiv.after(button);
         parentDiv.remove();
     }

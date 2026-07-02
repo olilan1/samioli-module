@@ -413,26 +413,33 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, range: number) {
 /**
  * Injects Damage and Critical buttons into the attack roll card footer.
  */
-export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
-    const damageButton = $('<button type="button" data-action="damage">Damage</button>');
-    const criticalButton = $('<button type="button" data-action="critical">Critical</button>');
-
-    damageButton.on("click", (e) => {
+export function addDancingBladeDamageButtons(message: ChatMessagePF2e, html: HTMLElement) {
+    const damageButton = document.createElement("button");
+    damageButton.type = "button";
+    damageButton.setAttribute("data-action", "damage");
+    damageButton.textContent = "Damage";
+    damageButton.addEventListener("click", (e) => {
         e.stopPropagation();
         rollDancingBladeDamage(message, false);
     });
-    criticalButton.on("click", (e) => {
+
+    const criticalButton = document.createElement("button");
+    criticalButton.type = "button";
+    criticalButton.setAttribute("data-action", "critical");
+    criticalButton.textContent = "Critical";
+    criticalButton.addEventListener("click", (e) => {
         e.stopPropagation();
         rollDancingBladeDamage(message, true);
     });
 
-    const buttonContainer = $(`
-        <div class="card-buttons flexrow" style="gap: 5px; margin-top: 4px;" />
-    `);
+    const buttonContainer = document.createElement("div");
+    buttonContainer.className = "card-buttons flexrow";
+    buttonContainer.style.gap = "5px";
+    buttonContainer.style.marginTop = "4px";
     buttonContainer.append(damageButton, criticalButton);
 
-    const footer = html.find("footer");
-    if (footer.length > 0) {
+    const footer = html.querySelector("footer");
+    if (footer) {
         footer.before(buttonContainer);
     } else {
         html.append(buttonContainer);

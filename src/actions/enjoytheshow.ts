@@ -4,21 +4,26 @@ import { applyPanacheForOutcome } from "../effects/panache.ts";
 
 export function editEnjoyTheShowSkillRoll(
     chatMessagePF2e: ChatMessagePF2e,
-    html: JQuery<HTMLElement>
+    html: HTMLElement
 ) {
-    html.find('.inline-check.with-repost').attr('data-against', 'will');
+    const elementToClone = html.querySelector(".inline-check.with-repost");
+    if (!elementToClone) return;
+
+    elementToClone.setAttribute("data-against", "will");
     
     const actor = chatMessagePF2e.actor;
     const hasFeat = actor?.items.some(
         entry => entry.system.slug === "acrobatic-performer" && entry.type === "feat"
     );
     if (hasFeat) {
-        const elementToClone = html.find('.inline-check.with-repost');
-        const clonedElement = elementToClone.clone();
-        clonedElement.attr('data-pf2-check', 'acrobatics');
-        clonedElement.find('.label').text('Perform with Acrobatics');
+        const clonedElement = elementToClone.cloneNode(true) as HTMLElement;
+        clonedElement.setAttribute("data-pf2-check", "acrobatics");
+        const label = clonedElement.querySelector(".label");
+        if (label) {
+            label.textContent = "Perform with Acrobatics";
+        }
         elementToClone.after(clonedElement);
-        elementToClone.after(' or ');
+        elementToClone.after(" or ");
     }
 }
 
