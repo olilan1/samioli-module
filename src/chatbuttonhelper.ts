@@ -78,7 +78,7 @@ export async function createChatMessageWithButton(spec: MessageSpec) {
     });
 }
 
-export function addButtonClickHandlers(message: ChatMessagePF2e, html: JQuery<HTMLElement>) {
+export function addButtonClickHandlers(message: ChatMessagePF2e, html: HTMLElement) {
     const slug = message.flags[MODULE_ID]?.buttonSlug as string | undefined;
     if (!slug) return;
     const handler = BUTTON_FUNCTION_MAPPINGS[slug];
@@ -87,10 +87,10 @@ export function addButtonClickHandlers(message: ChatMessagePF2e, html: JQuery<HT
         return;
     }
  
-    const button = html.find(`button[id="${slug}"]`);
-    if (button.length > 0) {
-        button.on('click', () => {
-            const paramsAttr = button.attr("data-params") ?? "[]";
+    const button = html.querySelector(`button[id="${slug}"]`) as HTMLButtonElement | null;
+    if (button) {
+        button.addEventListener("click", () => {
+            const paramsAttr = button.getAttribute("data-params") ?? "[]";
             const params = JSON.parse(paramsAttr) as string[];
             handler(message, ...params);
         });

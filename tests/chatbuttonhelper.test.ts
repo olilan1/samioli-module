@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, Mock } from "vitest";
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
 import {
     createChatMessageWithButton,
@@ -149,21 +149,29 @@ describe("chatbuttonhelper", () => {
             } as unknown as ChatMessagePF2e;
 
             const mockButton = {
-                length: 1,
-                on: vi.fn(),
-                attr: vi.fn().mockReturnValue(JSON.stringify(["token-1", "effect-2"]))
-            };
+                addEventListener: vi.fn(),
+                getAttribute: vi.fn().mockReturnValue(
+                    JSON.stringify(["token-1", "effect-2"])
+                )
+            } as unknown as HTMLButtonElement;
             const mockHtml = {
-                find: vi.fn().mockReturnValue(mockButton)
-            } as unknown as JQuery<HTMLElement>;
+                querySelector: vi.fn().mockReturnValue(mockButton)
+            } as unknown as HTMLElement;
 
             addButtonClickHandlers(mockMessage, mockHtml);
 
-            expect(mockHtml.find).toHaveBeenCalledWith('button[id="remove-antagonize"]');
-            expect(mockButton.on).toHaveBeenCalledWith("click", expect.any(Function));
+            expect(mockHtml.querySelector).toHaveBeenCalledWith(
+                'button[id="remove-antagonize"]'
+            );
+            expect(mockButton.addEventListener).toHaveBeenCalledWith(
+                "click",
+                expect.any(Function)
+            );
 
             // Trigger the click callback
-            const clickCallback = (mockButton.on as vi.Mock).mock.calls[0][1];
+            const clickCallback = (
+                mockButton.addEventListener as Mock
+            ).mock.calls[0][1];
             clickCallback();
 
             expect(onRemoveAntagonizeClick).toHaveBeenCalledWith(
@@ -179,12 +187,12 @@ describe("chatbuttonhelper", () => {
             } as unknown as ChatMessagePF2e;
 
             const mockHtml = {
-                find: vi.fn()
-            } as unknown as JQuery<HTMLElement>;
+                querySelector: vi.fn()
+            } as unknown as HTMLElement;
 
             addButtonClickHandlers(mockMessage, mockHtml);
 
-            expect(mockHtml.find).not.toHaveBeenCalled();
+            expect(mockHtml.querySelector).not.toHaveBeenCalled();
         });
 
         it("should parse parameters containing quotes back to original values", () => {
@@ -197,19 +205,20 @@ describe("chatbuttonhelper", () => {
             } as unknown as ChatMessagePF2e;
 
             const mockButton = {
-                length: 1,
-                on: vi.fn(),
-                attr: vi.fn().mockReturnValue(
+                addEventListener: vi.fn(),
+                getAttribute: vi.fn().mockReturnValue(
                     '["Sami\'s Eidolon","A \\"double\\" quote"]'
                 )
-            };
+            } as unknown as HTMLButtonElement;
             const mockHtml = {
-                find: vi.fn().mockReturnValue(mockButton)
-            } as unknown as JQuery<HTMLElement>;
+                querySelector: vi.fn().mockReturnValue(mockButton)
+            } as unknown as HTMLElement;
 
             addButtonClickHandlers(mockMessage, mockHtml);
 
-            const clickCallback = (mockButton.on as vi.Mock).mock.calls[0][1];
+            const clickCallback = (
+                mockButton.addEventListener as Mock
+            ).mock.calls[0][1];
             clickCallback();
 
             expect(onRemoveAntagonizeClick).toHaveBeenCalledWith(

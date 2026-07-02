@@ -5,21 +5,23 @@ import { replaceTargets } from "./templatetarget.ts";
 
 export function replaceUnstableCheckWithStrainCheck(
     chatMessage: ChatMessagePF2e,
-    html: JQuery<HTMLElement>
+    html: HTMLElement
 ) {
-    const flatCheckLink = html.find('a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]');
-    if (!flatCheckLink.length) return;
+    const flatCheckLink = html.querySelector(
+        'a.inline-check[data-pf2-dc="15"][data-pf2-check="flat"]'
+    );
+    if (!flatCheckLink) return;
     const actor = chatMessage.actor;
     if (!actor) return;
     const strainDC = getStrainDC(actor);
 
-    const button = $(
-        `<a class="inline-check unstable-action-button">` +
+    const button = document.createElement("a");
+    button.className = "inline-check unstable-action-button";
+    button.innerHTML =
         `<i class="fa-solid fa-screwdriver-wrench"></i> ` +
-        `Strain Check DC ${strainDC}</a>`
-    );
+        `Strain Check DC ${strainDC}`;
 
-    button.on("click", async () => {
+    button.addEventListener("click", async () => {
         rollAgainstStrainDC(actor);
     });
 
@@ -96,13 +98,13 @@ async function createFireDamageChatMessage(actor: ActorPF2e) {
     });
 
     const hookFunction = async (chatMessage: ChatMessagePF2e) => {
-        if (chatMessage.flags["samioli-module"]?.unstableCheckCriticalFailure){
+        if (chatMessage.flags["samioli-module"]?.unstableCheckCriticalFailure) {
             await replaceTargets([...currentTargets.map(t => t.id)]);
-            Hooks.off("renderChatMessage", hookFunction);
+            Hooks.off("renderChatMessageHTML", hookFunction);
         }
     };
 
-    Hooks.on("renderChatMessage", hookFunction);
+    Hooks.on("renderChatMessageHTML", hookFunction);
 }
 
 
