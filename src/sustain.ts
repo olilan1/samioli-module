@@ -56,10 +56,9 @@ export async function addSustainEffectToActor(
         system: {
             tokenIcon: { show: true },
             duration: {
-                value: 1,
-                unit: "rounds",
-                sustained: true,
-                expiry: 'turn-end'
+                value: 0,
+                unit: "unlimited",
+                expiry: null
             },
             description: {
                 ...spell.system.description,
@@ -87,7 +86,7 @@ export async function postSustainMessagesForActor(actor: ActorPF2e) {
         return;
     }
 
-    await resetSustainFlagsForActor(actor);
+    await resetSustainFlagsForEffects(sustainedEffects);
 
     for (const effect of sustainedEffects) {
         if (!effect.slug) continue;
@@ -113,24 +112,23 @@ export async function onSustainSpellClick(
     actorId: string,
     effectSlug: string
 ) {
-    const actor = game.actors.get(actorId);
+    const actor = fromUuidSync(actorId) as ActorPF2e | null;
     if (!actor || !actor.isOwner) {
         ui.notifications.warn("You do not have permission to sustain this spell.");
         return;
     }
 
-    const effect = actor.items.find(item => item.slug === effectSlug
-        && item.type === 'effect') as EffectPF2e;
+    const effect = actor.items.find(item =>
+        (item.slug ?? item.system.slug) === effectSlug && item.type === 'effect'
+    ) as EffectPF2e;
     if (!effect) {
         ui.notifications.error("Could not find the sustained effect on the actor.");
         return;
     }
 
-    await effect.update({
-        "system.duration.value": 1,
-        "system.start.value": game.time.worldTime,
-        [`flags.${MODULE_ID}.sustained`]: true,
-    });
+    if (effect.getFlag(MODULE_ID, "sustained") === false) {
+        await effect.update({ [`flags.${MODULE_ID}.sustained`]: true });
+    }
 
     await postSustainChatMessage(effect);
 
@@ -167,10 +165,11 @@ async function postSustainChatMessage(effect: EffectPF2e) {
 function getSpellFromEffect(effect: EffectPF2e): SpellPF2e | undefined {
     const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
     if (typeof spellId !== "string" || !spellId) return;
-    const spellUuid = 'Actor.' + effect.actor!.id + '.Item.' + spellId;
+    const spellUuid = `${effect.actor!.uuid}.Item.${spellId}`;
     const spell = fromUuidSync(spellUuid);
     if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
     return spell;
+
 }
 
 async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effect: EffectPF2e) {
@@ -185,14 +184,14 @@ async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effe
         actor: actor,
         content: content,
         button_label: "Sustain",
-        params: [actor.id, effectSlug ?? ""]
+        params: [actor.uuid, effectSlug ?? ""]
     });
 }
 
 export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
     if (!isEffect(item)) return;
-
     if (!item.slug?.startsWith('sustaining-effect-')) return;
+    if (!item.actor) return;
 
     const spellName = item.name.replace('Sustaining: ', '');
     const content = `<p><strong>${spellName}</strong> was not sustained.</p>`;
@@ -201,7 +200,7 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
     if (!spell) return;
 
     const isSpellASummon = spell.traits.has('summon');
-    const casterHasActiveSummons = !!getSummonedTokensFromCanvas(item.actor?.id!);
+    const casterHasActiveSummons = getSummonedTokensFromCanvas(item.actor.id).length > 0;
 
     // if spell is a summon check if there are relevant summons
     // create a chat with a button to remove the summoned token
@@ -350,11 +349,9 @@ export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e): boo
     ) ?? false;
 }
 
-async function resetSustainFlagsForActor(actor: ActorPF2e) {
-    const sustainedEffects = getActorSustainedEffects(actor);
-    if (!sustainedEffects) return;
-
-    for (const effect of sustainedEffects) {
+async function resetSustainFlagsForEffects(effects: ItemPF2e[]) {
+    for (const effect of effects) {
+        if (!isEffect(effect)) continue;
         if (effect.getFlag(MODULE_ID, "sustained") !== false) {
             await effect.update({ [`flags.${MODULE_ID}.sustained`]: false });
         }
