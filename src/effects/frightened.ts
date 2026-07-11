@@ -90,7 +90,7 @@ export async function onRemoveFrightenedAndAntagonizeClick(
     tokenId: string,
     antagonizedEffectId: string
 ) {
-    const token = canvas.scene?.tokens.get(tokenId)?.object
+    const token = canvas.scene?.tokens.get(tokenId)?.object;
     const actor = token?.actor;
     if (!actor) return;
     await removeAntagonizeEffect(tokenId, antagonizedEffectId);  
