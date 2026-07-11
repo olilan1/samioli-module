@@ -1,4 +1,4 @@
-import { ActorPF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
 import { getOwnersFromActor, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
 import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
@@ -84,8 +84,13 @@ async function createFrightenedAndAntagonizeRemovalConfirmationChatMessage
     });
 }
 
-export async function removeFrightenedAndAntagonize(frightenedConditionId: string, tokenId: string, antagonizedEffectId: string) {
-    const token = canvas.scene?.tokens.get(tokenId)?.object
+export async function onRemoveFrightenedAndAntagonizeClick(
+    _message: ChatMessagePF2e,
+    frightenedConditionId: string,
+    tokenId: string,
+    antagonizedEffectId: string
+) {
+    const token = canvas.scene?.tokens.get(tokenId)?.object;
     const actor = token?.actor;
     if (!actor) return;
     await removeAntagonizeEffect(tokenId, antagonizedEffectId);  

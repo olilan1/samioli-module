@@ -82,7 +82,7 @@ async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
     await eidolonActor.createEmbeddedDocuments("Item", [boostEidolonEffect.toObject()]);
 }
 
-export async function extendBoostEidolon(chatMessage: ChatMessagePF2e) {
+export async function onExtendBoostEidolonClick(chatMessage: ChatMessagePF2e) {
 
     const summonerActor = chatMessage.actor;
     if (!summonerActor || !isCharacter(summonerActor)) return;

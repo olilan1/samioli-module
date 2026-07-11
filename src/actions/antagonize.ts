@@ -144,3 +144,11 @@ export async function removeAntagonizeEffect(tokenId: string, antagonizedEffectI
         logd(`Could not find the antagonized effect on the actor.`);  
     }  
 }
+
+export async function onRemoveAntagonizeClick(
+    _message: ChatMessagePF2e,
+    tokenId: string,
+    effectId: string
+) {
+    await removeAntagonizeEffect(tokenId, effectId);
+}

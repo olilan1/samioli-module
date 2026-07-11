@@ -105,7 +105,11 @@ function getActorSustainedEffects(actor: ActorPF2e) {
     return sustainedEffects;
 }
 
-export async function handleSustainSpell(actorId: string, effectSlug: string) {
+export async function onSustainSpellClick(
+    _message: ChatMessagePF2e,
+    actorId: string,
+    effectSlug: string
+) {
     const actor = game.actors.get(actorId);
     if (!actor || !actor.isOwner) {
         ui.notifications.warn("You do not have permission to sustain this spell.");
@@ -227,7 +231,10 @@ function getSummonedTokensFromCanvas(casterId: string) {
     return summons;
 }
 
-export async function handleRemoveSummon(casterId: string) {
+export async function onRemoveSummonClick(
+    _message: ChatMessagePF2e,
+    casterId: string
+) {
     if (typeof casterId !== "string" || !casterId) return;
 
     const summons = getSummonedTokensFromCanvas(casterId);
