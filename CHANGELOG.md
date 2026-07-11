@@ -7,6 +7,7 @@
 - Updated flag retrieval to be consistent
 - Fix snares (broken after refactor)
 - Simplification of chatbuttonhelper
+- Migrate to renderChatMessageHTML hook and remove jQuery usage
 
 ## [0.65.0] - 2026-06-14
 

@@ -97,25 +97,31 @@ Hooks.once("socketlib.ready", () => {
     registerSocket();
 });
 
-Hooks.on("renderChatMessage", async (message: ChatMessagePF2e, html: JQuery<HTMLElement>) => {
-    hook(addAutoButtonToMessage, message, html)
-        .if(() => canAddAutoButton(message))
-        .run();
-    hook(editEnjoyTheShowSkillRoll, message, html)
-        .ifMessageOption("origin:item:slug:enjoy-the-show")
-        .run();
-    hook(addButtonClickHandlers, message, html)
-        .ifMessageHasFlag(MODULE_ID, "buttonSlug")
-        .run();
-    hook(replaceUnstableCheckWithStrainCheck, message, html)
-        .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
-        .ifMessageOptionAny("origin:item:trait:unstable", "self:action:trait:unstable")
-        .run();
-    hook(addDancingBladeDamageButtons, message, html)
-        .ifMessageType("attack-roll")
-        .ifMessageOption("samioli-module:dancing-blade-attack")
-        .run();
-});
+Hooks.on(
+    "renderChatMessageHTML",
+    async (message: ChatMessagePF2e, html: HTMLElement) => {
+        hook(addAutoButtonToMessage, message, html)
+            .if(() => canAddAutoButton(message))
+            .run();
+        hook(editEnjoyTheShowSkillRoll, message, html)
+            .ifMessageOption("origin:item:slug:enjoy-the-show")
+            .run();
+        hook(addButtonClickHandlers, message, html)
+            .ifMessageHasFlag(MODULE_ID, "buttonSlug")
+            .run();
+        hook(replaceUnstableCheckWithStrainCheck, message, html)
+            .ifEnabled(SETTINGS.UNSTABLE_CHECK_HOMEBREW)
+            .ifMessageOptionAny(
+                "origin:item:trait:unstable",
+                "self:action:trait:unstable"
+            )
+            .run();
+        hook(addDancingBladeDamageButtons, message, html)
+            .ifMessageType("attack-roll")
+            .ifMessageOption("samioli-module:dancing-blade-attack")
+            .run();
+    }
+);
 
 Hooks.on("createMeasuredTemplate", async (
     template: MeasuredTemplateDocumentPF2e,
