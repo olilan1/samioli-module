@@ -5,6 +5,7 @@
 - HookRunner refactor
 - Fix to Boost Eidolon requiring a focus point to work
 - Updated flag retrieval to be consistent
+- Fix snares (broken after refactor)
 - Simplification of chatbuttonhelper
 
 ## [0.65.0] - 2026-06-14
