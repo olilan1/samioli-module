@@ -108,11 +108,10 @@ function getActorSustainedEffects(actor: ActorPF2e) {
 }
 
 export async function onSustainSpellClick(
-    _message: ChatMessagePF2e,
-    actorId: string,
+    message: ChatMessagePF2e,
     effectSlug: string
 ) {
-    const actor = fromUuidSync(actorId) as ActorPF2e | null;
+    const actor = message.actor as ActorPF2e | null;
     if (!actor || !actor.isOwner) {
         ui.notifications.warn("You do not have permission to sustain this spell.");
         return;
@@ -184,7 +183,7 @@ async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effe
         actor: actor,
         content: content,
         button_label: "Sustain",
-        params: [actor.uuid, effectSlug ?? ""]
+        params: [effectSlug ?? ""]
     });
 }
 
