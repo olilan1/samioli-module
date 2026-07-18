@@ -10,7 +10,9 @@ import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
 import {
   addSustainEffectToCaster,
-  associateTemplateWithSustainedEffect
+  associateTemplateWithSustainedEffect,
+  postSustainMessagesForActor,
+  expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
 import { ActorPF2e, ChatMessagePF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from 'foundry-pf2e';
 
@@ -413,6 +415,63 @@ describe('Baseline Hook Handlers', () => {
       expect(mockEffect.update).toHaveBeenCalledWith({
         'flags.samioli-module.sustainedTemplateId': 'template-id'
       });
+    });
+
+    it(
+      'postSustainMessagesForActor: should reset flag and post chat message',
+      async () => {
+        const mockEffect = {
+          type: 'effect',
+          slug: 'sustaining-effect-bless',
+          getFlag: vi.fn().mockImplementation((_module, flag) => {
+            if (flag === "sustained") return true;
+            if (flag === "sustainedSpellId") return "spell-id";
+            return undefined;
+          }),
+          update: vi.fn()
+        };
+
+        const mockSpell = {
+          type: 'spell',
+          name: 'Bless',
+          img: 'bless.webp',
+          system: {
+            description: { value: 'Bless description' },
+            duration: { sustained: true },
+            level: { value: 1 }
+          }
+        };
+
+        const mockActor = {
+          items: Object.assign([mockEffect], {
+            filter: vi.fn().mockReturnValue([mockEffect]),
+            get: vi.fn().mockReturnValue(mockSpell)
+          })
+        } as unknown as ActorPF2e;
+
+        await postSustainMessagesForActor(mockActor);
+        expect(mockEffect.update).toHaveBeenCalledWith({
+          'flags.samioli-module.sustained': false
+        });
+      }
+    );
+
+    it('expireUnsustainedEffectsForActor: should delete unsustained effects', async () => {
+      const mockEffect = {
+        type: 'effect',
+        slug: 'sustaining-effect-bless',
+        getFlag: vi.fn().mockReturnValue(false),
+        delete: vi.fn()
+      };
+
+      const mockActor = {
+        items: Object.assign([mockEffect], {
+          filter: vi.fn().mockReturnValue([mockEffect])
+        })
+      } as unknown as ActorPF2e;
+
+      await expireUnsustainedEffectsForActor(mockActor);
+      expect(mockEffect.delete).toHaveBeenCalled();
     });
   });
 });
