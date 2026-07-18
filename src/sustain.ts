@@ -168,7 +168,6 @@ function getSpellFromEffect(effect: EffectPF2e): SpellPF2e | undefined {
     const spell = fromUuidSync(spellUuid);
     if (!(spell instanceof CONFIG.PF2E.Item.documentClasses.spell)) return;
     return spell;
-
 }
 
 async function createSustainChatMessage(actor: ActorPF2e, spell: SpellPF2e, effect: EffectPF2e) {
@@ -204,7 +203,6 @@ export async function createSpellNotSustainedChatMessage(item: ItemPF2e) {
     // if spell is a summon check if there are relevant summons
     // create a chat with a button to remove the summoned token
     if (isSpellASummon && casterHasActiveSummons) {
-        if (!item.actor) return;
         await createChatMessageWithButton({
             slug: "remove-summon",
             actor: item.actor,
