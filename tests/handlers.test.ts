@@ -14,7 +14,7 @@ import {
   postSustainMessagesForActor,
   expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
-import { ActorPF2e, ChatMessagePF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from 'foundry-pf2e';
+import { ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e } from 'foundry-pf2e';
 
 // Mock chatbuttonhelper to avoid real chat message creation
 vi.mock('../src/chatbuttonhelper.ts', () => ({
@@ -409,7 +409,7 @@ describe('Baseline Hook Handlers', () => {
         actor: mockActor,
         item: { slug: 'bless' },
         update: vi.fn()
-      } as unknown as MeasuredTemplateDocumentPF2e;
+      } as unknown as RegionDocumentPF2e;
 
       await associateTemplateWithSustainedEffect(mockTemplate);
       expect(mockEffect.update).toHaveBeenCalledWith({

@@ -1,4 +1,4 @@
-import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, SpellSource, TokenPF2e } from "foundry-pf2e";
+import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e, SpellPF2e, SpellSource, TokenPF2e } from "foundry-pf2e";
 import { addOrUpdateEffectOnActor, delay, sendBasicChatMessage } from "./utils.ts";
 import { getTemplateTokens, isTokenInTemplateArea, replaceTargets } from "./templatetarget.ts";
 
@@ -19,7 +19,7 @@ export const START_OF_TURN_SPELLS = [
     'wall-of-virtue'
 ];
 
-export async function addEffectsToTokensInStartOfTurnTemplates(template: MeasuredTemplateDocumentPF2e) {
+export async function addEffectsToTokensInStartOfTurnTemplates(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
 
     // @ts-expect-error slug is valid
     const spellSlug = template.flags.pf2e?.origin?.slug;
@@ -166,7 +166,7 @@ export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
     }
 }
 
-export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateDocumentPF2e) {
+export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
     const effectUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
     if (effectUuids && effectUuids.length > 0) {
         for (const effectUuid of effectUuids) {
@@ -267,7 +267,7 @@ function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDo
 /**
  * Determines if the template originates from a known start-of-turn spell.
  */
-export function isStartOfTurnSpellTemplate(template: MeasuredTemplateDocumentPF2e): boolean {
+export function isStartOfTurnSpellTemplate(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
     const slug = (template.flags.pf2e?.origin as { slug?: string } | undefined)?.slug;
     return !!slug && START_OF_TURN_SPELLS.includes(slug);
 }
@@ -275,7 +275,7 @@ export function isStartOfTurnSpellTemplate(template: MeasuredTemplateDocumentPF2
 /**
  * Checks if the template has flags indicating it was placed for a start-of-turn spell.
  */
-export function hasStartOfTurnFlags(template: MeasuredTemplateDocumentPF2e): boolean {
+export function hasStartOfTurnFlags(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
     return !!template.getFlag("samioli-module", "startOfTurnEffectUuid")
         || !!template.getFlag("samioli-module", "spellSource");
 }

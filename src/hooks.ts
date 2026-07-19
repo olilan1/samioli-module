@@ -1,3 +1,4 @@
+import { SamiOliHooks } from "./types/hook-types.ts";
 import { registerSettings, SETTINGS } from "./settings.ts";
 import { addAutoButtonToMessage, canAddAutoButton } from "./chatautobuttons.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
@@ -23,15 +24,15 @@ import {
     EffectPF2e,
     EncounterPF2e,
     ItemPF2e,
-    MeasuredTemplateDocumentPF2e,
+    RegionDocumentPF2e,
     TokenDocumentPF2e,
     TokenPF2e,
     UserPF2e
 } from "foundry-pf2e";
 import {
-    runMatchingTemplateDeletionFunction,
-    runMatchingTemplateFunctionAsCreator,
-    runMatchingTemplateFunctionAsGm
+    runMatchingRegionDeletionFunction,
+    runMatchingRegionFunctionAsCreator,
+    runMatchingRegionFunctionAsGm
 } from "./triggers.ts";
 import {
     postSustainMessagesForActor,
@@ -86,11 +87,13 @@ import { hook } from "./hookrunner.ts";
 
 export { hook, HookRunner } from "./hookrunner.ts";
 
+const Hooks = globalThis.Hooks as SamiOliHooks;
+
 Hooks.on("init", () => {
     registerSettings();
     const module = game.modules.get("samioli-module");
     if (module) {
-        (module as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
+        (module as unknown as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
     }
 });
 
@@ -124,71 +127,75 @@ Hooks.on(
     }
 );
 
-Hooks.on("createMeasuredTemplate", async (
-    template: MeasuredTemplateDocumentPF2e,
-    _context,
-    userId
+Hooks.on("createRegion", async (
+    region: RegionDocumentPF2e,
+    _context: unknown,
+    userId: string
 ) => {
     // Check for matching origin and run matching function if found (see triggers.ts)
-    let ranTemplateTrigger = hook(runMatchingTemplateFunctionAsGm, template)
+    let ranRegionTrigger = hook(runMatchingRegionFunctionAsGm, region)
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    ranTemplateTrigger ||= hook(runMatchingTemplateFunctionAsCreator, template)
+    ranRegionTrigger ||= hook(runMatchingRegionFunctionAsCreator, region)
         .ifUser(userId)
         .allowUnfilteredRun()
         .run();
 
-    if (!ranTemplateTrigger) {
+    if (!ranRegionTrigger) {
         // If no matching origin, target tokens if that feature is enabled
-        hook(targetTokensUnderTemplate, template, userId)
+        hook(targetTokensUnderTemplate, region, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .allowUnfilteredRun()
             .run();
     }
 
-    hook(associateTemplateWithSustainedEffect, template)
+    hook(associateTemplateWithSustainedEffect, region)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifGM()
         .if(hasSustainingEffect)
         .run();
 
-    hook(addEffectsToTokensInStartOfTurnTemplates, template)
+    hook(addEffectsToTokensInStartOfTurnTemplates, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
         .if(isStartOfTurnSpellTemplate)
         .run();
 });
 
-Hooks.on("preCreateMeasuredTemplate", (
-    template: MeasuredTemplateDocumentPF2e,
-    _data,
-    _context,
-    _userId
+Hooks.on("preCreateRegion", (
+    region: RegionDocumentPF2e,
+    _data: unknown,
+    _context: unknown,
+    _userId: string
 ) => {
-    hook(setTemplateColorToBlack, template)
+    hook(setTemplateColorToBlack, region)
         .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
         .allowUnfilteredRun()
         .run();
 });
 
-Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
-    hook(runMatchingTemplateDeletionFunction, template)
+Hooks.on("deleteRegion", (
+    region: RegionDocumentPF2e,
+    _options: unknown,
+    _userId: string
+) => {
+    hook(runMatchingRegionDeletionFunction, region)
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    hook(deleteTemplateTargets, template)
+    hook(deleteTemplateTargets, region)
         .ifEnabled(SETTINGS.TEMPLATE_TARGET)
-        .if(() => isLastTargetedTemplate(template.id))
+        .if(() => isLastTargetedTemplate(region.id))
         .run();
-    hook(deleteWithinEffectsForTemplate, template)
+    hook(deleteWithinEffectsForTemplate, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
         .if(hasStartOfTurnFlags)
         .run();
 });
 
-Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => {
+Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode: unknown, _userId: string) => {
     handleChatMessageWithRoll(message);
     if (game.modules.get("dice-so-nice")?.active
         && message.isRoll
@@ -207,7 +214,7 @@ Hooks.on("diceSoNiceRollComplete", (id: string) => {
 });
 
 // pf2e.startTurn only runs for the GM
-Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id: string) => {
     if (!combatant.actor) return;
     hook(postSustainMessagesForActor, combatant.actor)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
@@ -224,7 +231,7 @@ Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e,
 });
 
 // pf2e.endTurn only runs for the GM
-Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id: string) => {
     if (!combatant.actor) return;
     hook(expireUnsustainedEffectsForActor, combatant.actor)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
@@ -236,7 +243,7 @@ Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _
         .run();
 });
 
-Hooks.on("preDeleteItem", async (item: ItemPF2e, _action, _id) => {
+Hooks.on("preDeleteItem", async (item: ItemPF2e, _action: string, _id: string) => {
     hook(createSpellNotSustainedChatMessage, item)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifItemType("effect")
@@ -258,14 +265,21 @@ Hooks.on("preDeleteItem", async (item: ItemPF2e, _action, _id) => {
         .run();
 });
 
-Hooks.on("preDeleteToken", async (token: TokenDocumentPF2e, _action, _id) => {
+Hooks.on("preDeleteToken", async (token: TokenDocumentPF2e, _action: string, _id: string) => {
     hook(deleteGhostlyCarrierEffectFromCaster, token)
         .ifGM()
         .ifTokenHasFlag("samioli-module", "ghostlyCarrierEffectUUID")
         .run();
 });
 
-Hooks.on("moveToken", (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
+Hooks.on(
+    "moveToken",
+    (
+        token: TokenPF2e,
+        movement: { passed: { cost: number }; destination: { x: number; y: number } },
+        _action: string,
+        _user: UserPF2e
+    ) => {
     hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
         .ifGM()
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
@@ -308,7 +322,7 @@ Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
 
 // V13 Only
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
-    _data, _options) => {
+    _data: unknown, _options: unknown) => {
     hook(addDamageHelperButtonToChatUIv13, cssMappings)
         .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
         .ifGM()

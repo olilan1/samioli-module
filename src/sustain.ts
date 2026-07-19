@@ -1,4 +1,4 @@
-import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
+import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e } from "foundry-pf2e";
 import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect, MODULE_ID, isSpellPF2e, sendBasicChatMessage } from "./utils.ts";
 import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_SUSTAIN_SPELLS } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
@@ -296,7 +296,7 @@ export async function deleteSummonAsGM(summonId: string) {
     }
 }
 
-async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e,
+async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e,
     effect: EffectPF2e) {
     await effect.update({
         [`flags.${MODULE_ID}.sustainedTemplateId`]: template.id
@@ -304,7 +304,7 @@ async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2
 }
 
 export async function associateTemplateWithSustainedEffect(
-    template: MeasuredTemplateDocumentPF2e
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
 ) {
     const actor = template.actor;
     if (!actor) return;
@@ -340,7 +340,7 @@ export async function handleSustainedEffectDeletion(item: ItemPF2e) {
 /**
  * Checks if the actor associated with the template has any active sustaining effects.
  */
-export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e): boolean {
+export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
     return template.actor?.items.some(
         i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
     ) ?? false;

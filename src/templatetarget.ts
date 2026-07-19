@@ -1,4 +1,4 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { MeasuredTemplateDocumentPF2e, TokenPF2e, RegionDocumentPF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import { delay } from "./utils.ts";
 import { getSocket } from "./sockets.ts";
 
@@ -25,7 +25,7 @@ export async function replaceTargetsForUsers(userIds: string[], arrayOfTokenIds:
 }
 
 export async function targetTokensUnderTemplate(
-        template: MeasuredTemplateDocumentPF2e, creatorUserId: string) {
+        template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e, creatorUserId: string) {
     if (game.user.id !== creatorUserId) {
         return;
     }
@@ -45,7 +45,7 @@ export function isLastTargetedTemplate(templateId: string): boolean {
     return lastTemplateDetails?.templateId === templateId;
 }
 
-export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e) {
+export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
     const lastDetails = lastTemplateDetails;
     if (!lastDetails) {
         return;
@@ -58,11 +58,22 @@ export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e) {
     lastTemplateDetails = null;
 }
 
-export async function getTemplateTokens(measuredTemplateDocument: MeasuredTemplateDocumentPF2e) {
-    const grid = canvas.interface.grid;
-    const dimensions = canvas.dimensions;
-    const template = measuredTemplateDocument.object;
+export async function getTemplateTokens(
+    regionDocument: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+): Promise<TokenPF2e[]> {
+    if ("tokens" in regionDocument) {
+        return Array.from(regionDocument.tokens)
+            .map(tDoc => (tDoc as TokenDocumentPF2e).object)
+            .filter((t): t is TokenPF2e => !!t)
+            .filter((token) => {
+                const actor = token.actor;
+                if (!actor || token.document.hidden) return false;
+                if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+                return true;
+            });
+    }
 
+    const template = regionDocument.object;
     if (!template) {
         return [];
     }
@@ -77,7 +88,7 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
             && waitTime < GRID_HIGHLIGHT_MAX_TIME) {
         await delay(GRID_HIGHLIGHT_RETRY_TIME);
         waitTime += GRID_HIGHLIGHT_RETRY_TIME;
-        gridHighlight = grid.getHighlightLayer(template.highlightId);
+        gridHighlight = canvas.interface.grid.getHighlightLayer(template.highlightId);
     }
 
     if (!gridHighlight) {
@@ -119,8 +130,8 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
 
             const [gx, gy] = position.split(",").map((s) => Number(s));
             const destination = {
-                x: gx + dimensions.size * 0.5,
-                y: gy + dimensions.size * 0.5,
+                x: gx + canvas.dimensions.size * 0.5,
+                y: gy + canvas.dimensions.size * 0.5,
             };
             if (destination.x < 0 || destination.y < 0) continue;
 
@@ -141,21 +152,30 @@ export async function getTemplateTokens(measuredTemplateDocument: MeasuredTempla
         }
     }
 
-    return containedTokens;
+    return containedTokens as TokenPF2e[];
 }
 
- export function setTemplateColorToBlack(template: MeasuredTemplateDocumentPF2e): void {
-    
+ export function setTemplateColorToBlack(
+     template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+ ): void {
     if (!template.getFlag('samioli-module', 'ignoreTemplateColourOverride')) {
-        template.updateSource({
-            fillColor: "#000000",
-            borderColor: "#000000"
-        });
+        if ("color" in template) {
+            template.updateSource({
+                color: "#000000"
+            });
+        } else {
+            template.updateSource({
+                fillColor: "#000000",
+                borderColor: "#000000"
+            });
+        }
     }
  }
 
- export async function isTokenInTemplateArea(token: TokenPF2e, 
-    measuredTemplateDocument: MeasuredTemplateDocumentPF2e): Promise<boolean> {
+ export async function isTokenInTemplateArea(
+     token: TokenPF2e, 
+     measuredTemplateDocument: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+ ): Promise<boolean> {
     const tokens = await getTemplateTokens(measuredTemplateDocument);
     return tokens.some(t => t.id === token.id);
 }

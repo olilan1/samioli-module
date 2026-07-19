@@ -1,4 +1,4 @@
-import { MeasuredTemplateDocumentPF2e, EffectPF2e } from "foundry-pf2e";
+import { RegionDocumentPF2e, EffectPF2e } from "foundry-pf2e";
 import { initiateStormSpiral } from "./actions/stormspiral.ts";
 import { animateLightningDash } from "./actions/lightningdash.ts";
 import { 
@@ -21,39 +21,43 @@ import { MODULE_ID } from "./utils.ts";
  */
 export const MANUAL_SUSTAIN_SPELLS = new Set(["dancing-blade"]);
 
+type RegionTriggerFunction = (doc: RegionDocumentPF2e) => void;
+
 /**
- * Mappings for functions that run when a Measured Template is created.
+ * Mappings for functions that run when a Scene Region is created.
  * Key: origin:item:[slug] roll option.
  */
-const TEMPLATE_MAPPINGS_RUN_AS_CREATOR = {
-    "origin:item:storm-spiral": initiateStormSpiral,
-    "origin:item:lightning-dash": animateLightningDash,
-    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
-    "origin:item:blazing-dive": initiateBlazingDive
+const REGION_MAPPINGS_RUN_AS_CREATOR: Record<string, RegionTriggerFunction> = {
+    "origin:item:storm-spiral": initiateStormSpiral as RegionTriggerFunction,
+    "origin:item:lightning-dash": animateLightningDash as RegionTriggerFunction,
+    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist as RegionTriggerFunction,
+    "origin:item:blazing-dive": initiateBlazingDive as RegionTriggerFunction
 };
 
 /**
- * Mappings for template creation functions that must run with GM authority.
+ * Mappings for region creation functions that must run with GM authority.
  */
-const TEMPLATE_MAPPINGS_RUN_AS_GM = {
-    "origin:item:floating-flame": initiateFloatingFlame
+const REGION_MAPPINGS_RUN_AS_GM: Record<string, RegionTriggerFunction> = {
+    "origin:item:floating-flame": initiateFloatingFlame as RegionTriggerFunction
 };
 
 /**
  * Mappings for functions triggered by the "Sustain" action.
  */
-const SUSTAIN_MAPPINGS = {
-    "origin:item:pernicious-poltergeist": chooseEffectOfPerniciousPoltergeist,
-    "origin:item:floating-flame": sustainFloatingFlame,
-    "origin:item:dancing-blade": sustainDancingBlade
+type SustainTriggerFunction = (doc: RegionDocumentPF2e | EffectPF2e) => void;
+
+const SUSTAIN_MAPPINGS: Record<string, SustainTriggerFunction> = {
+    "origin:item:pernicious-poltergeist": chooseEffectOfPerniciousPoltergeist as SustainTriggerFunction,
+    "origin:item:floating-flame": sustainFloatingFlame as SustainTriggerFunction,
+    "origin:item:dancing-blade": sustainDancingBlade as SustainTriggerFunction
 };
 
 /**
- * Mappings for cleanup functions triggered when a Measured Template is deleted.
+ * Mappings for cleanup functions triggered when a Scene Region is deleted.
  */
-const TEMPLATE_DELETION_MAPPINGS = {
-    "origin:item:floating-flame": removeFloatingFlame,
-    "origin:item:wall-of-fire": removeWallOfFire
+const REGION_DELETION_MAPPINGS: Record<string, RegionTriggerFunction> = {
+    "origin:item:floating-flame": removeFloatingFlame as RegionTriggerFunction,
+    "origin:item:wall-of-fire": removeWallOfFire as RegionTriggerFunction
 };
 
 /**
@@ -65,30 +69,28 @@ const SUSTAIN_DELETION_MAPPINGS = {
 
 // --- Trigger Runners ---
 
-export function runMatchingTemplateFunctionAsCreator(
-    template: MeasuredTemplateDocumentPF2e
+export function runMatchingRegionFunctionAsCreator(
+    region: RegionDocumentPF2e
 ): boolean {
-    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_CREATOR);
+    return runMatchingFunctionsFromMappings(region, REGION_MAPPINGS_RUN_AS_CREATOR);
 }
 
-export function runMatchingTemplateFunctionAsGm(
-    template: MeasuredTemplateDocumentPF2e
+export function runMatchingRegionFunctionAsGm(
+    region: RegionDocumentPF2e
 ): boolean {
-    return runMatchingFunctionsFromMappings(template, TEMPLATE_MAPPINGS_RUN_AS_GM);
+    return runMatchingFunctionsFromMappings(region, REGION_MAPPINGS_RUN_AS_GM);
 }
 
 export function runMatchingSustainFunction(
-    document: MeasuredTemplateDocumentPF2e | EffectPF2e
+    document: RegionDocumentPF2e | EffectPF2e
 ): boolean {
-    const mappings: Record<string, (doc: MeasuredTemplateDocumentPF2e | EffectPF2e) => void> = 
-        SUSTAIN_MAPPINGS;
-    return runMatchingFunctionsFromMappings(document, mappings);
+    return runMatchingFunctionsFromMappings(document, SUSTAIN_MAPPINGS);
 }
 
-export function runMatchingTemplateDeletionFunction(
-    template: MeasuredTemplateDocumentPF2e
+export function runMatchingRegionDeletionFunction(
+    region: RegionDocumentPF2e
 ): boolean {
-   return runMatchingFunctionsFromMappings(template, TEMPLATE_DELETION_MAPPINGS);
+   return runMatchingFunctionsFromMappings(region, REGION_DELETION_MAPPINGS);
 }
 
 export function runMatchingSustainDeletionFunction(effect: EffectPF2e): boolean {
@@ -101,7 +103,7 @@ export function runMatchingSustainDeletionFunction(effect: EffectPF2e): boolean 
  * Iterates through a mapping object and executes the first function whose key
  * matches the document's origin roll options.
  */
-function runMatchingFunctionsFromMappings<T extends MeasuredTemplateDocumentPF2e | EffectPF2e>(
+function runMatchingFunctionsFromMappings<T extends RegionDocumentPF2e | EffectPF2e>(
     document: T,
     mappings: Record<string, (doc: T) => void>
 ) {
@@ -115,24 +117,27 @@ function runMatchingFunctionsFromMappings<T extends MeasuredTemplateDocumentPF2e
 }
 
 /**
- * Checks if a document (Template or Effect) contains a specific origin roll option.
+ * Checks if a document (Region or Effect) contains a specific origin roll option.
  * Falls back to slug checking for effects that may lack explicit origin flags.
  */
 function rollOptionsContains(
-    document: MeasuredTemplateDocumentPF2e | EffectPF2e, 
+    document: RegionDocumentPF2e | EffectPF2e, 
     rollOption: string
 ) {
-    const rollOptions = document.flags.pf2e?.origin?.rollOptions;
+    const pf2e = (document.flags as Record<string, unknown>)?.pf2e as Record<string, unknown> | undefined;
+    const origin = pf2e?.origin as Record<string, unknown> | undefined;
+    const rollOptions = origin?.rollOptions as string[] | undefined;
     if (rollOptions?.includes(rollOption)) return true;
 
     // Sustaining effects often don't have full origin data, so we check the flag or slug
-    if (document.type === "effect") {
-        const spellId = document.getFlag(MODULE_ID, "sustainedSpellId");
+    if ("type" in document && document.type === "effect") {
+        const effect = document as EffectPF2e;
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
         if (spellId) {
-            const spell = document.actor?.items.get(spellId as string);
+            const spell = effect.actor?.items.get(spellId as string);
             if (spell && `origin:item:${spell.slug}` === rollOption) return true;
-        } else if (document.slug) {
-            const spellSlug = document.slug.replace("sustaining-effect-", "");
+        } else if (effect.slug) {
+            const spellSlug = effect.slug.replace("sustaining-effect-", "");
             if (`origin:item:${spellSlug}` === rollOption) return true;
         }
     }

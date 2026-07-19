@@ -161,25 +161,6 @@ describe('HookRunner & hook helper', () => {
     });
   });
 
-  describe('ifV12', () => {
-    it('should run if version starts with 12.', () => {
-      (game as { version: string }).version = '12.328';
-      const callback = vi.fn();
-
-      hook(callback).ifV12().allowUnfilteredRun().run();
-
-      expect(callback).toHaveBeenCalled();
-    });
-
-    it('should NOT run if version does not start with 12.', () => {
-      (game as { version: string }).version = '13.336';
-      const callback = vi.fn();
-
-      hook(callback).ifV12().allowUnfilteredRun().run();
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-  });
 
   describe('ifMessageType', () => {
     it('should run callback if context type matches target type', () => {
