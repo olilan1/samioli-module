@@ -47,11 +47,6 @@ export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTM
     });
 }
 
-export function addDamageHelperButtonToChatUIv12(_html: HTMLElement) {
-    
-    //TODO: build support for v12 injection
-    logd("Foundry v12 is not yet supported for the damage helper button.");
-}
 
 async function showDamageHelperDialog() {
 

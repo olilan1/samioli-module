@@ -59,8 +59,8 @@ import {
     hasStartOfTurnFlags
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
-import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
-import { getHtmlElement, MODULE_ID } from "./utils.ts";
+import { addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
+import { MODULE_ID } from "./utils.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
@@ -316,16 +316,6 @@ Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElem
         .run();
 });
 
-Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement,
-    _data: Record<string, unknown>, _options: Record<string, unknown>) => {
-    const html = getHtmlElement(htmlOrJQuery);
-    hook(addDamageHelperButtonToChatUIv12, html)
-        .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
-        .ifGM()
-        .ifV12()
-        .allowUnfilteredRun()
-        .run();
-});
 
 function handleChatMessageWithRoll(message: ChatMessagePF2e) {
     switch (getMessageType(message)) {

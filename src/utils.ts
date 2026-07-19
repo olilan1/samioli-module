@@ -174,13 +174,6 @@ export function returnStringOfNamesFromArray(names: string[]): string {
     return `${allButLast} and ${last}`;
 }
 
-export function getHtmlElement(htmlOrJquery: JQuery | HTMLElement): HTMLElement {
-    if (htmlOrJquery instanceof HTMLElement) {
-        return htmlOrJquery;
-    }
-    // If it is a jQuery object, return the first wrapped element
-    return (htmlOrJquery as JQuery)[0] as HTMLElement;
-}
 
 export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
     return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)

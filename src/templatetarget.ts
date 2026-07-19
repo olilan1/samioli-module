@@ -13,14 +13,7 @@ interface TemplateDetails {
 let lastTemplateDetails: TemplateDetails | null;
 
 export async function replaceTargets(arrayOfTokenIds: string[]) {
-    if (game.release.generation >= 13) {
-        canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
-    } else {
-        // @ts-expect-error updateTokenTargets is correct for v12
-        game.user.updateTokenTargets(arrayOfTokenIds);
-        // @ts-expect-error "targets" is correct
-        game.user.broadcastActivity({ targets: arrayOfTokenIds });
-    }
+    canvas.tokens.setTargets(arrayOfTokenIds, {mode: "replace"});
 }
 
 export async function replaceTargetsForUser(userId: string, arrayOfTokenIds: string[]) {

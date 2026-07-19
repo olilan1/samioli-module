@@ -232,19 +232,6 @@ export class HookRunner<T extends unknown[]> {
         return this;
     }
 
-    /**
-     * Restricts execution to Foundry VTT version 12 environments only.
-     * 
-     * @note This is a general environment check and does not count as a filter to allow the hook
-     *       to run (a content-specific filter or `allowUnfilteredRun()` must still be called).
-     * @returns The HookRunner instance for chaining.
-     */
-    ifV12(): this {
-        if (!game.version.startsWith("12.")) {
-            this.shouldRun = false;
-        }
-        return this;
-    }
 
     /**
      * Restricts execution to a specific type of chat message (e.g. "attack-roll", "damage-roll").
