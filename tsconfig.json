@@ -9,12 +9,16 @@
         ],
         "types": [
             "vite/client",
-            "foundry-pf2e",
-            "foundry-pf2e/lib-wrapper",
-            "foundry-pf2e/socketlib",
-            "jquery",
+            "@7h3laughingman/pf2e-types",
+            "@7h3laughingman/foundry-types",
             "sequencer"
         ],
+        "baseUrl": ".",
+        "paths": {
+            "foundry-pf2e": ["node_modules/@7h3laughingman/pf2e-types/src/index.d.ts"],
+            "foundry-pf2e/foundry/common/*": ["node_modules/@7h3laughingman/foundry-types/src/common/*"],
+            "foundry-pf2e/foundry/client/*": ["node_modules/@7h3laughingman/foundry-types/src/client/*"]
+        },
         "resolveJsonModule": true,
         "noEmit": true,
         "allowImportingTsExtensions": true,

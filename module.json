@@ -39,8 +39,8 @@
       "styles/samioli-styles.css"
     ],
     "compatibility": {
-      "minimum": "12",
-      "verified": "13"
+      "minimum": "14",
+      "verified": "14"
     },
     "relationships": {
       "requires": [
