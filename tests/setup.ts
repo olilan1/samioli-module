@@ -27,6 +27,9 @@ import { GamePF2e } from 'foundry-pf2e';
   once: vi.fn(),
 } as unknown as typeof Hooks;
 
+// Define global RegionDocument mock
+(globalThis as unknown as { RegionDocument: unknown }).RegionDocument = class {};
+
 // Define a minimal game mock so top-level code executing imports does not crash
 (globalThis as unknown as { game: GamePF2e }).game = {
   modules: {

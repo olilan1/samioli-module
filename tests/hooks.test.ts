@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import '../src/hooks.ts';
 import { hook } from '../src/hookrunner.ts';
 import { SETTINGS } from '../src/settings.ts';
 import { ChatMessagePF2e, GamePF2e } from 'foundry-pf2e';
@@ -606,6 +607,14 @@ describe('HookRunner & hook helper', () => {
         .run();
 
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Foundry v14 Region Hook Registrations', () => {
+    it('should register region hooks and custom handlers', () => {
+      expect(Hooks.on).toHaveBeenCalledWith('createRegion', expect.any(Function));
+      expect(Hooks.on).toHaveBeenCalledWith('preCreateRegion', expect.any(Function));
+      expect(Hooks.on).toHaveBeenCalledWith('deleteRegion', expect.any(Function));
     });
   });
 });

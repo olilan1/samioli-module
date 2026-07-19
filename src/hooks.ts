@@ -320,7 +320,6 @@ Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
         .run();
 });
 
-// V13 Only
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
     _data: unknown, _options: unknown) => {
     hook(addDamageHelperButtonToChatUIv13, cssMappings)
