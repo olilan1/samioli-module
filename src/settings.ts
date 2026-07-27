@@ -26,8 +26,8 @@ export type SettingsKey = typeof SETTINGS[keyof typeof SETTINGS];
 
 export function registerSettings() {
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.TEMPLATE_TARGET, {
-        name: "Template targetting",
-        hint: "Automatically target all tokens under a placed template",
+        name: "Region targeting",
+        hint: "Automatically target all tokens under a placed region",
         scope: "world",
         config: true,
         default: false,
@@ -35,8 +35,8 @@ export function registerSettings() {
     });
 
     game.settings.register(SETTINGS_NAMESPACE, SETTINGS.TEMPLATE_COLOUR_OVERRIDE, {
-        name: "Template Colour Override",
-        hint: "Automatically set placed templates to black to look better with animations. Some templates can override this setting.",
+        name: "Region Colour Override",
+        hint: "Automatically set placed regions to black to look better with animations. Some regions can override this setting.",
         scope: "world",
         config: true,
         default: false,

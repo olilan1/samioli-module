@@ -1,5 +1,13 @@
 import { ActorPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e, SpellPF2e, EffectSource, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, deleteTemplateById, isEffect, MODULE_ID, isSpellPF2e, sendBasicChatMessage } from "./utils.ts";
+import {
+    addOrUpdateEffectOnActor,
+    deleteItemFromActor,
+    deleteRegionById,
+    isEffect,
+    MODULE_ID,
+    isSpellPF2e,
+    sendBasicChatMessage
+} from "./utils.ts";
 import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_SUSTAIN_SPELLS } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 import { getSocket, DELETE_SUMMON } from "./sockets.ts";
@@ -77,7 +85,21 @@ export async function addSustainEffectToActor(
         }
     };
 
-    return addOrUpdateEffectOnActor(actor, effect as DeepPartial<EffectSource> as EffectSource);
+    const createdEffect = await addOrUpdateEffectOnActor(
+        actor,
+        effect as DeepPartial<EffectSource> as EffectSource
+    );
+    const regions = (canvas.scene?.regions as unknown as { contents?: RegionDocumentPF2e[] })
+        ?.contents ?? [];
+    const matchingRegion = regions.find((r) => {
+        const pf2eOrigin = (r.flags?.pf2e as Record<string, unknown> | undefined)
+            ?.origin as Record<string, unknown> | undefined;
+        return pf2eOrigin?.actor === actor.uuid && pf2eOrigin?.slug === spell.system.slug;
+    });
+    if (matchingRegion) {
+        await associateTemplateWithSustainedEffect(matchingRegion);
+    }
+    return createdEffect;
 }
 
 export async function postSustainMessagesForActor(actor: ActorPF2e) {
@@ -131,18 +153,18 @@ export async function onSustainSpellClick(
 
     await postSustainChatMessage(effect);
 
-    const template = getTemplateFromEffect(effect);
-    if (template) {
-        runMatchingSustainFunction(template);
+    const region = getRegionFromEffect(effect);
+    if (region) {
+        runMatchingSustainFunction(region);
     } else {
         runMatchingSustainFunction(effect);
     }
 }
 
-function getTemplateFromEffect(effect: EffectPF2e) {
-    const templateId = effect.getFlag(MODULE_ID, "sustainedTemplateId");
-    if (typeof templateId !== "string" || !templateId) return;
-    return canvas.scene?.templates.get(templateId);
+function getRegionFromEffect(effect: EffectPF2e) {
+    const regionId = (effect.getFlag(MODULE_ID, "sustainedRegionId") ?? effect.getFlag(MODULE_ID, "sustainedTemplateId")) as string | undefined;
+    if (typeof regionId !== "string" || !regionId) return;
+    return canvas.scene?.regions.get(regionId) ?? canvas.scene?.templates?.get(regionId);
 }
 
 async function postSustainChatMessage(effect: EffectPF2e) {
@@ -296,42 +318,57 @@ export async function deleteSummonAsGM(summonId: string) {
     }
 }
 
-async function associateTemplateWithEffect(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e,
-    effect: EffectPF2e) {
+async function associateRegionWithEffect(
+    region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e,
+    effect: EffectPF2e
+) {
     await effect.update({
-        [`flags.${MODULE_ID}.sustainedTemplateId`]: template.id
+        [`flags.${MODULE_ID}.sustainedRegionId`]: region.id
     });
 }
 
 export async function associateTemplateWithSustainedEffect(
-    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+    region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
 ) {
-    const actor = template.actor;
+    const pf2eOrigin = (region.flags as Record<string, unknown>)?.pf2e as
+        Record<string, unknown> | undefined;
+    const origin = pf2eOrigin?.origin as Record<string, unknown> | undefined;
+
+    const actorUuid = (origin?.actor as string | undefined)
+        || (region.getFlag?.(MODULE_ID, "casterUuid") as string | undefined);
+    const actor = region.actor
+        || (actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : null);
     if (!actor) return;
 
     const sustainedEffectsOnActor = getActorSustainedEffects(actor);
-    if (!sustainedEffectsOnActor) return;
+    if (!sustainedEffectsOnActor || sustainedEffectsOnActor.length === 0) return;
 
-    const spellSlugFromTemplate = template.item?.slug;
+    const spellSlugFromTemplate = (region as { item?: { slug?: string } }).item?.slug
+        || (origin?.slug as string | undefined)
+        || (origin?.uuid as string | undefined)?.split(".").pop()?.toLowerCase();
     if (!spellSlugFromTemplate) return;
 
     const matchingEffect = sustainedEffectsOnActor.find(effect => {
-        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
-        const spell = actor.items.get(spellId) as SpellPF2e;
-        return spell?.slug === spellSlugFromTemplate;
+        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as
+            string | undefined;
+        if (spellId) {
+            const spell = actor.items.get(spellId) as SpellPF2e | undefined;
+            if (spell?.slug === spellSlugFromTemplate) return true;
+        }
+        return effect.slug?.includes(spellSlugFromTemplate) ?? false;
     });
 
     if (matchingEffect) {
-        await associateTemplateWithEffect(template, matchingEffect as EffectPF2e);
+        await associateRegionWithEffect(region, matchingEffect as EffectPF2e);
     }
 }
 
 export async function handleSustainedEffectDeletion(item: ItemPF2e) {
     if (!isEffect(item)) return;
 
-    const templateId = item.getFlag(MODULE_ID, "sustainedTemplateId");
-    if (typeof templateId === "string" && templateId) {
-        await deleteTemplateById(templateId);
+    const regionId = (item.getFlag(MODULE_ID, "sustainedRegionId") ?? item.getFlag(MODULE_ID, "sustainedTemplateId")) as string | undefined;
+    if (typeof regionId === "string" && regionId) {
+        await deleteRegionById(regionId);
     }
 
     runMatchingSustainDeletionFunction(item);
@@ -340,9 +377,15 @@ export async function handleSustainedEffectDeletion(item: ItemPF2e) {
 /**
  * Checks if the actor associated with the template has any active sustaining effects.
  */
-export function hasSustainingEffect(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
-    return template.actor?.items.some(
-        i => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
+export function hasSustainingEffect(
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+): boolean {
+    const pf2eOrigin = (template.flags?.pf2e as Record<string, unknown> | undefined)
+        ?.origin as Record<string, unknown> | undefined;
+    const actorUuid = (pf2eOrigin?.actor as string | undefined) ?? template.actor?.uuid;
+    const actor = actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : template.actor;
+    return actor?.items.some(
+        (i: ItemPF2e) => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
     ) ?? false;
 }
 
@@ -361,7 +404,7 @@ export async function expireUnsustainedEffectsForActor(actor: ActorPF2e) {
 
     for (const effect of sustainedEffects) {
         if (effect.getFlag(MODULE_ID, "sustained") === false) {
-            await effect.delete();
+            await deleteItemFromActor(effect);
         }
     }
 }

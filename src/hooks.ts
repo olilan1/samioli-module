@@ -38,10 +38,10 @@ import {
     postSustainMessagesForActor,
     addSustainEffectToCaster,
     associateTemplateWithSustainedEffect,
+    hasSustainingEffect,
     handleSustainedEffectDeletion,
     createSpellNotSustainedChatMessage,
     isAutomaticSustainSpell,
-    hasSustainingEffect,
     expireUnsustainedEffectsForActor
 } from "./sustain.ts";
 import {
@@ -54,9 +54,7 @@ import { addButtonClickHandlers } from "./chatbuttonhelper.ts";
 import {
     postMessagesForWithinEffects,
     deleteWithinEffectsForTemplate,
-    addEffectsToTokensInStartOfTurnTemplates,
-    addOrRemoveWithinEffectIfNeeded,
-    isStartOfTurnSpellTemplate,
+    injectStartOfTurnBehaviorsToRegion,
     hasStartOfTurnFlags
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
@@ -155,12 +153,6 @@ Hooks.on("createRegion", async (
         .ifGM()
         .if(hasSustainingEffect)
         .run();
-
-    hook(addEffectsToTokensInStartOfTurnTemplates, region)
-        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-        .ifGM()
-        .if(isStartOfTurnSpellTemplate)
-        .run();
 });
 
 Hooks.on("preCreateRegion", (
@@ -171,6 +163,10 @@ Hooks.on("preCreateRegion", (
 ) => {
     hook(setTemplateColorToBlack, region)
         .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
+        .allowUnfilteredRun()
+        .run();
+    hook(injectStartOfTurnBehaviorsToRegion, region)
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .allowUnfilteredRun()
         .run();
 });
@@ -280,11 +276,6 @@ Hooks.on(
         _action: string,
         _user: UserPF2e
     ) => {
-    hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
-        .ifGM()
-        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-        .ifSceneHasTemplateWithFlag("samioli-module", "isStartOfTurnSpell")
-        .run();
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
         .ifGM()
         .ifActorHasEffect("samioli-ghostly-carrier")

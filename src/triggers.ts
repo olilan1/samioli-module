@@ -129,6 +129,21 @@ function rollOptionsContains(
     const rollOptions = origin?.rollOptions as string[] | undefined;
     if (rollOptions?.includes(rollOption)) return true;
 
+    // Fallback: check origin.uuid if rollOptions is missing or incomplete
+    const uuid = origin?.uuid as string | undefined;
+    if (uuid && typeof uuid === "string") {
+        const targetSlug = rollOption
+            .replace(/^origin:item:/, "")
+            .replace(/[^a-z0-9]/gi, "")
+            .toLowerCase();
+        const uuidSlug = (uuid.split(".").pop() ?? "")
+            .replace(/[^a-z0-9]/gi, "")
+            .toLowerCase();
+        if (uuidSlug === targetSlug) {
+            return true;
+        }
+    }
+
     // Sustaining effects often don't have full origin data, so we check the flag or slug
     if ("type" in document && document.type === "effect") {
         const effect = document as EffectPF2e;

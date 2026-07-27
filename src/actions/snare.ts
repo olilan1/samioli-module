@@ -165,7 +165,7 @@ async function selectSquare(token: TokenPF2e) {
     const iconTexture = "icons/svg/trap.svg";
     const color = "#000000ff";
     const selectedLocation = await Sequencer.Crosshair.show({
-            t: CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE,
+            t: "rect",
             distance: crosshairWidth,
             fillColor: color,
             label: {

@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -50,9 +50,9 @@ export function getHashCode(str: string) {
     return hash;
 }
 
-export function logd(message: unknown) {
-    if (getSetting(SETTINGS.DEBUG_LOGGING)) {
-        console.log(message);
+export function logd(...args: unknown[]) {
+    if (typeof game !== "undefined" && game.settings && getSetting(SETTINGS.DEBUG_LOGGING)) {
+        console.log(...args);
     }
 }
 
@@ -70,28 +70,32 @@ export function postUINotification(message: string, type: "info" | "warn" | "err
     }
 }
 
-export async function deleteTemplateById(templateId: string) {
+export async function deleteRegionById(regionId: string) {
     if (!canvas.scene) {
         console.log("No active scene found.");
         return;
     }
 
-    // Check if the template exists before attempting to delete
-    const template = canvas.scene.templates.get(templateId);
-    if (!template) {
-        console.log(`Measured Template with ID ${templateId} not found on the current scene.`);
+    const region = canvas.scene.regions?.get(regionId) ?? canvas.scene.templates?.get(regionId);
+    if (!region) {
+        console.log(`Region/Template with ID ${regionId} not found on the current scene.`);
         return;
     }
 
     try {
-        // The deleteEmbeddedDocuments method expects an array of IDs
-        await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [templateId]);
-        console.log(`Deleted Measured Template with ID: ${templateId}`);
+        if (canvas.scene.regions?.has(regionId)) {
+            await canvas.scene.deleteEmbeddedDocuments("Region", [regionId]);
+        } else if (canvas.scene.templates?.has(regionId)) {
+            await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [regionId]);
+        }
+        logd(`Deleted Region/Template with ID: ${regionId}`);
     } catch (error) {
-        console.error("Error deleting Measured Template:", error);
-        ui.notifications.error(`Failed to delete Measured Template with ID ${templateId}. See console for details.`);
+        console.error("Error deleting Region/Template:", error);
+        ui.notifications.error(`Failed to delete Region/Template with ID ${regionId}. See console for details.`);
     }
 }
+
+export const deleteTemplateById = deleteRegionById;
 
 export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
     return actor?.getActiveTokens()[0] ?? null;
@@ -108,17 +112,14 @@ export function getOwnersFromActor(actor: ActorPF2e, includeGM: boolean = true):
 }
 
 /**
- * Checks if a template has a flag with a lightId, and if so, deletes the associated light.
+ * Checks if a region or template has a flag with a lightId, and if so, deletes the associated light.
  */
-export async function deleteLightFromTemplate(template: MeasuredTemplateDocumentPF2e) {
-    // Get the lightId from the template's flag.
-    const lightId = template.getFlag(MODULE_ID, "lightId");
+export async function deleteLightFromRegion(region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
+    const lightId = region.getFlag(MODULE_ID, "lightId");
     if (!lightId) return;
 
-    // Find the light document in the current scene's lights collection.
     const light = canvas.scene?.lights.find(l => l.id === lightId);
 
-    // If the light is found, delete it.
     if (light) {
         try {
             await light.delete();
@@ -131,6 +132,8 @@ export async function deleteLightFromTemplate(template: MeasuredTemplateDocument
         logd(`Light with ID: ${lightId} not found on the canvas.`);
     }
 }
+
+export const deleteLightFromTemplate = deleteLightFromRegion;
 
 export function isCondition(item: ItemPF2e): item is ConditionPF2e {
     return item.type === "condition";
@@ -179,21 +182,60 @@ export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[
     return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)
 }
 
-export async function createTemplateAtPoint(point: Point, userId: string, radius: number, shape: MeasuredTemplateType): Promise<MeasuredTemplateDocumentPF2e> {
+export async function createRegionAtPoint(
+    point: Point,
+    _userId: string,
+    radius: number,
+    shapeType: MeasuredTemplateType | "ellipse" | "circle" | "rectangle" = "ellipse"
+): Promise<RegionDocumentPF2e> {
+    if (!canvas.scene) throw new Error("No active scene found");
 
-    const templateData = {
-        t: shape,
-        distance: radius,
+    const shape = {
+        type: shapeType === "circle" ? "ellipse" : shapeType,
         x: point.x,
         y: point.y,
-        user: userId
+        radiusX: radius,
+        radiusY: radius
     };
 
-    const template = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene }) as MeasuredTemplateDocumentPF2e;
-    if (!template) {
-        throw new Error("Failed to create template");
+    const regionData = {
+        name: "Custom Region",
+        shapes: [shape],
+        color: "#000000" as `#${string}`
+    };
+
+    const region = await RegionDocument.create(regionData, { parent: canvas.scene });
+    if (!region) throw new Error("Failed to create region");
+    return region as RegionDocumentPF2e;
+}
+
+export async function createTemplateAtPoint(
+    point: Point,
+    userId: string,
+    radius: number,
+    shape: MeasuredTemplateType
+): Promise<MeasuredTemplateDocumentPF2e | RegionDocumentPF2e> {
+    try {
+        return await createRegionAtPoint(point, userId, radius, shape);
+    } catch (error) {
+        logd("createTemplateAtPoint: fallback to MeasuredTemplate creation", error);
+        console.warn("Fallback to MeasuredTemplate creation used in createTemplateAtPoint", error);
+        const templateData = {
+            t: shape,
+            distance: radius,
+            x: point.x,
+            y: point.y,
+            user: userId
+        };
+        const configData = CONFIG as unknown as {
+            MeasuredTemplate?: {
+                documentClass: new (d: object, o: object) => MeasuredTemplateDocumentPF2e
+            }
+        };
+        const templateClass = configData.MeasuredTemplate?.documentClass;
+        if (!templateClass) throw new Error("MeasuredTemplate documentClass unavailable");
+        return (await templateClass.create(templateData, { parent: canvas.scene })) as MeasuredTemplateDocumentPF2e;
     }
-    return template;
 }
 
 export async function addOrUpdateEffectOnActor(
@@ -405,5 +447,122 @@ export function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
  * Checks if an actor is conscious and alive based on their HP and conditions.
  */
 export function isConsciousAndAlive(actor: ActorPF2e): boolean {
-    return !actor.isDead && !actor.hasCondition("unconscious");
+    if (!actor || actor.isDead) return false;
+    return !actor.hasCondition("unconscious");
 }
+
+export function getActorFromRegion(region: RegionDocumentPF2e | MeasuredTemplateDocumentPF2e): ActorPF2e | null {
+    return region.actor;
+}
+
+export function getItemFromRegion(region: RegionDocumentPF2e | MeasuredTemplateDocumentPF2e): ItemPF2e | null {
+    return region.item;
+}
+
+export function getRegionOrigin(
+    shape: foundry.data.BaseShapeData | RegionDocumentPF2e | MeasuredTemplateDocumentPF2e
+): Point | null {
+    if (!shape) return null;
+
+    if ("x" in shape && "y" in shape && typeof (shape as { x: number }).x === "number" && typeof (shape as { y: number }).y === "number") {
+        return { x: (shape as { x: number }).x, y: (shape as { y: number }).y };
+    }
+
+    const actualShape = "shapes" in shape ? (shape as RegionDocumentPF2e).shapes?.at(0) : shape;
+    if (!actualShape) return null;
+
+    const fData = typeof foundry !== "undefined" ? foundry.data : undefined;
+    if (fData?.PolygonShapeData && actualShape instanceof fData.PolygonShapeData) {
+        if (actualShape.points.length < 2) return null;
+        return { x: actualShape.points[0], y: actualShape.points[1] };
+    } else if (fData?.EmanationShapeData && actualShape instanceof fData.EmanationShapeData) {
+        return getRegionOrigin(actualShape.base);
+    } else if ("x" in actualShape && "y" in actualShape) {
+        return { x: (actualShape as { x: number }).x, y: (actualShape as { y: number }).y };
+    }
+    return null;
+}
+
+export function getRegionDirection(
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+): number {
+    if (!template) return 0;
+
+    if ("shapes" in template) {
+        const shape = (template as RegionDocumentPF2e).shapes?.at(0);
+        const rot = (shape as { rotation?: number })?.rotation;
+        if (typeof rot === "number") return rot;
+
+        const dir = (shape as { direction?: number })?.direction;
+        if (typeof dir === "number") return dir;
+    }
+
+    const directDir = (template as { direction?: number }).direction;
+    return typeof directDir === "number" ? directDir : 0;
+}
+
+export function getTokensWithinRadius(
+    center: Point,
+    radiusFeet: number,
+    options: { checkWalls?: boolean; scene?: Scene } = {}
+): TokenPF2e[] {
+    const scene = options.scene ?? canvas.scene;
+    if (!scene) return [];
+
+    const grid = canvas.grid;
+    const gridDistance = grid.distance || 5;
+    const gridUnits = radiusFeet / gridDistance;
+    const maxPixelDistance = gridUnits * grid.size;
+
+    const tokens = (canvas.tokens?.placeables ?? []).filter((token: TokenPF2e) => {
+        const actor = token.actor;
+        if (!actor || token.document.hidden) return false;
+        if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+
+        const distanceInUnits = typeof token.distanceTo === "function"
+            ? token.distanceTo(center)
+            : null;
+        if (distanceInUnits !== null) {
+            if (distanceInUnits > radiusFeet) return false;
+        } else {
+            const dx = token.center.x - center.x;
+            const dy = token.center.y - center.y;
+            const pixelDist = Math.hypot(dx, dy);
+            if (pixelDist > maxPixelDistance) return false;
+        }
+
+        if (options.checkWalls) {
+            const wallBackend = CONFIG.Canvas?.polygonBackends?.["sight"];
+            if (wallBackend?.testCollision) {
+                const footprint = token.footprint ?? [{ i: 0, j: 0 }];
+                const hasUnblockedSpace = footprint.some(offset => {
+                    const spaceCenter = grid.getCenterPoint
+                        ? grid.getCenterPoint(offset)
+                        : token.center;
+                    return !wallBackend.testCollision(
+                        center, spaceCenter, { type: "sight", mode: "any" }
+                    );
+                });
+                if (!hasUnblockedSpace) return false;
+            }
+        }
+
+        return true;
+    });
+
+    return tokens as TokenPF2e[];
+}
+
+export async function deleteItemFromActor(
+    item: ItemPF2e | null | undefined
+): Promise<boolean> {
+    if (!item || !item.actor) return false;
+    if (!item.actor.items.has(item.id)) return false;
+
+    try {
+        await item.delete();
+        return true;
+    } catch {
+        return false;
+    }
+}

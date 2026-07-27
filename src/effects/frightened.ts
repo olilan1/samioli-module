@@ -1,5 +1,5 @@
 import { ActorPF2e, ChatMessagePF2e, CombatantPF2e, ConditionPF2e, EffectPF2e, TokenPF2e } from "foundry-pf2e";
-import { getOwnersFromActor, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
+import { deleteItemFromActor, getOwnersFromActor, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
 import { getActorAntagonizedEffects, removeAntagonizeEffect } from "../actions/antagonize.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
@@ -107,7 +107,7 @@ export async function onRemoveFrightenedAndAntagonizeClick(
     const condition = actor.items.find(item => item.id === frightenedConditionId) as ConditionPF2e;
     
     if (condition) {  
-        await condition.delete();  
+        await deleteItemFromActor(condition);  
     } else {  
         logd(`Could not find the frightened condition on the actor.`);  
     }  

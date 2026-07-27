@@ -1,6 +1,10 @@
 import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e, SpellPF2e, SpellSource, TokenPF2e } from "foundry-pf2e";
-import { addOrUpdateEffectOnActor, delay, sendBasicChatMessage } from "./utils.ts";
-import { getTemplateTokens, isTokenInTemplateArea, replaceTargets } from "./templatetarget.ts";
+import {
+    addOrUpdateEffectOnActor,
+    deleteItemFromActor,
+    sendBasicChatMessage
+} from "./utils.ts";
+import { getTemplateTokens, replaceTargets } from "./templatetarget.ts";
 
 export const START_OF_TURN_SPELLS = [
     'ash-cloud',
@@ -20,12 +24,14 @@ export const START_OF_TURN_SPELLS = [
 ];
 
 export async function addEffectsToTokensInStartOfTurnTemplates(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
-
-    // @ts-expect-error slug is valid
-    const spellSlug = template.flags.pf2e?.origin?.slug;
-    const spellUuid = template.flags.pf2e?.origin?.uuid as string;
-
-    if (!START_OF_TURN_SPELLS.includes(spellSlug)) return;
+    const pf2eFlags = (template.flags as Record<string, unknown>)?.pf2e as Record<string, unknown> | undefined;
+    const pf2eOrigin = pf2eFlags?.origin as Record<string, unknown> | undefined;
+    const spellSlug = (pf2eOrigin?.slug ?? "") as string;
+    const spellUuid = (pf2eOrigin?.uuid ?? "") as string;
+    const uuidSlug = spellUuid.split(".").pop() ?? "";
+    const isMatchingSpell = START_OF_TURN_SPELLS.includes(spellSlug)
+        || START_OF_TURN_SPELLS.includes(uuidSlug);
+    if (!isMatchingSpell) return;
 
     let spell = fromUuidSync(spellUuid) as SpellPF2e;
     let isTransient = false;
@@ -55,91 +61,137 @@ export async function addEffectsToTokensInStartOfTurnTemplates(template: Measure
     }
 }
 
-async function addWithinEffectToTokenActor(token: TokenPF2e, spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e) {
-    // create the within effect from the spell
+async function addWithinEffectToTokenActor(
+    token: TokenPF2e,
+    spell: SpellPF2e,
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+) {
     const effectSource = createWithinEffectSource(spell, template);
-    // add the within effect to the actor
     if (!token.actor) return;
-    const effectItem = await addOrUpdateEffectOnActor(token.actor, effectSource);
-    if (!effectItem) return;
-    const effectUuid = effectItem.uuid as string;
-    const templateLinkedUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[] ?? [];
+    await addOrUpdateEffectOnActor(token.actor, effectSource);
+}
 
-    // Check if the new UUID is already in the array, add if not
-    if (!templateLinkedUuids.includes(effectUuid)) {
-        templateLinkedUuids.push(effectUuid);
+const inFlightTokenEnters = new Set<string>();
+
+export async function handleStartOfTurnTokenEnter(
+    token: TokenPF2e,
+    region: RegionDocumentPF2e
+) {
+    if (!token?.actor) return;
+
+    const existingEffect = token.actor.items.find(
+        item => item.type === "effect" &&
+                item.flags?.["samioli-module"]?.startOfTurnTemplateId === region.id
+    );
+    if (existingEffect) return;
+
+    const lockKey = `${token.id}-${region.id}`;
+    if (inFlightTokenEnters.has(lockKey)) return;
+    inFlightTokenEnters.add(lockKey);
+
+    try {
+        const pf2eOrigin = (region.flags as Record<string, unknown>)?.pf2e as
+            Record<string, unknown> | undefined;
+        const origin = pf2eOrigin?.origin as Record<string, unknown> | undefined;
+        const spellSlug = (origin?.slug ?? "") as string;
+        const spellUuid = (origin?.uuid ?? "") as string;
+
+        if (
+            !START_OF_TURN_SPELLS.includes(spellSlug) &&
+            !START_OF_TURN_SPELLS.some(s => spellUuid.toLowerCase().includes(s))
+        ) {
+            return;
+        }
+
+        let spell = (spellUuid ? fromUuidSync(spellUuid) : null) as SpellPF2e | null;
+
+        if (!spell) {
+            const messageId = region.flags?.pf2e?.messageId as string;
+            if (messageId) {
+                const message = game.messages.get(messageId);
+                spell = message?.item as SpellPF2e;
+            }
+        }
+
+        if (spell) {
+            await addWithinEffectToTokenActor(token, spell, region);
+        }
+    } finally {
+        inFlightTokenEnters.delete(lockKey);
     }
-
-    // update template with new UUIDs
-    await template.setFlag("samioli-module", 'startOfTurnEffectUuid', templateLinkedUuids);
 }
 
-async function removeWithinEffectFromTokenActor(token: TokenPF2e, spellEffect: ItemPF2e,
-    template: MeasuredTemplateDocumentPF2e) {
+const inFlightTokenExits = new Set<string>();
 
-    if (!token.actor) return;
-    const spellEffectUuid = spellEffect.uuid;
-    await spellEffect.delete();
-    // update the template to remove the within effect
-    const templateLinkedUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
-    const newTemplateLinkedUuids = templateLinkedUuids.filter(uuid => uuid !== spellEffectUuid);
-    await template.setFlag("samioli-module", 'startOfTurnEffectUuid', newTemplateLinkedUuids);
-}
-
-export async function addOrRemoveWithinEffectIfNeeded(token: TokenPF2e, costInFeet: number) {
-
-    const validTemplates = canvas.templates.placeables.filter(
-        template => template.document.getFlag('samioli-module', 'isStartOfTurnSpell'));
-
-    if (validTemplates.length === 0) {
+export async function handleStartOfTurnTokenExit(
+    token: TokenPF2e,
+    region: RegionDocumentPF2e
+) {
+    if (!token?.actor) return;
+    if (!canvas.scene?.regions.has(region.id)) {
         return;
     }
 
-    const gridDistance = canvas.grid.distance;
-    const costInSquares = costInFeet / gridDistance;
+    const effect = token.actor.items.find(
+        i => i.type === "effect" &&
+             i.flags?.["samioli-module"]?.startOfTurnTemplateId === region.id
+    );
+    if (!effect) return;
 
-    // add a required delay based on the movement distance to ensure the calculation occurs at the
-    // correct time, or it triggers too early and doesn't detect that it's within the template
-    // TODO: find a better way to handle this timing issue
-    if (costInSquares <= 3) {
-        await delay(costInSquares * 220);
-    } else {
-        await delay(costInSquares * 170);
-    }
+    const lockKey = `${token.id}-${region.id}`;
+    if (inFlightTokenExits.has(lockKey)) return;
+    inFlightTokenExits.add(lockKey);
 
-    const actor = token.actor;
-    if (!actor) return;
-
-    // for all templates flagged with start of turn logic, is the token within one?
-    for (const template of validTemplates) {
-
-        const effect = actor.items.find(item => item.type === 'effect'
-            && (item.flags?.["samioli-module"]?.startOfTurnTemplateId === template.id));
-
-        if (await isTokenInTemplateArea(token, template.document)) {
-            // Token is in template area and has no effect, add effect
-            if (!effect) {
-                const spellUuid = template.document.flags.pf2e.origin?.uuid as string;
-                const spellSource = template.document.getFlag(
-                    "samioli-module",
-                    "spellSource"
-                ) as SpellSource | undefined;
-                const casterUuid = template.document.getFlag(
-                    "samioli-module",
-                    "casterUuid"
-                ) as string | undefined;
-                const spell = getSpellOrFallback(spellUuid, spellSource, casterUuid);
-                if (!spell) continue;
-                await addWithinEffectToTokenActor(token, spell, template.document);
-            }
-        } else {
-            // token is not within the template
-            if (effect) {
-                // remove effect if it exists as it's outside the template area.
-                await removeWithinEffectFromTokenActor(token, effect, template.document);
-            }
+    try {
+        if (token.actor.items.has(effect.id)) {
+            await effect.delete();
         }
+    } catch {
+        // Document was already deleted concurrently
+    } finally {
+        inFlightTokenExits.delete(lockKey);
     }
+}
+
+export async function injectStartOfTurnBehaviorsToRegion(region: RegionDocumentPF2e) {
+    if (!isStartOfTurnSpellTemplate(region)) return;
+
+    const enterBehavior = {
+        name: "Start of Turn Enter",
+        type: "executeScript",
+        disabled: false,
+        system: {
+            events: ["tokenEnter"],
+            source: `
+                const region = event.region;
+                const tokenDoc = event.data.token;
+                if (tokenDoc?.object) {
+                    const module = game.modules.get("samioli-module");
+                    module?.api?.handleStartOfTurnTokenEnter?.(tokenDoc.object, region);
+                }
+            `
+        }
+    };
+
+    const exitBehavior = {
+        name: "Start of Turn Exit",
+        type: "executeScript",
+        disabled: false,
+        system: {
+            events: ["tokenExit"],
+            source: `
+                const region = event.region;
+                const tokenDoc = event.data.token;
+                if (tokenDoc?.object) {
+                    const module = game.modules.get("samioli-module");
+                    module?.api?.handleStartOfTurnTokenExit?.(tokenDoc.object, region);
+                }
+            `
+        }
+    };
+
+    const behaviors = [enterBehavior, exitBehavior];
+    region.updateSource({ behaviors: [...((region._source as { behaviors?: object[] }).behaviors ?? []), ...behaviors] });
 }
 
 export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
@@ -166,13 +218,19 @@ export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
     }
 }
 
-export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
-    const effectUuids = template.getFlag('samioli-module', 'startOfTurnEffectUuid') as string[];
-    if (effectUuids && effectUuids.length > 0) {
-        for (const effectUuid of effectUuids) {
-            const effect = fromUuidSync(effectUuid) as ItemPF2e;
-            if (!effect) continue;
-            await effect.delete();
+export async function deleteWithinEffectsForTemplate(
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+) {
+    const sceneTokens = canvas.tokens?.placeables ?? [];
+    for (const token of sceneTokens) {
+        const actor = token.actor;
+        if (!actor) continue;
+        const matchingEffects = actor.items.filter(i =>
+            i.type === "effect" &&
+            i.flags?.["samioli-module"]?.startOfTurnTemplateId === template.id
+        );
+        for (const effect of matchingEffects) {
+            await deleteItemFromActor(effect as ItemPF2e);
         }
     }
 
@@ -182,11 +240,13 @@ export async function deleteWithinEffectsForTemplate(template: MeasuredTemplateD
     ) as SpellSource | undefined;
     
     if (spellSource) {
-        const casterUuid = template.flags.pf2e?.origin?.actor as string
-            || template.getFlag("samioli-module", "casterUuid") as string;
+        const pf2eOrigin = (template.flags as Record<string, unknown>)?.pf2e as
+            Record<string, unknown> | undefined;
+        const casterUuid = (pf2eOrigin?.origin as Record<string, unknown> | undefined)
+            ?.actor as string || template.getFlag("samioli-module", "casterUuid") as string;
         const caster = casterUuid ? fromUuidSync(casterUuid) as ActorPF2e : null;
-        if (caster && spellSource._id) {
-            (caster.items as unknown as Map<string, ItemPF2e>).delete(spellSource._id);
+        if (caster && spellSource._id && caster.items.has(spellSource._id)) {
+            await caster.deleteEmbeddedDocuments("Item", [spellSource._id]);
         }
     }
 }
@@ -223,7 +283,7 @@ function getSpellOrFallback(
     return null;
 }
 
-function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e): EffectSource {
+function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): EffectSource {
 
     const effectName = `Within: ${spell.name}`;
 
@@ -267,15 +327,23 @@ function createWithinEffectSource(spell: SpellPF2e, template: MeasuredTemplateDo
 /**
  * Determines if the template originates from a known start-of-turn spell.
  */
-export function isStartOfTurnSpellTemplate(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
-    const slug = (template.flags.pf2e?.origin as { slug?: string } | undefined)?.slug;
-    return !!slug && START_OF_TURN_SPELLS.includes(slug);
+export function isStartOfTurnSpellTemplate(
+    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+): boolean {
+    const pf2eFlags = (template.flags as Record<string, unknown>)?.pf2e as
+        Record<string, unknown> | undefined;
+    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
+    const slug = (origin?.slug ?? "") as string;
+    const uuid = (origin?.uuid ?? "") as string;
+    const uuidSlug = uuid.split(".").pop() ?? "";
+
+    return START_OF_TURN_SPELLS.includes(slug) || START_OF_TURN_SPELLS.includes(uuidSlug);
 }
 
 /**
  * Checks if the template has flags indicating it was placed for a start-of-turn spell.
  */
 export function hasStartOfTurnFlags(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e): boolean {
-    return !!template.getFlag("samioli-module", "startOfTurnEffectUuid")
-        || !!template.getFlag("samioli-module", "spellSource");
+    return !!template.getFlag("samioli-module", "spellSource")
+        || isStartOfTurnSpellTemplate(template);
 }

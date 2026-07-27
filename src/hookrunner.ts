@@ -534,22 +534,31 @@ export class HookRunner<T extends unknown[]> {
     }
 
     /**
-     * Restricts execution to scenes that contain at least one measured template carrying the
-     * specified flag.
+     * Restricts execution to scenes containing at least one region carrying the specified flag.
      * 
      * @param scope The flag scope namespace.
      * @param flagName The name of the flag.
      * @returns The HookRunner instance for chaining.
      */
-    ifSceneHasTemplateWithFlag(scope: string, flagName: string): this {
+    ifSceneHasRegionWithFlag(scope: string, flagName: string): this {
         this.isGuarded = true;
-        const hasTemplate = canvas.templates?.placeables.some(
-            t => !!t.document.getFlag(scope, flagName)
-        ) ?? false;
-        if (!hasTemplate) {
+        const placeables = (canvas as unknown as { templates?: { placeables?: unknown[] } }).templates?.placeables;
+        const hasRegion = (canvas.scene?.regions?.some(
+            r => !!r.getFlag(scope, flagName)
+        ) || placeables?.some(
+            (t: unknown) => !!(t as { document?: { getFlag(s: string, f: string): unknown } }).document?.getFlag(scope, flagName)
+        )) ?? false;
+        if (!hasRegion) {
             this.shouldRun = false;
         }
         return this;
+    }
+
+    /**
+     * Backward-compatibility alias for ifSceneHasRegionWithFlag.
+     */
+    ifSceneHasTemplateWithFlag(scope: string, flagName: string): this {
+        return this.ifSceneHasRegionWithFlag(scope, flagName);
     }
 
     /**

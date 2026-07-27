@@ -24,28 +24,32 @@ export async function replaceTargetsForUsers(userIds: string[], arrayOfTokenIds:
     await getSocket().executeForUsers(replaceTargets, userIds, arrayOfTokenIds);
 }
 
-export async function targetTokensUnderTemplate(
-        template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e, creatorUserId: string) {
+export async function targetTokensUnderRegion(
+        region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e, creatorUserId: string) {
     if (game.user.id !== creatorUserId) {
         return;
     }
 
-    const tokens = await getTemplateTokens(template);
+    const tokens = await getTemplateTokens(region);
     const tokenIds = tokens.map((token) => token.id);
 
     replaceTargets(tokenIds);
 
     lastTemplateDetails = {
-        templateId: template.id,
+        templateId: region.id,
         tokenIds: tokenIds
     };
 }
 
-export function isLastTargetedTemplate(templateId: string): boolean {
-    return lastTemplateDetails?.templateId === templateId;
+export const targetTokensUnderTemplate = targetTokensUnderRegion;
+
+export function isLastTargetedRegion(regionId: string): boolean {
+    return lastTemplateDetails?.templateId === regionId;
 }
 
-export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
+export const isLastTargetedTemplate = isLastTargetedRegion;
+
+export function deleteRegionTargets(_region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
     const lastDetails = lastTemplateDetails;
     if (!lastDetails) {
         return;
@@ -58,11 +62,13 @@ export function deleteTemplateTargets(_template: MeasuredTemplateDocumentPF2e | 
     lastTemplateDetails = null;
 }
 
+export const deleteTemplateTargets = deleteRegionTargets;
+
 export async function getTemplateTokens(
     regionDocument: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
 ): Promise<TokenPF2e[]> {
     if ("tokens" in regionDocument) {
-        return Array.from(regionDocument.tokens)
+        const boundTokens = Array.from(regionDocument.tokens)
             .map(tDoc => (tDoc as TokenDocumentPF2e).object)
             .filter((t): t is TokenPF2e => !!t)
             .filter((token) => {
@@ -71,6 +77,27 @@ export async function getTemplateTokens(
                 if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
                 return true;
             });
+
+        if (boundTokens.length === 0) {
+            return (canvas.tokens?.placeables ?? []).filter((token: TokenPF2e) => {
+                const actor = token.actor;
+                if (!actor || token.document.hidden) return false;
+                if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+
+                const point = {
+                    x: token.center.x,
+                    y: token.center.y,
+                    elevation: token.document.elevation ?? 0
+                };
+                const regDoc = regionDocument as RegionDocumentPF2e;
+                if (typeof regDoc.testPoint === "function") {
+                    return regDoc.testPoint(point);
+                }
+                return false;
+            }) as TokenPF2e[];
+        }
+
+        return boundTokens;
     }
 
     const template = regionDocument.object;
@@ -155,27 +182,22 @@ export async function getTemplateTokens(
     return containedTokens as TokenPF2e[];
 }
 
- export function setTemplateColorToBlack(
-     template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
- ): void {
-    if (!template.getFlag('samioli-module', 'ignoreTemplateColourOverride')) {
-        if ("color" in template) {
-            template.updateSource({
+export function setRegionColorToBlack(
+    region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
+): void {
+    if (!region.getFlag('samioli-module', 'ignoreTemplateColourOverride')) {
+        if ("color" in region) {
+            region.updateSource({
                 color: "#000000"
             });
         } else {
-            template.updateSource({
+            region.updateSource({
                 fillColor: "#000000",
                 borderColor: "#000000"
             });
         }
     }
- }
-
- export async function isTokenInTemplateArea(
-     token: TokenPF2e, 
-     measuredTemplateDocument: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
- ): Promise<boolean> {
-    const tokens = await getTemplateTokens(measuredTemplateDocument);
-    return tokens.some(t => t.id === token.id);
 }
+
+/** Backward-compatibility alias for setRegionColorToBlack */
+export const setTemplateColorToBlack = setRegionColorToBlack;

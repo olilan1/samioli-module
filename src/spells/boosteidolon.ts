@@ -1,5 +1,5 @@
 import { ActorPF2e, CharacterPF2e, ChatMessagePF2e, EffectPF2e, ItemPF2e } from "foundry-pf2e";
-import { getEidolonActor, getLevelBasedDC, getOwnersFromActor, isCharacter, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
+import { deleteItemFromActor, getEidolonActor, getLevelBasedDC, getOwnersFromActor, isCharacter, logd, sendBasicChatMessage, MODULE_ID } from "../utils.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 
 type Tradition = "arcane" | "divine" | "occult" | "primal";
@@ -57,7 +57,7 @@ async function createBoostEidolonEffectOnActor(eidolonActor: ActorPF2e) {
     if (existingEffect) {  
         if (existingEffect.system.expired === true) {  
             // Effect exists but is expired, delete it and proceed to create a new one.  
-            await existingEffect.delete();  
+            await deleteItemFromActor(existingEffect);  
         } else {  
             // Effect exists and is not expired, we don't need to do anything.  
             return;  
