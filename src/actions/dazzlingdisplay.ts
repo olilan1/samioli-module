@@ -1,17 +1,16 @@
 import { TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
-import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint } from "../utils.ts";
+import {
+    getTokenIdsFromTokens,
+    getEnemyTokensFromTokenArray,
+    getTokensWithinRadius
+} from "../utils.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../templatetarget.ts";
 import { DAZZLING_DISPLAY, getSocket } from "../sockets.ts";
 
 export async function startDazzlingDisplay(token: TokenPF2e) {
-    // Create a 30 ft radius template at the token's position
-    const creatorUserId = game?.user.id;
-    const tokenPoint = {x: token.x, y: token.y};
-    const template = await createTemplateAtPoint(tokenPoint, creatorUserId, 30, "circle");
-
-    // capture all targets in the area of effect
-    const allTargets = await getTemplateTokens(template);
+    // Capture all tokens within 30 ft emanation
+    const allTargets = getTokensWithinRadius(token.center, 30, { checkWalls: true });
 
     // remove allies and neutrals from the target list
     const enemyTargets = getEnemyTokensFromTokenArray(token, allTargets);
@@ -20,9 +19,6 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
     const finalTargets = enemyTargets.filter(t => !t.actor?.items.some(item => 
         item.type === "effect" && item.slug === "samioli-dazzling-display-immunity")
     );
-
-    // delete the template
-    await template.delete();
 
     // add tokens to current player's target list
     const finalTargetIds = getTokenIdsFromTokens(finalTargets);

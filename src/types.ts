@@ -39,5 +39,7 @@ export interface CrosshairUpdatable {
 declare module "foundry-pf2e" {
     interface RegionDocumentPF2e {
         testPoint?: (point: Point & { elevation?: number }) => boolean;
+        bounds?: { x: number; y: number; width: number; height: number; center: Point };
+        tokens?: Set<TokenPF2e>;
     }
 }

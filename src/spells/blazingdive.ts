@@ -1,24 +1,31 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getTokenFromActor, getTokenIdsFromTokens } from "../utils.ts";
+import {
+    ActorPF2e,
+    RegionDocumentPF2e,
+    TokenPF2e
+} from "foundry-pf2e";
+import { delay, getTokenIdsFromTokens, getRegionOrigin } from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
-export async function initiateBlazingDive(template: MeasuredTemplateDocumentPF2e) {
-
-    // Store tokens from template
-    const targetTokens = await getTemplateTokens(template);
+export async function initiateBlazingDive(region: RegionDocumentPF2e) {
+    // Store tokens from region
+    const targetTokens = await getTemplateTokens(region);
     // Remove targets from caster
     await replaceTargets([]);
-    // get template location
-    const locationOfTemplate: Point = {x: template.x, y: template.y};
-    // get caster token
-    const casterToken = getTokenFromActor(template.actor);
-    
-    if (!casterToken) {
-        return;
-    }
-    // delete template
-    await template.delete();
+    const locationOfTemplate = getRegionOrigin(region) ?? { x: 0, y: 0 };
+
+    const pf2eFlags = (region.flags as Record<string, unknown>)?.pf2e as
+        Record<string, unknown> | undefined;
+    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
+    const originActorUuid = origin?.actor as string | undefined;
+
+    const actor = originActorUuid ? fromUuidSync<ActorPF2e>(originActorUuid) : null;
+    const casterToken = actor?.getActiveTokens()[0];
+
+    if (!casterToken) return;
+
+    // delete region
+    await region.delete();
 
     // run animation sequence
     await animateBlazingDive(casterToken, locationOfTemplate);

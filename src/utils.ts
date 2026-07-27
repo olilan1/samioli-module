@@ -464,7 +464,14 @@ export function getRegionOrigin(
 ): Point | null {
     if (!shape) return null;
 
-    if ("x" in shape && "y" in shape && typeof (shape as { x: number }).x === "number" && typeof (shape as { y: number }).y === "number") {
+    if ("bounds" in shape && (shape as RegionDocumentPF2e).bounds?.center) {
+        const center = (shape as RegionDocumentPF2e).bounds.center;
+        return { x: center.x, y: center.y };
+    }
+
+    if ("x" in shape && "y" in shape &&
+        typeof (shape as { x: number }).x === "number" &&
+        typeof (shape as { y: number }).y === "number") {
         return { x: (shape as { x: number }).x, y: (shape as { y: number }).y };
     }
 
@@ -483,22 +490,13 @@ export function getRegionOrigin(
     return null;
 }
 
-export function getRegionDirection(
-    template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e
-): number {
-    if (!template) return 0;
+export function getRegionStartPoint(region: RegionDocumentPF2e): Point {
+    const shape = region?.shapes?.at(0) as { x?: number; y?: number } | undefined;
+    return { x: shape?.x ?? 0, y: shape?.y ?? 0 };
+}
 
-    if ("shapes" in template) {
-        const shape = (template as RegionDocumentPF2e).shapes?.at(0);
-        const rot = (shape as { rotation?: number })?.rotation;
-        if (typeof rot === "number") return rot;
-
-        const dir = (shape as { direction?: number })?.direction;
-        if (typeof dir === "number") return dir;
-    }
-
-    const directDir = (template as { direction?: number }).direction;
-    return typeof directDir === "number" ? directDir : 0;
+export function getRegionDirection(region: RegionDocumentPF2e): number {
+    return (region?.shapes?.at(0) as { rotation?: number })?.rotation ?? 0;
 }
 
 export function getTokensWithinRadius(

@@ -1,29 +1,37 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getRandomNumberBetween, getTokenIdsFromTokens, shuffleArray } from "../utils.ts";
+import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import {
+    delay,
+    getRandomNumberBetween,
+    getTokenIdsFromTokens,
+    shuffleArray,
+    getRegionOrigin
+} from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 
-export async function initiateStormSpiral(template: MeasuredTemplateDocumentPF2e) {
-    let targetTokens = await getTemplateTokens(template);
+export async function initiateStormSpiral(region: RegionDocumentPF2e) {
+    let targetTokens = await getTemplateTokens(region);
 
     if (targetTokens.length != 0) {
-        targetTokens = shuffleArray(targetTokens)
-        template.delete();    
-        await animateStormSpiral(template, targetTokens);
+        targetTokens = shuffleArray(targetTokens);
+        await region.delete();
+        await animateStormSpiral(region, targetTokens);
         await delay(11000);
         replaceTargets(getTokenIdsFromTokens(targetTokens));
     }
 }
 
-async function animateStormSpiral(template: MeasuredTemplateDocumentPF2e, targetTokens: TokenPF2e[]) {
-    const locationOfTemplateX = template.x;
-    const locationOfTemplateY = template.y;
+async function animateStormSpiral(
+    region: RegionDocumentPF2e,
+    targetTokens: TokenPF2e[]
+) {
+    const center = getRegionOrigin(region) ?? { x: 0, y: 0 };
     const lightningSounds = ["sound/NWN2-Sounds/as_wt_thundercl1.WAV", 
-        "sound/NWN2-Sounds/as_wt_thundercl2.WAV"]
+        "sound/NWN2-Sounds/as_wt_thundercl2.WAV"];
         
-        const sequence = new Sequence()
+    const sequence = new Sequence()
         .effect()
             .file("jb2a.call_lightning.high_res.blue")
-            .atLocation({ x: locationOfTemplateX, y: locationOfTemplateY })
+            .atLocation(center)
             .fadeIn(1500)
             .fadeOut(1000)
             .duration(10000)
