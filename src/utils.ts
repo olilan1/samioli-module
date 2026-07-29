@@ -1,4 +1,4 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
@@ -51,7 +51,7 @@ export function getHashCode(str: string) {
 }
 
 export function logd(...args: unknown[]) {
-    if (typeof game !== "undefined" && game.settings && getSetting(SETTINGS.DEBUG_LOGGING)) {
+    if (game.settings && getSetting(SETTINGS.DEBUG_LOGGING)) {
         console.log(...args);
     }
 }
@@ -71,31 +71,22 @@ export function postUINotification(message: string, type: "info" | "warn" | "err
 }
 
 export async function deleteRegionById(regionId: string) {
-    if (!canvas.scene) {
-        console.log("No active scene found.");
-        return;
-    }
+    if (!canvas.scene) return;
 
-    const region = canvas.scene.regions?.get(regionId) ?? canvas.scene.templates?.get(regionId);
+    const region = canvas.scene.regions.get(regionId);
     if (!region) {
-        console.log(`Region/Template with ID ${regionId} not found on the current scene.`);
+        logd(`Region with ID ${regionId} not found on current scene.`);
         return;
     }
 
     try {
-        if (canvas.scene.regions?.has(regionId)) {
-            await canvas.scene.deleteEmbeddedDocuments("Region", [regionId]);
-        } else if (canvas.scene.templates?.has(regionId)) {
-            await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [regionId]);
-        }
-        logd(`Deleted Region/Template with ID: ${regionId}`);
+        await canvas.scene.deleteEmbeddedDocuments("Region", [regionId]);
+        logd(`Deleted Region with ID: ${regionId}`);
     } catch (error) {
-        console.error("Error deleting Region/Template:", error);
-        ui.notifications.error(`Failed to delete Region/Template with ID ${regionId}. See console for details.`);
+        console.error("Error deleting Region:", error);
+        ui.notifications.error(`Failed to delete Region with ID ${regionId}.`);
     }
 }
-
-export const deleteTemplateById = deleteRegionById;
 
 export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
     return actor?.getActiveTokens()[0] ?? null;
@@ -112,9 +103,9 @@ export function getOwnersFromActor(actor: ActorPF2e, includeGM: boolean = true):
 }
 
 /**
- * Checks if a region or template has a flag with a lightId, and if so, deletes the associated light.
+ * Checks if a region has a flag with a lightId, and if so, deletes the associated light.
  */
-export async function deleteLightFromRegion(region: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
+export async function deleteLightFromRegion(region: RegionDocumentPF2e) {
     const lightId = region.getFlag(MODULE_ID, "lightId");
     if (!lightId) return;
 
@@ -132,8 +123,6 @@ export async function deleteLightFromRegion(region: MeasuredTemplateDocumentPF2e
         logd(`Light with ID: ${lightId} not found on the canvas.`);
     }
 }
-
-export const deleteLightFromTemplate = deleteLightFromRegion;
 
 export function isCondition(item: ItemPF2e): item is ConditionPF2e {
     return item.type === "condition";
@@ -179,7 +168,7 @@ export function returnStringOfNamesFromArray(names: string[]): string {
 
 
 export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
-    return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)
+    return tokens.filter(token => token.document.disposition === self.document.disposition * -1);
 }
 
 export async function createRegionAtPoint(
@@ -214,28 +203,8 @@ export async function createTemplateAtPoint(
     userId: string,
     radius: number,
     shape: MeasuredTemplateType
-): Promise<MeasuredTemplateDocumentPF2e | RegionDocumentPF2e> {
-    try {
-        return await createRegionAtPoint(point, userId, radius, shape);
-    } catch (error) {
-        logd("createTemplateAtPoint: fallback to MeasuredTemplate creation", error);
-        console.warn("Fallback to MeasuredTemplate creation used in createTemplateAtPoint", error);
-        const templateData = {
-            t: shape,
-            distance: radius,
-            x: point.x,
-            y: point.y,
-            user: userId
-        };
-        const configData = CONFIG as unknown as {
-            MeasuredTemplate?: {
-                documentClass: new (d: object, o: object) => MeasuredTemplateDocumentPF2e
-            }
-        };
-        const templateClass = configData.MeasuredTemplate?.documentClass;
-        if (!templateClass) throw new Error("MeasuredTemplate documentClass unavailable");
-        return (await templateClass.create(templateData, { parent: canvas.scene })) as MeasuredTemplateDocumentPF2e;
-    }
+): Promise<RegionDocumentPF2e> {
+    return createRegionAtPoint(point, userId, radius, shape);
 }
 
 export async function addOrUpdateEffectOnActor(
@@ -255,7 +224,7 @@ export async function addOrUpdateEffectOnActor(
         }
     }
     const [newEffect] = await actor.createEmbeddedDocuments("Item", [sourceClone]) as EffectPF2e[];
-    return newEffect as EffectPF2e;
+    return newEffect;
 }
 
 export async function performFlatCheck(actor: ActorPF2e, dc: number, title: string, rollOptions: string[] = []): Promise<void> {
@@ -451,52 +420,32 @@ export function isConsciousAndAlive(actor: ActorPF2e): boolean {
     return !actor.hasCondition("unconscious");
 }
 
-export function getActorFromRegion(region: RegionDocumentPF2e | MeasuredTemplateDocumentPF2e): ActorPF2e | null {
-    return region.actor;
-}
-
-export function getItemFromRegion(region: RegionDocumentPF2e | MeasuredTemplateDocumentPF2e): ItemPF2e | null {
-    return region.item;
-}
-
 export function getRegionOrigin(
-    shape: foundry.data.BaseShapeData | RegionDocumentPF2e | MeasuredTemplateDocumentPF2e
+    region: RegionDocumentPF2e | { x?: number; y?: number; points?: number[]; base?: unknown }
 ): Point | null {
-    if (!shape) return null;
+    if (!region) return null;
+    const target = "shapes" in region ? region.shapes?.at(0) : region;
+    if (!target) return null;
 
-    if ("bounds" in shape && (shape as RegionDocumentPF2e).bounds?.center) {
-        const center = (shape as RegionDocumentPF2e).bounds.center;
-        return { x: center.x, y: center.y };
+    if ("x" in target && "y" in target && typeof target.x === "number" && typeof target.y === "number") {
+        return { x: target.x, y: target.y };
     }
-
-    if ("x" in shape && "y" in shape &&
-        typeof (shape as { x: number }).x === "number" &&
-        typeof (shape as { y: number }).y === "number") {
-        return { x: (shape as { x: number }).x, y: (shape as { y: number }).y };
+    if ("points" in target && Array.isArray(target.points) && target.points.length >= 2) {
+        return { x: target.points[0], y: target.points[1] };
     }
-
-    const actualShape = "shapes" in shape ? (shape as RegionDocumentPF2e).shapes?.at(0) : shape;
-    if (!actualShape) return null;
-
-    const fData = typeof foundry !== "undefined" ? foundry.data : undefined;
-    if (fData?.PolygonShapeData && actualShape instanceof fData.PolygonShapeData) {
-        if (actualShape.points.length < 2) return null;
-        return { x: actualShape.points[0], y: actualShape.points[1] };
-    } else if (fData?.EmanationShapeData && actualShape instanceof fData.EmanationShapeData) {
-        return getRegionOrigin(actualShape.base);
-    } else if ("x" in actualShape && "y" in actualShape) {
-        return { x: (actualShape as { x: number }).x, y: (actualShape as { y: number }).y };
+    if ("base" in target && target.base) {
+        return getRegionOrigin(target.base as RegionDocumentPF2e);
     }
     return null;
 }
 
 export function getRegionStartPoint(region: RegionDocumentPF2e): Point {
-    const shape = region?.shapes?.at(0) as { x?: number; y?: number } | undefined;
+    const shape = region.shapes?.at(0) as { x?: number; y?: number } | undefined;
     return { x: shape?.x ?? 0, y: shape?.y ?? 0 };
 }
 
 export function getRegionDirection(region: RegionDocumentPF2e): number {
-    return (region?.shapes?.at(0) as { rotation?: number })?.rotation ?? 0;
+    return (region.shapes?.at(0) as { rotation?: number })?.rotation ?? 0;
 }
 
 export function getTokensWithinRadius(
@@ -508,54 +457,38 @@ export function getTokensWithinRadius(
     if (!scene) return [];
 
     const grid = canvas.grid;
-    const gridDistance = grid.distance || 5;
+    const gridDistance = grid.distance;
     const gridUnits = radiusFeet / gridDistance;
     const maxPixelDistance = gridUnits * grid.size;
 
-    const tokens = (canvas.tokens?.placeables ?? []).filter((token: TokenPF2e) => {
+    return canvas.tokens.placeables.filter((token: TokenPF2e) => {
         const actor = token.actor;
         if (!actor || token.document.hidden) return false;
         if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
 
-        const distanceInUnits = typeof token.distanceTo === "function"
-            ? token.distanceTo(center)
-            : null;
-        if (distanceInUnits !== null) {
-            if (distanceInUnits > radiusFeet) return false;
-        } else {
-            const dx = token.center.x - center.x;
-            const dy = token.center.y - center.y;
-            const pixelDist = Math.hypot(dx, dy);
-            if (pixelDist > maxPixelDistance) return false;
-        }
+        const distanceInUnits = token.distanceTo(center);
+        if (distanceInUnits > radiusFeet) return false;
 
         if (options.checkWalls) {
-            const wallBackend = CONFIG.Canvas?.polygonBackends?.["sight"];
-            if (wallBackend?.testCollision) {
-                const footprint = token.footprint ?? [{ i: 0, j: 0 }];
-                const hasUnblockedSpace = footprint.some(offset => {
-                    const spaceCenter = grid.getCenterPoint
-                        ? grid.getCenterPoint(offset)
-                        : token.center;
-                    return !wallBackend.testCollision(
-                        center, spaceCenter, { type: "sight", mode: "any" }
-                    );
-                });
-                if (!hasUnblockedSpace) return false;
-            }
+            const wallBackend = CONFIG.Canvas.polygonBackends["sight"];
+            const footprint = token.footprint;
+            const hasUnblockedSpace = footprint.some(offset => {
+                const spaceCenter = grid.getCenterPoint(offset);
+                return !wallBackend.testCollision(
+                    center, spaceCenter, { type: "sight", mode: "any" }
+                );
+            });
+            if (!hasUnblockedSpace) return false;
         }
 
         return true;
     });
-
-    return tokens as TokenPF2e[];
 }
 
 export async function deleteItemFromActor(
     item: ItemPF2e | null | undefined
 ): Promise<boolean> {
-    if (!item || !item.actor) return false;
-    if (!item.actor.items.has(item.id)) return false;
+    if (!item?.actor) return false;
 
     try {
         await item.delete();

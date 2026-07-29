@@ -12,10 +12,9 @@ export async function initiateBlazingDive(region: RegionDocumentPF2e) {
     const targetTokens = await getTemplateTokens(region);
     // Remove targets from caster
     await replaceTargets([]);
-    const locationOfTemplate = getRegionOrigin(region) ?? { x: 0, y: 0 };
+    const locationOfTemplate = getRegionOrigin(region)!;
 
-    const pf2eFlags = (region.flags as Record<string, unknown>)?.pf2e as
-        Record<string, unknown> | undefined;
+    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
     const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
     const originActorUuid = origin?.actor as string | undefined;
 

@@ -542,23 +542,13 @@ export class HookRunner<T extends unknown[]> {
      */
     ifSceneHasRegionWithFlag(scope: string, flagName: string): this {
         this.isGuarded = true;
-        const placeables = (canvas as unknown as { templates?: { placeables?: unknown[] } }).templates?.placeables;
-        const hasRegion = (canvas.scene?.regions?.some(
+        const hasRegion = canvas.scene?.regions.some(
             r => !!r.getFlag(scope, flagName)
-        ) || placeables?.some(
-            (t: unknown) => !!(t as { document?: { getFlag(s: string, f: string): unknown } }).document?.getFlag(scope, flagName)
-        )) ?? false;
+        ) ?? false;
         if (!hasRegion) {
             this.shouldRun = false;
         }
         return this;
-    }
-
-    /**
-     * Backward-compatibility alias for ifSceneHasRegionWithFlag.
-     */
-    ifSceneHasTemplateWithFlag(scope: string, flagName: string): this {
-        return this.ifSceneHasRegionWithFlag(scope, flagName);
     }
 
     /**

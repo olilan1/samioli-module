@@ -16,7 +16,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
     const enemyTargets = getEnemyTokensFromTokenArray(token, allTargets);
 
     // remove any tokens that have the dazzling display immunity effect
-    const finalTargets = enemyTargets.filter(t => !t.actor?.items.some(item => 
+    const finalTargets = enemyTargets.filter(t => !t.actor!.items.some(item => 
         item.type === "effect" && item.slug === "samioli-dazzling-display-immunity")
     );
 
@@ -43,7 +43,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
             demoralizeMacro.execute();
         }
     } else {
-        ui.notifications?.warn("Workbench Demoralize macro not found.");
+        ui.notifications.warn("Workbench Demoralize macro not found.");
         return;
     }
 
@@ -76,7 +76,9 @@ export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
     };
     
     for (const target of targets) {
-        await target.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+        if (target.actor) {
+            await target.actor.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+        }
     }
 }
 

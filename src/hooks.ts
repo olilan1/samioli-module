@@ -12,10 +12,10 @@ import {
 } from "./effects/panache.ts";
 import { startHuntPrey } from "./actions/huntprey.ts";
 import {
-    targetTokensUnderTemplate,
-    deleteTemplateTargets,
-    setTemplateColorToBlack,
-    isLastTargetedTemplate
+    targetTokensUnderRegion,
+    deleteRegionTargets,
+    setRegionColorToBlack,
+    isLastTargetedRegion
 } from "./templatetarget.ts";
 import { applyUnstableEffectOnFailure } from "./effects/unstablecheck.ts";
 import {
@@ -37,7 +37,7 @@ import {
 import {
     postSustainMessagesForActor,
     addSustainEffectToCaster,
-    associateTemplateWithSustainedEffect,
+    associateRegionWithSustainedEffect,
     hasSustainingEffect,
     handleSustainedEffectDeletion,
     createSpellNotSustainedChatMessage,
@@ -53,9 +53,9 @@ import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlers } from "./chatbuttonhelper.ts";
 import {
     postMessagesForWithinEffects,
-    deleteWithinEffectsForTemplate,
+    deleteWithinEffectsForRegion,
     injectStartOfTurnBehaviorsToRegion,
-    hasStartOfTurnFlags
+    hasStartOfTurnRegionFlags
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
@@ -91,7 +91,7 @@ Hooks.on("init", () => {
     registerSettings();
     const module = game.modules.get("samioli-module");
     if (module) {
-        (module as unknown as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
+        (module as { api?: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
     }
 });
 
@@ -142,13 +142,13 @@ Hooks.on("createRegion", async (
 
     if (!ranRegionTrigger) {
         // If no matching origin, target tokens if that feature is enabled
-        hook(targetTokensUnderTemplate, region, userId)
+        hook(targetTokensUnderRegion, region, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .allowUnfilteredRun()
             .run();
     }
 
-    hook(associateTemplateWithSustainedEffect, region)
+    hook(associateRegionWithSustainedEffect, region)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifGM()
         .if(hasSustainingEffect)
@@ -161,7 +161,7 @@ Hooks.on("preCreateRegion", (
     _context: unknown,
     _userId: string
 ) => {
-    hook(setTemplateColorToBlack, region)
+    hook(setRegionColorToBlack, region)
         .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
         .allowUnfilteredRun()
         .run();
@@ -180,14 +180,14 @@ Hooks.on("deleteRegion", (
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    hook(deleteTemplateTargets, region)
+    hook(deleteRegionTargets, region)
         .ifEnabled(SETTINGS.TEMPLATE_TARGET)
-        .if(() => isLastTargetedTemplate(region.id))
+        .if(() => isLastTargetedRegion(region.id))
         .run();
-    hook(deleteWithinEffectsForTemplate, region)
+    hook(deleteWithinEffectsForRegion, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(hasStartOfTurnFlags)
+        .if(hasStartOfTurnRegionFlags)
         .run();
 });
 
@@ -283,7 +283,7 @@ Hooks.on(
 });
 
 Hooks.on("createItem", (item: ItemPF2e, _context: unknown, userId: string) => {
-    hook(handleMirrorImageCreated, item as EffectPF2e)
+    hook(handleMirrorImageCreated, item)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
@@ -296,7 +296,7 @@ Hooks.on("updateItem", (
     _context: unknown,
     userId: string
 ) => {
-    hook(handleMirrorImageUpdated, item as EffectPF2e, changes)
+    hook(handleMirrorImageUpdated, item, changes)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
@@ -304,7 +304,7 @@ Hooks.on("updateItem", (
 });
 
 Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
-    hook(handleMirrorImageDeleted, item as EffectPF2e)
+    hook(handleMirrorImageDeleted, item)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
@@ -328,17 +328,6 @@ function handleChatMessageWithRoll(message: ChatMessagePF2e) {
                 .ifMessagePosterAndActorOwner()
                 .ifMessageOption("item:imaginary-weapon")
                 .run();
-            break;
-        case "damage-roll":
-            break;
-        case "skill-check":
-            break;
-        case "flat-check":
-            break;
-        case "action":
-            break;
-        case "spell":
-        case "spell-cast":
             break;
     }
 }

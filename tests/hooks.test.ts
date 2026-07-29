@@ -523,19 +523,17 @@ describe('HookRunner & hook helper', () => {
       expect(callback).toHaveBeenCalled();
     });
 
-    it('should satisfy isGuarded check with ifSceneHasTemplateWithFlag', () => {
+    it('should satisfy isGuarded check with ifSceneHasRegionWithFlag', () => {
       const callback = vi.fn();
       (globalThis as unknown as { canvas: unknown }).canvas = {
-        templates: {
-          placeables: [
+        scene: {
+          regions: [
             {
-              document: {
-                getFlag: (scope: string, key: string) => {
-                  if (scope === 'samioli-module' && key === 'isStartOfTurnSpell') {
-                    return true;
-                  }
-                  return undefined;
+              getFlag: (scope: string, key: string) => {
+                if (scope === 'samioli-module' && key === 'isStartOfTurnSpell') {
+                  return true;
                 }
+                return undefined;
               }
             }
           ]
@@ -543,7 +541,7 @@ describe('HookRunner & hook helper', () => {
       };
 
       hook(callback)
-        .ifSceneHasTemplateWithFlag('samioli-module', 'isStartOfTurnSpell')
+        .ifSceneHasRegionWithFlag('samioli-module', 'isStartOfTurnSpell')
         .run();
       expect(callback).toHaveBeenCalled();
       

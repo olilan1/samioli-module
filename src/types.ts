@@ -15,16 +15,7 @@ export interface CustomRegionData {
 /**
  * Backward-compatibility alias for CustomRegionData / legacy MeasuredTemplateData
  */
-export type CustomTemplateData = CustomRegionData & {
-    t?: MeasuredTemplateType;
-    x?: number;
-    y?: number;
-    width?: number;
-    distance?: number;
-    direction?: number;
-    fillColor?: `#${string}`;
-    borderColor?: `#${string}`;
-};
+export type CustomTemplateData = CustomRegionData;
 
 /**
  * Type suitable for use as the parameter in Sequencer crosshair callbacks

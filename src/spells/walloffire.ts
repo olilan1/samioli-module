@@ -1,5 +1,5 @@
 import { ItemPF2e, MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, deleteTemplateById, getCollidableCallbacks, getTokenIdsFromTokens } from "../utils.ts";
+import { delay, deleteRegionById, getCollidableCallbacks, getTokenIdsFromTokens } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
@@ -176,7 +176,7 @@ async function animateWallOfFireRing(token: TokenPF2e) {
 export function removeWallOfFire(template: MeasuredTemplateDocumentPF2e) {
     const associatedTemplateId = template.getFlag("samioli-module", "wallOfFireAssociatedTemplateId");
     if (associatedTemplateId) {
-        deleteTemplateById(associatedTemplateId.toString());
+        deleteRegionById(associatedTemplateId.toString());
     }
 }
 

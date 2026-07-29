@@ -8,14 +8,12 @@ import {
     getTokenIdsFromTokens,
     postUINotification,
     getRegionDirection,
-    getRegionStartPoint,
-    MODULE_ID
+    getRegionStartPoint
 } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export async function animateLightningDash(region: RegionDocumentPF2e) {
-    const pf2eFlags = (region.flags as Record<string, unknown>)?.pf2e as
-        Record<string, unknown> | undefined;
+    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
     const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
     const originActorUuid = origin?.actor as string | undefined;
 
@@ -51,14 +49,14 @@ function findDestination(token: TokenPF2e, region: RegionDocumentPF2e) {
     const radianAngle = direction * (Math.PI / 180);
     const origin = getRegionStartPoint(region);
 
+    const scene = canvas.scene;
+    if (!scene) return null;
+
     const halfSquare = 2.5 * feetToCoords;
-    const width = canvas.scene?.width ?? 0;
-    const height = canvas.scene?.height ?? 0;
-    const padding = canvas.scene?.padding ?? 0;
-    const minX = width * padding + halfSquare;
-    const minY = height * padding + halfSquare;
-    const maxX = width + minX - 2 * halfSquare;
-    const maxY = height + minY - 2 * halfSquare;
+    const minX = scene.width * scene.padding + halfSquare;
+    const minY = scene.height * scene.padding + halfSquare;
+    const maxX = scene.width + minX - 2 * halfSquare;
+    const maxY = scene.height + minY - 2 * halfSquare;
     
     const cos = Math.cos(radianAngle);
     const sin = Math.sin(radianAngle);

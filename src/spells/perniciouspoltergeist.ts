@@ -1,13 +1,13 @@
-import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets, targetTokensUnderTemplate } from "../templatetarget.ts";
+import { MeasuredTemplateDocumentPF2e, RegionDocumentPF2e } from "foundry-pf2e";
+import { getTemplateTokens, replaceTargets, targetTokensUnderRegion } from "../templatetarget.ts";
 import { delay, getTokenFromActor } from "../utils.ts";
 
-export async function initiatePerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e) {
-    animateTemplate(template);
-    chooseEffectOfPerniciousPoltergeist(template);
+export async function initiatePerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e | RegionDocumentPF2e) {
+    animateTemplate(template as RegionDocumentPF2e);
+    chooseEffectOfPerniciousPoltergeist(template as RegionDocumentPF2e);
 }
 
-export async function chooseEffectOfPerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e) {
+export async function chooseEffectOfPerniciousPoltergeist(template: RegionDocumentPF2e) {
 
     const dialogOptions = {
         left: (window.innerWidth - 450) / 2,
@@ -110,16 +110,16 @@ async function deathlyAssault(template: MeasuredTemplateDocumentPF2e) {
     }, assaultDialogOptions).render(true);
 }
 
-async function frighten(template: MeasuredTemplateDocumentPF2e) {
-    animateFrighten(template);
+async function frighten(region: RegionDocumentPF2e) {
+    animateFrighten(region);
     await delay(2000);
-    targetTokensUnderTemplate(template, game.user.id);
+    targetTokensUnderRegion(region, game.user.id);
 }
 
-async function telekineticStorm(template: MeasuredTemplateDocumentPF2e) {
-    animateTelekineticStorm(template);
+async function telekineticStorm(region: RegionDocumentPF2e) {
+    animateTelekineticStorm(region);
     await delay(10000);
-    targetTokensUnderTemplate(template, game.user.id);
+    targetTokensUnderRegion(region, game.user.id);
 }
 
 function animateTemplate(template: MeasuredTemplateDocumentPF2e) {

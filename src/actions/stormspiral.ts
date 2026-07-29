@@ -1,4 +1,5 @@
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import {
     delay,
     getRandomNumberBetween,
@@ -13,18 +14,18 @@ export async function initiateStormSpiral(region: RegionDocumentPF2e) {
 
     if (targetTokens.length != 0) {
         targetTokens = shuffleArray(targetTokens);
+        const center = getRegionOrigin(region)!;
         await region.delete();
-        await animateStormSpiral(region, targetTokens);
+        await animateStormSpiral(center, targetTokens);
         await delay(11000);
         replaceTargets(getTokenIdsFromTokens(targetTokens));
     }
 }
 
 async function animateStormSpiral(
-    region: RegionDocumentPF2e,
+    center: Point,
     targetTokens: TokenPF2e[]
 ) {
-    const center = getRegionOrigin(region) ?? { x: 0, y: 0 };
     const lightningSounds = ["sound/NWN2-Sounds/as_wt_thundercl1.WAV", 
         "sound/NWN2-Sounds/as_wt_thundercl2.WAV"];
         

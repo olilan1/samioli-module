@@ -10,7 +10,7 @@ import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
 import {
   addSustainEffectToCaster,
-  associateTemplateWithSustainedEffect,
+  associateRegionWithSustainedEffect,
   postSustainMessagesForActor,
   expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
@@ -18,7 +18,7 @@ import { getTemplateTokens } from '../src/templatetarget.ts';
 import {
   handleStartOfTurnTokenEnter,
   handleStartOfTurnTokenExit,
-  deleteWithinEffectsForTemplate
+  deleteWithinEffectsForRegion
 } from '../src/startofturnspells.ts';
 import { ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e, TokenPF2e } from 'foundry-pf2e';
 
@@ -401,7 +401,7 @@ describe('Baseline Hook Handlers', () => {
       );
     });
 
-    it('associateTemplateWithSustainedEffect: should associate template with effect', async () => {
+    it('associateRegionWithSustainedEffect: should associate region with effect', async () => {
       const mockEffect = {
         type: 'effect',
         slug: 'sustaining-effect-bless',
@@ -422,10 +422,12 @@ describe('Baseline Hook Handlers', () => {
         id: 'template-id',
         actor: mockActor,
         item: { slug: 'bless' },
+        flags: {},
+        getFlag: vi.fn(),
         update: vi.fn()
       } as unknown as RegionDocumentPF2e;
 
-      await associateTemplateWithSustainedEffect(mockTemplate);
+      await associateRegionWithSustainedEffect(mockTemplate);
       expect(mockEffect.update).toHaveBeenCalledWith({
         'flags.samioli-module.sustainedRegionId': 'template-id'
       });
@@ -626,14 +628,14 @@ describe('Baseline Hook Handlers', () => {
       expect(mockActor.items).toHaveLength(1);
     });
 
-    it('deleteWithinEffectsForTemplate: should find and delete matching startOfTurnTemplateId effects on scene tokens', async () => {
+    it('deleteWithinEffectsForRegion: should find and delete matching startOfTurnRegionId effects on scene tokens', async () => {
       const mockDelete = vi.fn().mockResolvedValue({});
       const mockEffect = {
         id: 'effect-1',
         type: 'effect',
         flags: {
           'samioli-module': {
-            startOfTurnTemplateId: 'region-1'
+            startOfTurnRegionId: 'region-1'
           }
         },
         delete: mockDelete
@@ -659,7 +661,7 @@ describe('Baseline Hook Handlers', () => {
         getFlag: vi.fn().mockReturnValue(undefined)
       } as unknown as RegionDocumentPF2e;
 
-      await deleteWithinEffectsForTemplate(mockRegion);
+      await deleteWithinEffectsForRegion(mockRegion);
       expect(mockDelete).toHaveBeenCalled();
     });
 
@@ -669,7 +671,7 @@ describe('Baseline Hook Handlers', () => {
         type: 'effect',
         flags: {
           'samioli-module': {
-            startOfTurnTemplateId: 'region-exit-1'
+            startOfTurnRegionId: 'region-exit-1'
           }
         },
         delete: vi.fn().mockResolvedValue({})

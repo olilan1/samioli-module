@@ -1,7 +1,7 @@
 import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { CrosshairUpdatable } from "../types.ts";
-import { deleteLightFromTemplate, MODULE_ID } from "../utils.ts";
+import { deleteLightFromRegion, MODULE_ID } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 const floatingFlameAnimation = "jb2a.flaming_sphere.200px.orange.02";
@@ -264,7 +264,7 @@ export async function removeFloatingFlame(template: MeasuredTemplateDocumentPF2e
         .scale(0.7)
         .waitUntilFinished(-1300)
     .thenDo(async function() {
-        deleteLightFromTemplate(template);
+        deleteLightFromRegion(region as unknown as RegionDocumentPF2e);
         const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${template.id}` })[0];
         if (floatingFlameEffect) {
             Sequencer.EffectManager.endEffects({ name: `floating-flame-${template.id}` });
