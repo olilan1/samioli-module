@@ -5,6 +5,7 @@ import {
   selectToken,
   targetToken,
   postActorActionToChat,
+  performActorStrike,
   clickChatMessageButton,
   deleteTokensFromScene,
 } from './helpers/foundry-helpers.js';
@@ -100,14 +101,15 @@ async function getPanacheState(page: import('@playwright/test').Page) {
 async function waitForPanacheState(
   page: import('@playwright/test').Page,
   expectedHasPanache: boolean,
-  expectedDurationValue?: number
+  expectedDurationValue?: number,
+  expectedDurationUnit?: string
 ) {
   await page.waitForFunction(
-    ({ expected, expDuration }) => {
+    ({ expected, expDuration, expUnit }) => {
       interface EffectDoc {
         name: string;
         slug?: string;
-        system?: { duration?: { value?: number } };
+        system?: { duration?: { value?: number; unit?: string } };
       }
       interface ActorDoc {
         name: string;
@@ -136,9 +138,19 @@ async function waitForPanacheState(
       ) {
         return false;
       }
+      if (
+        expUnit !== undefined &&
+        panache?.system?.duration?.unit !== expUnit
+      ) {
+        return false;
+      }
       return true;
     },
-    { expected: expectedHasPanache, expDuration: expectedDurationValue },
+    {
+      expected: expectedHasPanache,
+      expDuration: expectedDurationValue,
+      expUnit: expectedDurationUnit,
+    },
     { timeout: 10000 }
   );
 
@@ -254,6 +266,54 @@ test.describe('Test Panache Functionality on Demoralize', () => {
 
     const state = await waitForPanacheState(sharedPage, false);
     expect(state.hasPanache).toBe(false);
+  });
+
+  test('Upgrade: should upgrade Panache from 1 round to unlimited on success', async ({
+    sharedPage,
+  }) => {
+    await prepareScene(sharedPage);
+    await executeDemoralize(sharedPage, 4);
+
+    const state1 = await waitForPanacheState(sharedPage, true, 1, 'rounds');
+    expect(state1.hasPanache).toBe(true);
+    expect(state1.durationValue).toBe(1);
+    expect(state1.durationUnit).toBe('rounds');
+
+    await executeDemoralize(sharedPage, 10);
+
+    const state2 = await waitForPanacheState(
+      sharedPage,
+      true,
+      undefined,
+      'unlimited'
+    );
+    expect(state2.hasPanache).toBe(true);
+    expect(state2.durationUnit).toBe('unlimited');
+  });
+
+  test('Finisher Miss: should display button and clear Panache on click', async ({
+    sharedPage,
+  }) => {
+    await prepareScene(sharedPage);
+    await executeDemoralize(sharedPage, 4);
+
+    const stateBefore = await waitForPanacheState(sharedPage, true, 1);
+    expect(stateBefore.hasPanache).toBe(true);
+
+    await setForcedD20(sharedPage, 4);
+
+    await performActorStrike(sharedPage, {
+      actorNameOrId: 'Sayf Mujalid',
+      strikeNameOrIndex: 0,
+      extraRollOptions: ['finisher'],
+    });
+
+    await clickChatMessageButton(sharedPage, {
+      buttonSelector: '#remove-panache',
+    });
+
+    const stateAfter = await waitForPanacheState(sharedPage, false);
+    expect(stateAfter.hasPanache).toBe(false);
   });
 
   test.afterAll(async ({ sharedPage }) => {

@@ -564,3 +564,125 @@ export async function deleteTokensFromScene(
     }
   }, tokenNamesOrIds);
 }
+
+/**
+ * Options for executing an actor's strike attack roll.
+ */
+export interface PerformStrikeOptions {
+  actorNameOrId: string;
+  strikeNameOrIndex?: string | number;
+  extraRollOptions?: string[];
+}
+
+/**
+ * Rolls an actor's strike attack roll.
+ */
+export async function performActorStrike(
+  page: Page,
+  options: PerformStrikeOptions
+): Promise<string | undefined> {
+  const {
+    actorNameOrId,
+    strikeNameOrIndex = 0,
+    extraRollOptions = [],
+  } = options;
+
+  const messageId = await page.evaluate(
+    async ({ idOrName, strikeIdxOrName, rollOpts }) => {
+      interface ActionVariant {
+        roll(options?: { extraRollOptions?: string[] }): Promise<unknown>;
+      }
+      interface StrikeAction {
+        name: string;
+        slug?: string;
+        variants?: ActionVariant[];
+        roll?(options?: { extraRollOptions?: string[] }): Promise<unknown>;
+      }
+      interface ActorDoc {
+        id: string;
+        name: string;
+        system?: {
+          actions?: StrikeAction[];
+        };
+      }
+      interface PlaceableToken {
+        id: string;
+        name: string;
+        actor?: ActorDoc;
+      }
+      interface FoundryGame {
+        actors?: {
+          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
+        };
+        messages?: {
+          contents?: Array<{ id: string }>;
+        };
+      }
+      interface CanvasObj {
+        tokens?: {
+          placeables?: PlaceableToken[];
+        };
+      }
+
+      const globalObj = window as unknown as {
+        game?: FoundryGame;
+        canvas?: CanvasObj;
+      };
+
+      let actor = globalObj.game?.actors?.find(
+        (a) =>
+          a.id === idOrName || a.name.toLowerCase() === idOrName.toLowerCase()
+      );
+
+      if (!actor) {
+        const token = globalObj.canvas?.tokens?.placeables?.find(
+          (t) =>
+            t.id === idOrName ||
+            t.name.toLowerCase() === idOrName.toLowerCase()
+        );
+        actor = token?.actor;
+      }
+
+      if (!actor) {
+        throw new Error(`Actor or Token "${idOrName}" not found.`);
+      }
+
+      const actions = actor.system?.actions || [];
+      let strike: StrikeAction | undefined;
+
+      if (typeof strikeIdxOrName === 'number') {
+        strike = actions[strikeIdxOrName];
+      } else {
+        strike = actions.find(
+          (a) =>
+            a.name.toLowerCase() === strikeIdxOrName.toLowerCase() ||
+            a.slug?.toLowerCase() === strikeIdxOrName.toLowerCase()
+        );
+      }
+
+      if (!strike) {
+        throw new Error(
+          `Strike "${strikeIdxOrName}" not found on actor "${actor.name}".`
+        );
+      }
+
+      if (strike.variants?.[0]) {
+        await strike.variants[0].roll({ extraRollOptions: rollOpts });
+      } else if (typeof strike.roll === 'function') {
+        await strike.roll({ extraRollOptions: rollOpts });
+      } else {
+        throw new Error(`Strike "${strike.name}" has no valid roll method.`);
+      }
+
+      const messages = globalObj.game?.messages?.contents || [];
+      return messages[messages.length - 1]?.id;
+    },
+    {
+      idOrName: actorNameOrId,
+      strikeIdxOrName: strikeNameOrIndex,
+      rollOpts: extraRollOptions,
+    }
+  );
+
+  return messageId;
+}
