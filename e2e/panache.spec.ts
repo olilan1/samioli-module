@@ -6,6 +6,7 @@ import {
   targetToken,
   postActorActionToChat,
   clickChatMessageButton,
+  deleteTokensFromScene,
 } from './helpers/foundry-helpers.js';
 
 test.describe.configure({ mode: 'serial' });
@@ -253,5 +254,12 @@ test.describe('Test Panache Functionality on Demoralize', () => {
 
     const state = await waitForPanacheState(sharedPage, false);
     expect(state.hasPanache).toBe(false);
+  });
+
+  test.afterAll(async ({ sharedPage }) => {
+    await deleteTokensFromScene(sharedPage, [
+      'Sayf Mujalid',
+      'Girtablilu Seer',
+    ]);
   });
 });

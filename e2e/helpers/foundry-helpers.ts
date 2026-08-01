@@ -490,3 +490,77 @@ export async function clickChatMessageButton(
 
   await confirmRollDialogIfPresent(page);
 }
+
+/**
+ * Deletes tokens from the active scene canvas matching given names or IDs.
+ * If no targets are provided, deletes all tokens on the active scene.
+ */
+export async function deleteTokensFromScene(
+  page: Page,
+  tokenNamesOrIds?: string[]
+): Promise<void> {
+  await page.evaluate(async (targets) => {
+    interface TokenDoc {
+      id: string;
+      name?: string;
+    }
+    interface PlaceableToken {
+      id: string;
+      name: string;
+      actor?: { name: string };
+      document: TokenDoc;
+    }
+    interface SceneDoc {
+      tokens?: { contents?: TokenDoc[] };
+      deleteEmbeddedDocuments(
+        type: string,
+        ids: string[]
+      ): Promise<unknown>;
+    }
+    interface CanvasObj {
+      scene?: SceneDoc;
+      tokens?: {
+        placeables?: PlaceableToken[];
+      };
+    }
+
+    const globalObj = window as unknown as { canvas?: CanvasObj };
+    const scene = globalObj.canvas?.scene;
+    if (!scene) return;
+
+    const placeables = globalObj.canvas?.tokens?.placeables || [];
+    const docTokens = scene.tokens?.contents || [];
+
+    let idsToDelete: string[] = [];
+
+    if (!targets || targets.length === 0) {
+      idsToDelete = docTokens.map((t) => t.id);
+    } else {
+      const lowerTargets = targets.map((t) => t.toLowerCase());
+      for (const p of placeables) {
+        const matchName = p.name.toLowerCase();
+        const matchActorName = p.actor?.name.toLowerCase();
+        if (
+          lowerTargets.includes(p.id.toLowerCase()) ||
+          lowerTargets.includes(matchName) ||
+          (matchActorName && lowerTargets.includes(matchActorName))
+        ) {
+          idsToDelete.push(p.id);
+        }
+      }
+      for (const d of docTokens) {
+        if (
+          d.name &&
+          lowerTargets.includes(d.name.toLowerCase()) &&
+          !idsToDelete.includes(d.id)
+        ) {
+          idsToDelete.push(d.id);
+        }
+      }
+    }
+
+    if (idsToDelete.length > 0) {
+      await scene.deleteEmbeddedDocuments('Token', idsToDelete);
+    }
+  }, tokenNamesOrIds);
+}
