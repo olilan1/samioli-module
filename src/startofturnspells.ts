@@ -6,6 +6,7 @@ import {
     MODULE_ID
 } from "./utils.ts";
 import { getTemplateTokens, replaceTargets } from "./templatetarget.ts";
+import { RegionOriginFlag } from "./types.ts";
 
 export const START_OF_TURN_SPELLS = [
     'ash-cloud',
@@ -34,11 +35,10 @@ export const START_OF_TURN_SPELLS = [
 function resolveSpellForRegion(
     region: RegionDocumentPF2e
 ): { spell: SpellPF2e; isTransient: boolean } | null {
-    const pf2eFlags = region.flags.pf2e as Record<string, unknown> | undefined;
-    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-    const spellUuid = (origin?.uuid ?? "") as string;
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
+    const spellUuid = origin?.uuid ?? "";
 
-    const resolved = spellUuid ? (fromUuidSync(spellUuid) as SpellPF2e | null) : null;
+    const resolved = spellUuid ? fromUuidSync<SpellPF2e>(spellUuid) : null;
     if (resolved) return { spell: resolved, isTransient: false };
 
     const spellSource = region.getFlag(MODULE_ID, "spellSource") as SpellSource | undefined;
@@ -48,7 +48,7 @@ function resolveSpellForRegion(
         if (stored) return { spell: stored, isTransient: true };
     }
 
-    const messageId = pf2eFlags?.messageId as string | undefined;
+    const messageId = region.flags.pf2e?.messageId as string | undefined;
     if (!messageId) return null;
     const transient = game.messages.get(messageId)?.item as SpellPF2e | undefined;
     return transient ? { spell: transient, isTransient: true } : null;
@@ -275,7 +275,7 @@ export async function deleteWithinEffectsForRegion(
             i.flags?.[MODULE_ID]?.startOfTurnRegionId === region.id
         );
         for (const effect of matchingEffects) {
-            await deleteItemFromActor(effect as ItemPF2e);
+            await deleteItemFromActor(effect);
         }
     }
 
@@ -285,14 +285,13 @@ export async function deleteWithinEffectsForRegion(
     ) as SpellSource | undefined;
     
     if (spellSource?._id) {
-        const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-        const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-        const casterUuid = (origin?.actor as string | undefined)
+        const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
+        const casterUuid = origin?.actor
             || (region.getFlag(MODULE_ID, "casterUuid") as string | undefined);
-        const caster = casterUuid ? (fromUuidSync(casterUuid) as ActorPF2e | null) : null;
+        const caster = casterUuid ? fromUuidSync<ActorPF2e>(casterUuid) : null;
         // getSpellOrFallback injects the transient spell into the in-memory collection only, so it
         // is removed the same way. A database delete would target a real item on the caster.
-        (caster?.items as unknown as Map<string, ItemPF2e> | undefined)?.delete(spellSource._id);
+        caster?.items.delete(spellSource._id);
     }
 }
 
@@ -308,16 +307,16 @@ function getSpellOrFallback(
     }
 
     if (spellSource) {
-        const caster = casterUuid ? (fromUuidSync(casterUuid) as ActorPF2e | null) : null;
+        const caster = casterUuid ? fromUuidSync<ActorPF2e>(casterUuid) : null;
         const spellViaFallback = new CONFIG.Item.documentClass(
             spellSource,
             { parent: caster }
         ) as SpellPF2e;
 
         if (caster) {
-            // Inject the synthetic spell in-memory so standard rolls can resolve it.
-            (caster.items as unknown as Map<string, ItemPF2e>)
-                .set(spellViaFallback.id, spellViaFallback);
+            // Inject the synthetic spell in-memory so standard rolls can resolve it. The cast
+            // narrows the parent to non-null, which the collection's element type requires.
+            caster.items.set(spellViaFallback.id, spellViaFallback as ItemPF2e<ActorPF2e>);
         }
 
         return spellViaFallback;
@@ -371,11 +370,9 @@ function createWithinEffectSource(spell: SpellPF2e, region: RegionDocumentPF2e):
 export function isStartOfTurnSpellRegion(
     region: RegionDocumentPF2e
 ): boolean {
-    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-    const slug = (origin?.slug ?? "") as string;
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
 
-    return START_OF_TURN_SPELLS.includes(slug);
+    return START_OF_TURN_SPELLS.includes(origin?.slug ?? "");
 }
 
 /**

@@ -2,7 +2,7 @@ import { ActorPF2e, TokenPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, Effe
 import { getSetting, SETTINGS } from "./settings.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
-import { CrosshairUpdatable, RegionShapeGeometry } from "./types.ts";
+import { CrosshairUpdatable, RegionOriginFlag, RegionShapeGeometry } from "./types.ts";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -89,6 +89,16 @@ export async function deleteRegionById(regionId: string) {
 
 export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
     return actor?.getActiveTokens()[0] ?? null;
+}
+
+/**
+ * Returns the actor a region originated from, or null.
+ *
+ * PF2e records the caster's UUID in `flags.pf2e.origin.actor` when it places a spell area.
+ */
+export function getActorFromRegion(region: RegionDocumentPF2e): ActorPF2e | null {
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
+    return origin?.actor ? fromUuidSync<ActorPF2e>(origin.actor) : null;
 }
 
 /**
@@ -328,7 +338,7 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
         return token.footprint.some(footprint => {
             return footprint.i === locationGridOffset.i && footprint.j === locationGridOffset.j;
         });
-    }) as TokenPF2e[];
+    });
 
     if (includeHidden) {
         return validTokens;

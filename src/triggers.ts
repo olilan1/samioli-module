@@ -14,6 +14,7 @@ import {
 import { removeWallOfFire } from "./spells/walloffire.ts";
 import { sustainDancingBlade, cleanupDancingBlade } from "./spells/dancingblade.ts";
 import { MODULE_ID } from "./utils.ts";
+import { RegionOriginFlag } from "./types.ts";
 
 /**
  * Spells that opt-out of automatic sustain effect creation on cast,
@@ -120,7 +121,7 @@ function runMatchingFunctionsFromMappings<T extends RegionDocumentPF2e | EffectP
 function isEffectDocument(
     document: RegionDocumentPF2e | EffectPF2e
 ): document is EffectPF2e {
-    return (document as { documentName?: string }).documentName === "Item";
+    return document.documentName === "Item";
 }
 
 /**
@@ -131,10 +132,8 @@ function rollOptionsContains(
     document: RegionDocumentPF2e | EffectPF2e,
     rollOption: string
 ) {
-    const pf2e = (document.flags as Record<string, unknown>)?.pf2e as Record<string, unknown> | undefined;
-    const origin = pf2e?.origin as Record<string, unknown> | undefined;
-    const rollOptions = origin?.rollOptions as string[] | undefined;
-    if (rollOptions?.includes(rollOption)) return true;
+    const origin = document.flags.pf2e?.origin as RegionOriginFlag | undefined;
+    if (origin?.rollOptions?.includes(rollOption)) return true;
 
     // Sustaining effects often don't have full origin data, so we check the flag or slug
     if (isEffectDocument(document)) {

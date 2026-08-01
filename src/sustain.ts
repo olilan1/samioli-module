@@ -3,6 +3,7 @@ import {
     addOrUpdateEffectOnActor,
     deleteItemFromActor,
     deleteRegionById,
+    getActorFromRegion,
     isEffect,
     MODULE_ID,
     isSpellPF2e,
@@ -11,6 +12,7 @@ import {
 import { runMatchingSustainFunction, runMatchingSustainDeletionFunction, MANUAL_SUSTAIN_SPELLS } from "./triggers.ts";
 import { createChatMessageWithButton } from "./chatbuttonhelper.ts";
 import { getSocket, DELETE_SUMMON } from "./sockets.ts";
+import { RegionOriginFlag } from "./types.ts";
 
 export async function addSustainEffectToCaster(message: ChatMessagePF2e) {
     if (message.actor && isSpellPF2e(message.item)) {
@@ -90,9 +92,8 @@ export async function addSustainEffectToActor(
     );
     const regions = canvas.scene?.regions.contents ?? [];
     const matchingRegion = regions.find((r) => {
-        const pf2eOrigin = (r.flags.pf2e as Record<string, unknown> | undefined)
-            ?.origin as Record<string, unknown> | undefined;
-        return pf2eOrigin?.actor === actor.uuid && pf2eOrigin?.slug === spell.system.slug;
+        const origin = r.flags.pf2e?.origin as RegionOriginFlag | undefined;
+        return origin?.actor === actor.uuid && origin?.slug === spell.system.slug;
     });
     if (matchingRegion) {
         await associateRegionWithSustainedEffect(matchingRegion);
@@ -323,19 +324,20 @@ async function associateRegionWithEffect(
 }
 
 export async function associateRegionWithSustainedEffect(region: RegionDocumentPF2e) {
-    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
 
-    const actorUuid = (origin?.actor as string | undefined)
+    // Falls back to the module's own caster flag, which start-of-turn regions carry when their
+    // spell was transient at placement time.
+    const actorUuid = origin?.actor
         || (region.getFlag(MODULE_ID, "casterUuid") as string | undefined);
-    const actor = actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : null;
+    const actor = actorUuid ? fromUuidSync<ActorPF2e>(actorUuid) : null;
     if (!actor) return;
 
     const sustainedEffectsOnActor = getActorSustainedEffects(actor);
     if (!sustainedEffectsOnActor || sustainedEffectsOnActor.length === 0) return;
 
     // PF2e writes the item slug into the region's origin flags when it places a spell area.
-    const spellSlugFromRegion = origin?.slug as string | undefined;
+    const spellSlugFromRegion = origin?.slug;
     if (!spellSlugFromRegion) return;
 
     const matchingEffect = sustainedEffectsOnActor.find(effect => {
@@ -370,10 +372,7 @@ export async function handleSustainedEffectDeletion(item: ItemPF2e) {
 export function hasSustainingEffect(
     region: RegionDocumentPF2e
 ): boolean {
-    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-    const pf2eOrigin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-    const actorUuid = pf2eOrigin?.actor as string | undefined;
-    const actor = actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : null;
+    const actor = getActorFromRegion(region);
     return actor?.items.some(
         (i: ItemPF2e) => i.type === "effect" && (i.slug?.startsWith("sustaining-effect-") ?? false)
     ) ?? false;

@@ -1,9 +1,14 @@
 import {
-    ActorPF2e,
     RegionDocumentPF2e,
     TokenPF2e
 } from "foundry-pf2e";
-import { delay, getTokenIdsFromTokens, getRegionOrigin } from "../utils.ts";
+import {
+    delay,
+    getActorFromRegion,
+    getTokenFromActor,
+    getTokenIdsFromTokens,
+    getRegionOrigin
+} from "../utils.ts";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
@@ -14,12 +19,7 @@ export async function initiateBlazingDive(region: RegionDocumentPF2e) {
     await replaceTargets([]);
     const locationOfTemplate = getRegionOrigin(region)!;
 
-    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-    const originActorUuid = origin?.actor as string | undefined;
-
-    const actor = originActorUuid ? fromUuidSync<ActorPF2e>(originActorUuid) : null;
-    const casterToken = actor?.getActiveTokens()[0];
+    const casterToken = getTokenFromActor(getActorFromRegion(region));
 
     if (!casterToken) return;
 
