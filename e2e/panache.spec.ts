@@ -6,56 +6,13 @@ import {
   targetToken,
   postActorActionToChat,
   performActorStrike,
+  applyEffectToActor,
+  removeEffectsFromActor,
   clickChatMessageButton,
   deleteTokensFromScene,
 } from './helpers/foundry-helpers.js';
 
 test.describe.configure({ mode: 'serial' });
-
-async function clearPanacheEffect(
-  page: import('@playwright/test').Page
-): Promise<void> {
-  await page.evaluate(async () => {
-    interface EffectDoc {
-      id: string;
-      name: string;
-      slug?: string;
-    }
-    interface ActorDoc {
-      name: string;
-      itemTypes?: { effect?: EffectDoc[] };
-      deleteEmbeddedDocuments(
-        type: string,
-        ids: string[]
-      ): Promise<unknown>;
-    }
-    interface FoundryGame {
-      actors?: {
-        find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
-      };
-    }
-
-    const globalObj = window as unknown as { game?: FoundryGame };
-    const sayf = globalObj.game?.actors?.find(
-      (a) => a.name.toLowerCase() === 'sayf mujalid'
-    );
-    if (!sayf) return;
-
-    const panacheEffects =
-      sayf.itemTypes?.effect?.filter(
-        (e) =>
-          e.slug === 'effect-panache' ||
-          e.name.toLowerCase().includes('panache')
-      ) || [];
-
-    if (panacheEffects.length > 0) {
-      await sayf.deleteEmbeddedDocuments(
-        'Item',
-        panacheEffects.map((e) => e.id)
-      );
-    }
-  });
-}
 
 async function getPanacheState(page: import('@playwright/test').Page) {
   return await page.evaluate(() => {
@@ -171,7 +128,8 @@ async function prepareScene(page: import('@playwright/test').Page) {
     }
   });
 
-  await clearPanacheEffect(page);
+  await removeEffectsFromActor(page, { actorNameOrId: 'Sayf Mujalid' });
+  await removeEffectsFromActor(page, { actorNameOrId: 'Girtablilu Seer' });
   await dropActorToScene(page, {
     actorName: 'Sayf Mujalid',
     x: 2900,
@@ -242,44 +200,9 @@ async function prepareDuelingParryStance(
       messageId,
     });
   } catch {
-    await page.evaluate(async () => {
-      interface ItemObj {
-        system?: { slug?: string };
-        toObject(): unknown;
-      }
-      interface ActorDoc {
-        name: string;
-        createEmbeddedDocuments(
-          type: string,
-          data: unknown[]
-        ): Promise<unknown>;
-      }
-      interface CompendiumPack {
-        getDocuments(): Promise<ItemObj[]>;
-      }
-      interface FoundryGame {
-        actors?: {
-          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
-        };
-        packs?: {
-          get: (id: string) => CompendiumPack | undefined;
-        };
-      }
-
-      const globalObj = window as unknown as { game?: FoundryGame };
-      const sayf = globalObj.game?.actors?.find(
-        (a) => a.name.toLowerCase() === 'sayf mujalid'
-      );
-      const pack = globalObj.game?.packs?.get('pf2e.feat-effects');
-      if (!sayf || !pack) return;
-
-      const docs = await pack.getDocuments();
-      const effect = docs.find(
-        (d) => d.system?.slug === 'effect-dueling-parry'
-      );
-      if (effect) {
-        await sayf.createEmbeddedDocuments('Item', [effect.toObject()]);
-      }
+    await applyEffectToActor(page, {
+      actorNameOrId: 'Sayf Mujalid',
+      effectSlugOrUuid: 'effect-dueling-parry',
     });
   }
 }
@@ -328,7 +251,16 @@ test.describe('Test Panache Functionality on Demoralize', () => {
     sharedPage,
   }) => {
     await prepareScene(sharedPage);
-    await executeDemoralize(sharedPage, 4);
+    await applyEffectToActor(sharedPage, {
+      actorNameOrId: 'Sayf Mujalid',
+      effectSlugOrUuid: 'effect-panache',
+      customData: {
+        name: 'Effect: Panache (1 round)',
+        'system.duration.value': 1,
+        'system.duration.unit': 'rounds',
+        'system.duration.expiry': 'turn-end',
+      },
+    });
 
     const state1 = await waitForPanacheState(sharedPage, true, 1, 'rounds');
     expect(state1.hasPanache).toBe(true);
@@ -351,9 +283,12 @@ test.describe('Test Panache Functionality on Demoralize', () => {
     sharedPage,
   }) => {
     await prepareScene(sharedPage);
-    await executeDemoralize(sharedPage, 4);
+    await applyEffectToActor(sharedPage, {
+      actorNameOrId: 'Sayf Mujalid',
+      effectSlugOrUuid: 'effect-panache',
+    });
 
-    const stateBefore = await waitForPanacheState(sharedPage, true, 1);
+    const stateBefore = await waitForPanacheState(sharedPage, true);
     expect(stateBefore.hasPanache).toBe(true);
 
     await setForcedD20(sharedPage, 4);
@@ -390,6 +325,10 @@ test.describe('Test Panache Functionality on Demoralize', () => {
     const state = await waitForPanacheState(sharedPage, true, 1);
     expect(state.hasPanache).toBe(true);
     expect(state.durationValue).toBe(1);
+
+    await removeEffectsFromActor(sharedPage, {
+      actorNameOrId: 'Sayf Mujalid',
+    });
   });
 
   test('Dueling Parry Hit: should NOT grant Panache when enemy hits', async ({
@@ -409,6 +348,10 @@ test.describe('Test Panache Functionality on Demoralize', () => {
 
     const state = await waitForPanacheState(sharedPage, false);
     expect(state.hasPanache).toBe(false);
+
+    await removeEffectsFromActor(sharedPage, {
+      actorNameOrId: 'Sayf Mujalid',
+    });
   });
 
   test.afterAll(async ({ sharedPage }) => {

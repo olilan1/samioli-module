@@ -686,3 +686,211 @@ export async function performActorStrike(
 
   return messageId;
 }
+
+/**
+ * Options for applying an effect to an actor.
+ */
+export interface ApplyEffectOptions {
+  actorNameOrId: string;
+  effectSlugOrUuid: string;
+  compendiumPack?: string;
+  customData?: Record<string, unknown>;
+}
+
+/**
+ * Applies an effect item from compendium or UUID to an actor/token.
+ */
+export async function applyEffectToActor(
+  page: Page,
+  options: ApplyEffectOptions
+): Promise<string | undefined> {
+  const {
+    actorNameOrId,
+    effectSlugOrUuid,
+    compendiumPack = 'pf2e.feat-effects',
+    customData,
+  } = options;
+
+  return await page.evaluate(
+    async ({ idOrName, slugOrUuid, packName, extraData }) => {
+      interface ItemDoc {
+        id: string;
+        system?: { slug?: string };
+        toObject(): Record<string, unknown>;
+      }
+      interface ActorDoc {
+        id: string;
+        name: string;
+        createEmbeddedDocuments(
+          type: string,
+          data: unknown[]
+        ): Promise<ItemDoc[]>;
+      }
+      interface PlaceableToken {
+        id: string;
+        name: string;
+        actor?: ActorDoc;
+      }
+      interface CompendiumPack {
+        getDocuments(): Promise<ItemDoc[]>;
+        getDocument(id: string): Promise<ItemDoc | null>;
+      }
+      interface FoundryGame {
+        actors?: {
+          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
+        };
+        packs?: {
+          get: (id: string) => CompendiumPack | undefined;
+        };
+      }
+
+      const globalObj = window as unknown as {
+        game?: FoundryGame;
+        canvas?: { tokens?: { placeables?: PlaceableToken[] } };
+        fromUuid?: (uuid: string) => Promise<ItemDoc | null>;
+      };
+
+      let actor = globalObj.game?.actors?.find(
+        (a) =>
+          a.id === idOrName || a.name.toLowerCase() === idOrName.toLowerCase()
+      );
+
+      if (!actor) {
+        const token = globalObj.canvas?.tokens?.placeables?.find(
+          (t) =>
+            t.id === idOrName ||
+            t.name.toLowerCase() === idOrName.toLowerCase()
+        );
+        actor = token?.actor;
+      }
+
+      if (!actor) {
+        throw new Error(`Actor or Token "${idOrName}" not found.`);
+      }
+
+      let effectDoc: ItemDoc | null = null;
+
+      if (
+        slugOrUuid.startsWith('Compendium.') ||
+        slugOrUuid.startsWith('Item.')
+      ) {
+        if (typeof globalObj.fromUuid === 'function') {
+          effectDoc = await globalObj.fromUuid(slugOrUuid);
+        }
+      } else {
+        const pack = globalObj.game?.packs?.get(packName);
+        if (pack) {
+          effectDoc = await pack.getDocument(slugOrUuid).catch(() => null);
+          if (!effectDoc) {
+            const docs = await pack.getDocuments();
+            effectDoc =
+              docs.find((d) => d.system?.slug === slugOrUuid) || null;
+          }
+        }
+      }
+
+      if (!effectDoc) {
+        throw new Error(
+          `Effect "${slugOrUuid}" not found in pack "${packName}".`
+        );
+      }
+
+      const itemData = {
+        ...effectDoc.toObject(),
+        ...(extraData || {}),
+      };
+
+      const [created] = await actor.createEmbeddedDocuments('Item', [itemData]);
+      return created?.id;
+    },
+    {
+      idOrName: actorNameOrId,
+      slugOrUuid: effectSlugOrUuid,
+      packName: compendiumPack,
+      extraData: customData,
+    }
+  );
+}
+
+/**
+ * Options for removing embedded effects and conditions from an actor.
+ */
+export interface RemoveEffectsOptions {
+  actorNameOrId: string;
+  effectSlugs?: string[];
+}
+
+/**
+ * Removes embedded effects and conditions from an actor/token.
+ */
+export async function removeEffectsFromActor(
+  page: Page,
+  options: RemoveEffectsOptions
+): Promise<void> {
+  const { actorNameOrId, effectSlugs } = options;
+
+  await page.evaluate(
+    async ({ idOrName, slugs }) => {
+      interface ItemDoc {
+        id: string;
+        type: string;
+        system?: { slug?: string };
+      }
+      interface ActorDoc {
+        id: string;
+        name: string;
+        items?: { contents?: ItemDoc[] };
+        deleteEmbeddedDocuments(
+          type: string,
+          ids: string[]
+        ): Promise<unknown>;
+      }
+      interface PlaceableToken {
+        id: string;
+        name: string;
+        actor?: ActorDoc;
+      }
+      interface FoundryGame {
+        actors?: {
+          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
+        };
+      }
+
+      const globalObj = window as unknown as {
+        game?: FoundryGame;
+        canvas?: { tokens?: { placeables?: PlaceableToken[] } };
+      };
+
+      let actor = globalObj.game?.actors?.find(
+        (a) =>
+          a.id === idOrName || a.name.toLowerCase() === idOrName.toLowerCase()
+      );
+
+      if (!actor) {
+        const token = globalObj.canvas?.tokens?.placeables?.find(
+          (t) =>
+            t.id === idOrName ||
+            t.name.toLowerCase() === idOrName.toLowerCase()
+        );
+        actor = token?.actor;
+      }
+
+      if (!actor) return;
+
+      const items = actor.items?.contents || [];
+      const toDelete = items.filter((item) => {
+        if (item.type !== 'effect' && item.type !== 'condition') return false;
+        if (!slugs || slugs.length === 0) return true;
+        return item.system?.slug && slugs.includes(item.system.slug);
+      });
+
+      if (toDelete.length > 0) {
+        await actor.deleteEmbeddedDocuments(
+          'Item',
+          toDelete.map((i) => i.id)
+        );
+      }
+    },
+    { idOrName: actorNameOrId, slugs: effectSlugs }
+  );
+}

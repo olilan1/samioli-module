@@ -98,6 +98,24 @@ export const test = base.extend<SharedPageFixtures, SharedWorkerFixtures>({
           );
         });
       }
+      await page.evaluate(() => {
+        interface SidebarObj {
+          activateTab?: (name: string) => void;
+          expand?: () => void;
+        }
+        interface FoundryGame {
+          ready?: boolean;
+        }
+        const globalObj = window as unknown as {
+          game?: FoundryGame;
+          ui?: { sidebar?: SidebarObj };
+        };
+
+        if (globalObj.game?.ready && globalObj.ui?.sidebar) {
+          globalObj.ui.sidebar.activateTab?.('chat');
+          globalObj.ui.sidebar.expand?.();
+        }
+      });
       await use(page);
     },
     { scope: 'worker' },
