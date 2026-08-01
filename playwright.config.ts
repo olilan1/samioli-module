@@ -7,7 +7,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: [
+    ['html'],
+    ['./e2e/helpers/foundry-reporter.ts'],
+  ],
   use: {
     baseURL: process.env.FOUNDRY_URL || 'http://localhost:30000',
     viewport: { width: 1920, height: 1080 },
