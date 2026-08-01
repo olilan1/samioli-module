@@ -21,7 +21,6 @@ import { applyUnstableEffectOnFailure } from "./effects/unstablecheck.ts";
 import {
     ChatMessagePF2e,
     CombatantPF2e,
-    EffectPF2e,
     EncounterPF2e,
     ItemPF2e,
     RegionDocumentPF2e,
@@ -54,7 +53,8 @@ import { addButtonClickHandlers } from "./chatbuttonhelper.ts";
 import {
     postMessagesForWithinEffects,
     deleteWithinEffectsForRegion,
-    injectStartOfTurnBehaviorsToRegion,
+    initialiseStartOfTurnRegion,
+    isStartOfTurnSpellRegion,
     hasStartOfTurnRegionFlags
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
@@ -73,7 +73,6 @@ import {
     moveGhostlyCarrierToCaster
 } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
-import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
 import {
     resolveMirrorImageOnAttack,
     handleMirrorImageCreated,
@@ -153,6 +152,14 @@ Hooks.on("createRegion", async (
         .ifGM()
         .if(hasSustainingEffect)
         .run();
+
+    // Runs after creation and as GM: a non-GM cannot create a Region that already carries
+    // behaviors, so they are attached to the placed region rather than injected at preCreate.
+    hook(initialiseStartOfTurnRegion, region)
+        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
+        .ifGM()
+        .if(isStartOfTurnSpellRegion)
+        .run();
 });
 
 Hooks.on("preCreateRegion", (
@@ -163,10 +170,6 @@ Hooks.on("preCreateRegion", (
 ) => {
     hook(setRegionColorToBlack, region)
         .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
-        .allowUnfilteredRun()
-        .run();
-    hook(injectStartOfTurnBehaviorsToRegion, region)
-        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .allowUnfilteredRun()
         .run();
 });

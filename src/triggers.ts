@@ -116,12 +116,19 @@ function runMatchingFunctionsFromMappings<T extends RegionDocumentPF2e | EffectP
     return false;
 }
 
+/** Narrows a trigger document to an Effect. Regions have no `type` field. */
+function isEffectDocument(
+    document: RegionDocumentPF2e | EffectPF2e
+): document is EffectPF2e {
+    return (document as { documentName?: string }).documentName === "Item";
+}
+
 /**
  * Checks if a document (Region or Effect) contains a specific origin roll option.
  * Falls back to slug checking for effects that may lack explicit origin flags.
  */
 function rollOptionsContains(
-    document: RegionDocumentPF2e | EffectPF2e, 
+    document: RegionDocumentPF2e | EffectPF2e,
     rollOption: string
 ) {
     const pf2e = (document.flags as Record<string, unknown>)?.pf2e as Record<string, unknown> | undefined;
@@ -129,30 +136,14 @@ function rollOptionsContains(
     const rollOptions = origin?.rollOptions as string[] | undefined;
     if (rollOptions?.includes(rollOption)) return true;
 
-    // Fallback: check origin.uuid if rollOptions is missing or incomplete
-    const uuid = origin?.uuid as string | undefined;
-    if (uuid) {
-        const targetSlug = rollOption
-            .replace(/^origin:item:/, "")
-            .replace(/[^a-z0-9]/gi, "")
-            .toLowerCase();
-        const uuidSlug = uuid.split(".").pop()!
-            .replace(/[^a-z0-9]/gi, "")
-            .toLowerCase();
-        if (uuidSlug === targetSlug) {
-            return true;
-        }
-    }
-
     // Sustaining effects often don't have full origin data, so we check the flag or slug
-    if (document.type === "effect") {
-        const effect = document as EffectPF2e;
-        const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId");
+    if (isEffectDocument(document)) {
+        const spellId = document.getFlag(MODULE_ID, "sustainedSpellId");
         if (spellId) {
-            const spell = effect.actor?.items.get(spellId as string);
+            const spell = document.actor?.items.get(spellId as string);
             if (spell && `origin:item:${spell.slug}` === rollOption) return true;
-        } else if (effect.slug) {
-            const spellSlug = effect.slug.replace("sustaining-effect-", "");
+        } else if (document.slug) {
+            const spellSlug = document.slug.replace("sustaining-effect-", "");
             if (`origin:item:${spellSlug}` === rollOption) return true;
         }
     }

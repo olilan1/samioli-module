@@ -523,31 +523,6 @@ describe('HookRunner & hook helper', () => {
       expect(callback).toHaveBeenCalled();
     });
 
-    it('should satisfy isGuarded check with ifSceneHasRegionWithFlag', () => {
-      const callback = vi.fn();
-      (globalThis as unknown as { canvas: unknown }).canvas = {
-        scene: {
-          regions: [
-            {
-              getFlag: (scope: string, key: string) => {
-                if (scope === 'samioli-module' && key === 'isStartOfTurnSpell') {
-                  return true;
-                }
-                return undefined;
-              }
-            }
-          ]
-        }
-      };
-
-      hook(callback)
-        .ifSceneHasRegionWithFlag('samioli-module', 'isStartOfTurnSpell')
-        .run();
-      expect(callback).toHaveBeenCalled();
-      
-      delete (globalThis as Record<string, unknown>).canvas;
-    });
-
     it('should satisfy isGuarded check with ifMessageHasFlag', () => {
       const callback = vi.fn();
       const mockMessage = {

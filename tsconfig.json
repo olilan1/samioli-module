@@ -10,7 +10,6 @@
         "types": [
             "vite/client",
             "@7h3laughingman/pf2e-types",
-            "@7h3laughingman/foundry-types",
             "sequencer"
         ],
         "baseUrl": ".",

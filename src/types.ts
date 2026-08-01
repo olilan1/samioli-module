@@ -1,5 +1,4 @@
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 
 /**
  * Type suitable for passing to RegionDocument.create
@@ -27,10 +26,16 @@ export interface CrosshairUpdatable {
   source: Point;  
 }
 
-declare module "foundry-pf2e" {
-    interface RegionDocumentPF2e {
-        testPoint?: (point: Point & { elevation?: number }) => boolean;
-        bounds?: { x: number; y: number; width: number; height: number; center: Point };
-        tokens?: Set<TokenPF2e>;
-    }
+/**
+ * The geometry members of a region shape. Cast entries of `region.shapes` to this to read them:
+ * they exist at runtime but are absent from the shape union in `@7h3laughingman/foundry-types`.
+ */
+export interface RegionShapeGeometry {
+    /** The shape's origin: an emanation's base token centre, a polygon's centroid, otherwise x/y. */
+    origin: Point;
+    /** Rotation about the origin, in degrees. */
+    rotation: number;
+    /** Length in pixels. Line shapes only. */
+    length?: number;
 }
+

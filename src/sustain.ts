@@ -86,7 +86,7 @@ export async function addSustainEffectToActor(
 
     const createdEffect = await addOrUpdateEffectOnActor(
         actor,
-        effect as EffectSource
+        effect as DeepPartial<EffectSource> as EffectSource
     );
     const regions = canvas.scene?.regions.contents ?? [];
     const matchingRegion = regions.find((r) => {
@@ -109,11 +109,11 @@ export async function postSustainMessagesForActor(actor: ActorPF2e) {
     await resetSustainFlagsForEffects(sustainedEffects);
 
     for (const effect of sustainedEffects) {
-        if (!effect.slug) continue;
+        if (!effect.slug || effect.type !== "effect") continue;
         const spellId = effect.getFlag(MODULE_ID, "sustainedSpellId") as string;
         const spell = actor.items.get(spellId) as SpellPF2e;
         if (spell) {
-            await createSustainChatMessage(actor, spell, effect);
+            await createSustainChatMessage(actor, spell, effect as EffectPF2e);
         }
     }
 }
@@ -328,16 +328,14 @@ export async function associateRegionWithSustainedEffect(region: RegionDocumentP
 
     const actorUuid = (origin?.actor as string | undefined)
         || (region.getFlag(MODULE_ID, "casterUuid") as string | undefined);
-    const actor = region.actor
-        || (actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : null);
+    const actor = actorUuid ? (fromUuidSync(actorUuid) as ActorPF2e | null) : null;
     if (!actor) return;
 
     const sustainedEffectsOnActor = getActorSustainedEffects(actor);
     if (!sustainedEffectsOnActor || sustainedEffectsOnActor.length === 0) return;
 
-    const spellSlugFromRegion = (region as { item?: { slug?: string } }).item?.slug
-        || (origin?.slug as string | undefined)
-        || (origin?.uuid as string | undefined)?.split(".").pop()?.toLowerCase();
+    // PF2e writes the item slug into the region's origin flags when it places a spell area.
+    const spellSlugFromRegion = origin?.slug as string | undefined;
     if (!spellSlugFromRegion) return;
 
     const matchingEffect = sustainedEffectsOnActor.find(effect => {

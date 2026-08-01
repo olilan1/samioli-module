@@ -534,24 +534,6 @@ export class HookRunner<T extends unknown[]> {
     }
 
     /**
-     * Restricts execution to scenes containing at least one region carrying the specified flag.
-     * 
-     * @param scope The flag scope namespace.
-     * @param flagName The name of the flag.
-     * @returns The HookRunner instance for chaining.
-     */
-    ifSceneHasRegionWithFlag(scope: string, flagName: string): this {
-        this.isGuarded = true;
-        const hasRegion = canvas.scene?.regions.some(
-            r => !!r.getFlag(scope, flagName)
-        ) ?? false;
-        if (!hasRegion) {
-            this.shouldRun = false;
-        }
-        return this;
-    }
-
-    /**
      * Restricts execution to hook arguments containing a chat message carrying the specified flag.
      * 
      * @param scope The flag scope namespace.

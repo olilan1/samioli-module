@@ -9,7 +9,9 @@ async function applyUnstableEffect(actor: ActorPF2e) {
 }
 
 export function applyUnstableEffectOnFailure(chatMessage: ChatMessagePF2e) {
-    const actorId = chatMessage.flags.pf2e.context?.actor;
+    // `actor` is present on the check-context variants but not on the ChatContextFlag union.
+    const context = chatMessage.flags.pf2e.context as { actor?: string } | undefined;
+    const actorId = context?.actor;
     if (actorId) {
         const actor = game.actors.get(actorId);
         if (actor) applyUnstableEffect(actor);

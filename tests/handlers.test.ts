@@ -418,18 +418,25 @@ describe('Baseline Hook Handlers', () => {
         })
       } as unknown as ActorPF2e;
 
-      const mockTemplate = {
-        id: 'template-id',
-        actor: mockActor,
-        item: { slug: 'bless' },
-        flags: {},
+      // A real region carries no `actor` or `item`; both are resolved from the PF2e origin flags.
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi
+        .fn()
+        .mockReturnValue(mockActor);
+
+      const mockRegion = {
+        id: 'region-id',
+        flags: {
+          pf2e: {
+            origin: { actor: 'Actor.abc123', slug: 'bless' }
+          }
+        },
         getFlag: vi.fn(),
         update: vi.fn()
       } as unknown as RegionDocumentPF2e;
 
-      await associateRegionWithSustainedEffect(mockTemplate);
+      await associateRegionWithSustainedEffect(mockRegion);
       expect(mockEffect.update).toHaveBeenCalledWith({
-        'flags.samioli-module.sustainedRegionId': 'template-id'
+        'flags.samioli-module.sustainedRegionId': 'region-id'
       });
     });
 
@@ -513,30 +520,32 @@ describe('Baseline Hook Handlers', () => {
       expect(matched).toBe(true);
     });
 
-    it('runMatchingRegionFunctionAsCreator: should match via origin.uuid fallback when rollOptions is missing', async () => {
+    it('runMatchingRegionFunctionAsCreator: should not match when no roll option corresponds', async () => {
       const { runMatchingRegionFunctionAsCreator } = await import('../src/triggers.ts');
+      // A real item UUID ends in a random document ID, never a readable slug, so there is nothing
+      // to fall back on when rollOptions is absent.
       const mockRegion = {
         flags: {
           pf2e: {
             origin: {
-              uuid: 'Compendium.pf2e.spells-srd.Item.StormSpiral'
+              uuid: 'Compendium.pf2e.spells-srd.Item.aB3xY9kLmN2pQr7s'
             }
           }
         }
       } as unknown as RegionDocumentPF2e;
 
       const matched = runMatchingRegionFunctionAsCreator(mockRegion);
-      expect(matched).toBe(true);
+      expect(matched).toBe(false);
     });
 
-    it('runMatchingRegionFunctionAsGm: should match via origin.uuid for GM triggers', async () => {
+    it('runMatchingRegionFunctionAsGm: should match via origin.rollOptions for GM triggers', async () => {
       const { runMatchingRegionFunctionAsGm } = await import('../src/triggers.ts');
       const mockRegion = {
         setFlag: vi.fn().mockResolvedValue({}),
         flags: {
           pf2e: {
             origin: {
-              uuid: 'Compendium.pf2e.spells-srd.Item.FloatingFlame'
+              rollOptions: ['origin:item:floating-flame']
             }
           }
         }
@@ -547,45 +556,102 @@ describe('Baseline Hook Handlers', () => {
     });
   });
 
-  describe('getTemplateTokens Region Fallback via RegionDocument#testPoint', () => {
-    it('getTemplateTokens: should fallback to regionDocument.testPoint when region.tokens is empty on frame 0', async () => {
-      const mockTokenInside = {
-        id: 'token-inside',
-        center: { x: 100, y: 100 },
-        actor: {
-          isOfType: (t: string) => t === 'creature',
-          isDead: false
-        },
-        document: { hidden: false, elevation: 0 }
-      };
+  describe('getTemplateTokens region containment', () => {
+    const scene = { id: 'scene-1' };
 
-      const mockTokenOutside = {
-        id: 'token-outside',
-        center: { x: 500, y: 500 },
-        actor: {
-          isOfType: (t: string) => t === 'creature',
-          isDead: false
-        },
-        document: { hidden: false, elevation: 0 }
-      };
+    /**
+     * Builds a token whose containment answer and footprint are controlled by the test.
+     * `inside` stands in for TokenDocument#testInsideRegion, which tests the whole footprint
+     * rather than a single centre point.
+     */
+    const makeToken = (
+      id: string,
+      inside: boolean,
+      footprint: { i: number; j: number }[] = [{ i: 0, j: 0 }]
+    ) => ({
+      id,
+      center: { x: 100, y: 100 },
+      actor: { isOfType: (t: string) => t === 'creature', isDead: false },
+      footprint,
+      document: {
+        hidden: false,
+        elevation: 0,
+        testInsideRegion: vi.fn().mockReturnValue(inside)
+      }
+    });
 
+    const setCanvas = (tokens: unknown[], blockedSpaces: { x: number; y: number }[] = []) => {
       (globalThis as unknown as { canvas: unknown }).canvas = {
-        tokens: {
-          placeables: [mockTokenInside, mockTokenOutside]
+        scene,
+        tokens: { placeables: tokens },
+        grid: {
+          getCenterPoint: (o: { i: number; j: number }) => ({ x: o.j * 100 + 50, y: o.i * 100 + 50 })
         }
       };
+      (globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG = {
+        ...(globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG,
+        Canvas: {
+          polygonBackends: {
+            move: {
+              testCollision: (_o: unknown, target: { x: number; y: number }) =>
+                blockedSpaces.some(s => s.x === target.x && s.y === target.y)
+            }
+          }
+        }
+      };
+    };
 
-      const mockRegion = {
-        tokens: new Set(),
-        testPoint: vi.fn().mockImplementation((point: { x: number; y: number }) => {
-          return point.x === 100 && point.y === 100;
-        })
-      } as unknown as RegionDocumentPF2e;
+    const regionWithShape = () => ({
+      parent: scene,
+      shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
+    } as unknown as RegionDocumentPF2e);
 
-      const tokens = await getTemplateTokens(mockRegion);
+    it('includes tokens the region contains and excludes those it does not', async () => {
+      const inside = makeToken('token-inside', true);
+      const outside = makeToken('token-outside', false);
+      setCanvas([inside, outside]);
+
+      const tokens = await getTemplateTokens(regionWithShape());
       expect(tokens).toHaveLength(1);
       expect(tokens[0].id).toBe('token-inside');
-      expect(mockRegion.testPoint).toHaveBeenCalled();
+      expect(inside.document.testInsideRegion).toHaveBeenCalled();
+    });
+
+    it('includes a Large token whose footprint overlaps even when its centre does not', async () => {
+      // testInsideRegion samples every square of the footprint, so a 2x2 token counts as inside
+      // when any of its squares overlaps, including when its centre falls outside.
+      const large = makeToken('large-token', true, [
+        { i: 0, j: 0 }, { i: 0, j: 1 }, { i: 1, j: 0 }, { i: 1, j: 1 }
+      ]);
+      setCanvas([large]);
+
+      const tokens = await getTemplateTokens(regionWithShape());
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].id).toBe('large-token');
+    });
+
+    it('targets a contained token even when a wall stands between it and the origin', async () => {
+      // PF2e places spell areas unclipped by walls (restriction disabled, coverage highlighting),
+      // so the affected squares must match the highlight rather than line of effect.
+      const behindWall = makeToken('behind-wall', true, [{ i: 2, j: 2 }]);
+      const clear = makeToken('clear-token', true, [{ i: 0, j: 0 }]);
+      setCanvas([behindWall, clear], [{ x: 250, y: 250 }]);
+
+      const tokens = await getTemplateTokens(regionWithShape());
+      expect(tokens.map(t => t.id)).toEqual(['behind-wall', 'clear-token']);
+    });
+
+    it('returns nothing when the region belongs to a different scene', async () => {
+      const inside = makeToken('token-inside', true);
+      setCanvas([inside]);
+
+      const foreignRegion = {
+        parent: { id: 'other-scene' },
+        shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
+      } as unknown as RegionDocumentPF2e;
+
+      expect(await getTemplateTokens(foreignRegion)).toEqual([]);
+      expect(inside.document.testInsideRegion).not.toHaveBeenCalled();
     });
 
     it('samiOliModuleAPI: should export handleStartOfTurnTokenEnter', async () => {
@@ -598,13 +664,14 @@ describe('Baseline Hook Handlers', () => {
         type: 'effect',
         flags: {
           'samioli-module': {
-            startOfTurnTemplateId: 'region-1'
+            startOfTurnRegionId: 'region-1'
           }
         }
       };
 
       const mockActor = {
-        items: [mockEffect]
+        items: [mockEffect],
+        createEmbeddedDocuments: vi.fn()
       };
 
       const mockToken = {
@@ -620,12 +687,15 @@ describe('Baseline Hook Handlers', () => {
               slug: 'ash-cloud'
             }
           }
-        }
+        },
+        getFlag: () => undefined
       } as unknown as RegionDocumentPF2e;
 
       await handleStartOfTurnTokenEnter(mockToken, mockRegion);
-      // actor items remains length 1, no duplicate added
+
+      // Bails on the existing-effect check, so nothing new is created.
       expect(mockActor.items).toHaveLength(1);
+      expect(mockActor.createEmbeddedDocuments).not.toHaveBeenCalled();
     });
 
     it('deleteWithinEffectsForRegion: should find and delete matching startOfTurnRegionId effects on scene tokens', async () => {
@@ -707,6 +777,150 @@ describe('Baseline Hook Handlers', () => {
       ]);
 
       expect(mockEffect.delete).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Start of Turn behavior attachment', () => {
+    const regionForSpell = (slug: string) => ({
+      id: 'region-behaviors',
+      flags: { pf2e: { origin: { slug } } },
+      createEmbeddedDocuments: vi.fn().mockResolvedValue([])
+    } as unknown as RegionDocumentPF2e);
+
+    it('attaches tokenEnter and tokenExit behaviors after creation', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('ash-cloud');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      expect(region.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+      const [documentName, behaviors] = (
+        region.createEmbeddedDocuments as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+
+      // Behaviors must be created as their own embedded documents: a Region carrying behaviors in
+      // its creation payload is rejected outright for non-GM users.
+      expect(documentName).toBe('RegionBehavior');
+      expect(behaviors.map((b: { system: { events: string[] } }) => b.system.events[0]))
+        .toEqual(['tokenEnter', 'tokenExit']);
+    });
+
+    it('guards every behavior script against running on non-GM clients', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('frozen-fog');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      const [, behaviors] = (
+        region.createEmbeddedDocuments as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+
+      // Foundry dispatches region events to every connected client with no user filtering.
+      for (const behavior of behaviors as { system: { source: string } }[]) {
+        expect(behavior.system.source).toContain('if (!game.user.isActiveGM) return;');
+      }
+    });
+
+    it('does nothing for a region that is not a start-of-turn spell', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('fireball');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      expect(region.createEmbeddedDocuments).not.toHaveBeenCalled();
+    });
+
+    it('writes the region flags before attaching behaviors', async () => {
+      const { initialiseStartOfTurnRegion } = await import('../src/startofturnspells.ts');
+
+      // createWithinEffectSource reads the region flags, and attaching the behaviors fires
+      // tokenEnter for tokens already in the area, which builds an effect. Flags written after that
+      // point leave a wand-cast spell without its stored source.
+      const callOrder: string[] = [];
+      const region = {
+        id: 'region-ordering',
+        flags: { pf2e: { origin: { slug: 'ash-cloud', uuid: 'Actor.a.Item.b' } } },
+        parent: { id: 'scene-1' },
+        createEmbeddedDocuments: vi.fn().mockImplementation(async () => {
+          callOrder.push('attach-behaviors');
+          return [];
+        }),
+        getFlag: vi.fn().mockReturnValue(undefined),
+        setFlag: vi.fn().mockImplementation(async () => {
+          callOrder.push('write-flags');
+        })
+      } as unknown as RegionDocumentPF2e;
+
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn().mockReturnValue({
+        name: 'Ash Cloud',
+        toObject: () => ({ _id: 'spell-1' }),
+        actor: { uuid: 'Actor.a' }
+      });
+      (globalThis as unknown as { canvas: unknown }).canvas = {
+        scene: { id: 'scene-other' },
+        tokens: { placeables: [] }
+      };
+
+      await initialiseStartOfTurnRegion(region);
+
+      expect(callOrder).toContain('write-flags');
+      expect(callOrder).toContain('attach-behaviors');
+      expect(callOrder.indexOf('write-flags'))
+        .toBeLessThan(callOrder.indexOf('attach-behaviors'));
+    });
+
+    it('recovers a wand-cast spell from the stored region flag once the chat message is gone', async () => {
+      const { handleStartOfTurnTokenEnter } = await import('../src/startofturnspells.ts');
+
+      // A spell cast from an item activation is transient and its UUID does not resolve. The
+      // source stored on the region outlives the originating chat message.
+      const createdEffects: unknown[] = [];
+      const mockActor = {
+        items: Object.assign([], {
+          find: () => undefined,
+          get: () => undefined
+        }),
+        createEmbeddedDocuments: vi.fn().mockImplementation(async (_t: string, data: unknown[]) => {
+          createdEffects.push(...data);
+          return data;
+        })
+      };
+      const token = { id: 'token-late', actor: mockActor } as unknown as TokenPF2e;
+
+      const region = {
+        id: 'region-wand',
+        flags: { pf2e: { origin: { slug: 'ash-cloud', uuid: 'Item.doesNotResolve' } } },
+        getFlag: (_scope: string, key: string) =>
+          key === 'spellSource' ? { _id: 'spell-x', name: 'Ash Cloud' } : undefined
+      } as unknown as RegionDocumentPF2e;
+
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi
+        .fn()
+        .mockReturnValue(null);
+      (globalThis as unknown as { game: Record<string, unknown> }).game = {
+        ...(globalThis as unknown as { game: Record<string, unknown> }).game,
+        // No chat message to fall back on.
+        messages: { get: () => undefined }
+      };
+      (globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG = {
+        ...(globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG,
+        Item: {
+          documentClass: class {
+            id = 'spell-x';
+            name = 'Ash Cloud';
+            uuid = 'Item.spell-x';
+            img = 'icons/svg/aura.svg';
+            actor = null;
+            system = { level: { value: 3 }, slug: 'ash-cloud', description: { value: '' } };
+            constructor(public source: unknown) {}
+          }
+        }
+      };
+
+      await handleStartOfTurnTokenEnter(token, region);
+
+      expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
+      expect(createdEffects).toHaveLength(1);
     });
   });
 });

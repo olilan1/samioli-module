@@ -1,4 +1,4 @@
-import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, MeasuredTemplateDocumentPF2e, RegionDocumentPF2e, SpellPF2e, SpellSource, TokenPF2e } from "foundry-pf2e";
+import { ActorPF2e, CombatantPF2e, EffectSource, ItemPF2e, RegionDocumentPF2e, SpellPF2e, SpellSource, TokenPF2e } from "foundry-pf2e";
 import {
     addOrUpdateEffectOnActor,
     deleteItemFromActor,
@@ -24,41 +24,94 @@ export const START_OF_TURN_SPELLS = [
     'wall-of-virtue'
 ];
 
-export async function addEffectsToTokensInStartOfTurnTemplates(region: RegionDocumentPF2e) {
-    const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-    const pf2eOrigin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-    const spellSlug = (pf2eOrigin?.slug ?? "") as string;
-    const spellUuid = (pf2eOrigin?.uuid ?? "") as string;
-    const uuidSlug = spellUuid ? spellUuid.split(".").pop()! : "";
-    const isMatchingSpell = START_OF_TURN_SPELLS.includes(spellSlug)
-        || START_OF_TURN_SPELLS.includes(uuidSlug);
-    if (!isMatchingSpell) return;
+/**
+ * Resolves the spell behind a region.
+ *
+ * Spells cast from an item activation are transient and their UUID does not resolve. Those are
+ * rebuilt from the source stored on the region, which outlives the originating chat message. The
+ * message is consulted only on first placement, before that flag has been written.
+ */
+function resolveSpellForRegion(
+    region: RegionDocumentPF2e
+): { spell: SpellPF2e; isTransient: boolean } | null {
+    const pf2eFlags = region.flags.pf2e as Record<string, unknown> | undefined;
+    const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
+    const spellUuid = (origin?.uuid ?? "") as string;
 
-    let spell = (spellUuid ? fromUuidSync(spellUuid) : null) as SpellPF2e | null;
-    let isTransient = false;
+    const resolved = spellUuid ? (fromUuidSync(spellUuid) as SpellPF2e | null) : null;
+    if (resolved) return { spell: resolved, isTransient: false };
 
-    // for spells cast from item activations get the spell object from the message
-    if (!spell) {
-        const messageId = (region.flags.pf2e as Record<string, unknown> | undefined)?.messageId as string;
-        if (messageId) {
-            const message = game.messages.get(messageId);
-            spell = message?.item as SpellPF2e;
-            isTransient = true;
-        }
+    const spellSource = region.getFlag(MODULE_ID, "spellSource") as SpellSource | undefined;
+    if (spellSource) {
+        const casterUuid = region.getFlag(MODULE_ID, "casterUuid") as string | undefined;
+        const stored = getSpellOrFallback(spellUuid, spellSource, casterUuid);
+        if (stored) return { spell: stored, isTransient: true };
     }
 
-    if (!spell) return;
+    const messageId = pf2eFlags?.messageId as string | undefined;
+    if (!messageId) return null;
+    const transient = game.messages.get(messageId)?.item as SpellPF2e | undefined;
+    return transient ? { spell: transient, isTransient: true } : null;
+}
+
+/**
+ * Records the region flags that "Within" effects and turn-start messaging read back.
+ *
+ * For a spell cast from an item activation the spell is transient and its UUID will not resolve
+ * later, so the source is stored on the region and copied onto each effect.
+ */
+async function recordStartOfTurnRegionFlags(
+    region: RegionDocumentPF2e,
+    resolved: { spell: SpellPF2e; isTransient: boolean }
+) {
+    if (region.getFlag(MODULE_ID, "isStartOfTurnSpell")) return;
 
     await region.setFlag(MODULE_ID, "isStartOfTurnSpell", true);
-    if (isTransient) {
-        await region.setFlag(MODULE_ID, "spellSource", spell.toObject());
-        await region.setFlag(MODULE_ID, "casterUuid", spell.actor?.uuid);
+    if (resolved.isTransient) {
+        await region.setFlag(MODULE_ID, "spellSource", resolved.spell.toObject());
+        await region.setFlag(MODULE_ID, "casterUuid", resolved.spell.actor?.uuid);
     }
+}
+
+/**
+ * Prepares a newly placed start-of-turn spell region: records its flags, attaches the tracking
+ * behaviors, then applies the "Within" effect to tokens already in the area.
+ *
+ * The steps run in that order because `createWithinEffectSource` reads the region flags, and
+ * attaching the behaviors fires `tokenEnter` for tokens already inside, which builds an effect.
+ */
+export async function initialiseStartOfTurnRegion(region: RegionDocumentPF2e) {
+    if (!isStartOfTurnSpellRegion(region)) return;
+
+    const resolved = resolveSpellForRegion(region);
+    if (!resolved) return;
+
+    await recordStartOfTurnRegionFlags(region, resolved);
+    await attachStartOfTurnBehaviorsToRegion(region);
+    await addEffectsToTokensInStartOfTurnTemplates(region);
+}
+
+/**
+ * Applies the "Within" effect to tokens already inside a start-of-turn spell area at the moment it
+ * is placed, and records the flags that effect creation and turn-start messaging depend on.
+ *
+ * Runs on region creation as GM. Tokens entering later are handled by the attached tokenEnter
+ * behavior; this covers the ones that were already standing there.
+ */
+export async function addEffectsToTokensInStartOfTurnTemplates(region: RegionDocumentPF2e) {
+    if (!isStartOfTurnSpellRegion(region)) return;
+
+    const resolved = resolveSpellForRegion(region);
+    if (!resolved) return;
+
+    await recordStartOfTurnRegionFlags(region, resolved);
 
     const tokensWithinRegion = await getTemplateTokens(region);
 
+    // Routed through handleStartOfTurnTokenEnter so this path and the tokenEnter behavior share one
+    // existing-effect check and one in-flight lock, keeping them from both creating the effect.
     for (const token of tokensWithinRegion) {
-        await addWithinEffectToTokenActor(token, spell, region);
+        await handleStartOfTurnTokenEnter(token, region);
     }
 }
 
@@ -67,6 +120,7 @@ async function addWithinEffectToTokenActor(
     spell: SpellPF2e,
     region: RegionDocumentPF2e
 ) {
+    if (!token.actor) return;
     const effectSource = createWithinEffectSource(spell, region);
     await addOrUpdateEffectOnActor(token.actor, effectSource);
 }
@@ -77,6 +131,9 @@ export async function handleStartOfTurnTokenEnter(
     token: TokenPF2e,
     region: RegionDocumentPF2e
 ) {
+    if (!token.actor) return;
+    if (!isStartOfTurnSpellRegion(region)) return;
+
     const existingEffect = token.actor.items.find(
         item => item.type === "effect" &&
                 item.flags?.[MODULE_ID]?.startOfTurnRegionId === region.id
@@ -88,30 +145,9 @@ export async function handleStartOfTurnTokenEnter(
     inFlightTokenEnters.add(lockKey);
 
     try {
-        const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
-        const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
-        const spellSlug = (origin?.slug ?? "") as string;
-        const spellUuid = (origin?.uuid ?? "") as string;
-
-        if (
-            !START_OF_TURN_SPELLS.includes(spellSlug) &&
-            !START_OF_TURN_SPELLS.some(s => spellUuid.toLowerCase().includes(s))
-        ) {
-            return;
-        }
-
-        let spell = (spellUuid ? fromUuidSync(spellUuid) : null) as SpellPF2e | null;
-
-        if (!spell) {
-            const messageId = (region.flags.pf2e as Record<string, unknown> | undefined)?.messageId as string;
-            if (messageId) {
-                const message = game.messages.get(messageId);
-                spell = message?.item as SpellPF2e;
-            }
-        }
-
-        if (spell) {
-            await addWithinEffectToTokenActor(token, spell, region);
+        const resolved = resolveSpellForRegion(region);
+        if (resolved) {
+            await addWithinEffectToTokenActor(token, resolved.spell, region);
         }
     } finally {
         inFlightTokenEnters.delete(lockKey);
@@ -148,45 +184,59 @@ export async function handleStartOfTurnTokenExit(
     }
 }
 
-export async function injectStartOfTurnBehaviorsToRegion(region: RegionDocumentPF2e) {
+/**
+ * Builds the source for an executeScript behavior that forwards a region event to the module API.
+ *
+ * Foundry dispatches region events to every connected client without user filtering, so the script
+ * opens with an `isActiveGM` guard to keep effect creation on one client. `isActiveGM` rather than
+ * `isGM` covers the case of two connected GMs.
+ */
+function buildStartOfTurnScript(apiMethod: string): string {
+    return `
+if (!game.user.isActiveGM) return;
+const tokenDoc = event.data.token;
+if (!tokenDoc?.object) return;
+const api = game.modules.get("samioli-module")?.api;
+api?.${apiMethod}?.(tokenDoc.object, event.region);
+`;
+}
+
+/**
+ * Attaches the tokenEnter/tokenExit tracking behaviors to a start-of-turn spell region.
+ *
+ * Runs as GM once the region exists. `BaseRegion##canCreate` refuses a Region created by a non-GM
+ * that already carries behaviors, while RegionBehavior creation is permitted to GMs separately: the
+ * player places the bare region and the GM attaches the behaviors to it.
+ */
+export async function attachStartOfTurnBehaviorsToRegion(region: RegionDocumentPF2e) {
     if (!isStartOfTurnSpellRegion(region)) return;
 
-    const enterBehavior = {
-        name: "Start of Turn Enter",
-        type: "executeScript",
-        disabled: false,
-        system: {
-            events: ["tokenEnter"],
-            source: `
-                const region = event.region;
-                const tokenDoc = event.data.token;
-                if (tokenDoc?.object) {
-                    const module = game.modules.get("samioli-module");
-                    module?.api?.handleStartOfTurnTokenEnter?.(tokenDoc.object, region);
-                }
-            `
+    const behaviors = [
+        {
+            name: "Start of Turn Enter",
+            type: "executeScript",
+            disabled: false,
+            system: {
+                events: ["tokenEnter"],
+                source: buildStartOfTurnScript("handleStartOfTurnTokenEnter")
+            }
+        },
+        {
+            name: "Start of Turn Exit",
+            type: "executeScript",
+            disabled: false,
+            system: {
+                events: ["tokenExit"],
+                source: buildStartOfTurnScript("handleStartOfTurnTokenExit")
+            }
         }
-    };
+    ];
 
-    const exitBehavior = {
-        name: "Start of Turn Exit",
-        type: "executeScript",
-        disabled: false,
-        system: {
-            events: ["tokenExit"],
-            source: `
-                const region = event.region;
-                const tokenDoc = event.data.token;
-                if (tokenDoc?.object) {
-                    const module = game.modules.get("samioli-module");
-                    module?.api?.handleStartOfTurnTokenExit?.(tokenDoc.object, region);
-                }
-            `
-        }
-    };
-
-    const behaviors = [enterBehavior, exitBehavior];
-    region.updateSource({ behaviors: [...((region._source as { behaviors?: object[] }).behaviors ?? []), ...behaviors] });
+    try {
+        await region.createEmbeddedDocuments("RegionBehavior", behaviors);
+    } catch (error) {
+        console.error("Failed to attach start-of-turn behaviors to region:", error);
+    }
 }
 
 export async function postMessagesForWithinEffects(combatant: CombatantPF2e) {
@@ -240,9 +290,9 @@ export async function deleteWithinEffectsForRegion(
         const casterUuid = (origin?.actor as string | undefined)
             || (region.getFlag(MODULE_ID, "casterUuid") as string | undefined);
         const caster = casterUuid ? (fromUuidSync(casterUuid) as ActorPF2e | null) : null;
-        if (caster?.items.has(spellSource._id)) {
-            await caster.deleteEmbeddedDocuments("Item", [spellSource._id]);
-        }
+        // getSpellOrFallback injects the transient spell into the in-memory collection only, so it
+        // is removed the same way. A database delete would target a real item on the caster.
+        (caster?.items as unknown as Map<string, ItemPF2e> | undefined)?.delete(spellSource._id);
     }
 }
 
@@ -265,7 +315,9 @@ function getSpellOrFallback(
         ) as SpellPF2e;
 
         if (caster) {
-            caster.items.set(spellViaFallback.id, spellViaFallback);
+            // Inject the synthetic spell in-memory so standard rolls can resolve it.
+            (caster.items as unknown as Map<string, ItemPF2e>)
+                .set(spellViaFallback.id, spellViaFallback);
         }
 
         return spellViaFallback;
@@ -307,11 +359,14 @@ function createWithinEffectSource(spell: SpellPF2e, region: RegionDocumentPF2e):
                 ...(spellSource ? { startOfTurnSpellSource: spellSource } : {})
             }
         }
-    } as EffectSource;
+    } as DeepPartial<EffectSource> as EffectSource;
 }
 
 /**
  * Determines if the region originates from a known start-of-turn spell.
+ *
+ * PF2e writes the item slug to `flags.pf2e.origin.slug` when it places a spell area
+ * (see `placeRegionFromItem`), so that is the only check needed.
  */
 export function isStartOfTurnSpellRegion(
     region: RegionDocumentPF2e
@@ -319,10 +374,8 @@ export function isStartOfTurnSpellRegion(
     const pf2eFlags = (region.flags.pf2e as Record<string, unknown> | undefined);
     const origin = pf2eFlags?.origin as Record<string, unknown> | undefined;
     const slug = (origin?.slug ?? "") as string;
-    const uuid = (origin?.uuid ?? "") as string;
-    const uuidSlug = uuid ? uuid.split(".").pop()! : "";
 
-    return START_OF_TURN_SPELLS.includes(slug) || START_OF_TURN_SPELLS.includes(uuidSlug);
+    return START_OF_TURN_SPELLS.includes(slug);
 }
 
 /**

@@ -3,7 +3,12 @@ import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
 import { replaceTargetsForUsers } from "../templatetarget.ts";
-import { getCollidableCallbacks, getOwnersFromActor, getTokensAtLocation } from "../utils.ts";
+import {
+    getCollidableCallbacks,
+    getOwnersFromActor,
+    getRegionOrigin,
+    getTokensAtLocation
+} from "../utils.ts";
 
 export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessagePF2e) {
    
@@ -198,7 +203,10 @@ async function selectSquare(token: TokenPF2e) {
 function getSnareAtLocation(location: Point) {
     return canvas.scene?.regions.find((region) => {
         const snareId = region.getFlag("samioli-module", "snareId");
-        return !!snareId && region.x === location.x && region.y === location.y;
+        if (!snareId) return false;
+        // Regions have no top-level x/y; the coordinates live on the shape.
+        const origin = getRegionOrigin(region);
+        return origin?.x === location.x && origin?.y === location.y;
     });
 }
 
@@ -226,7 +234,8 @@ async function animateSnareTrigger(x: number, y: number) {
 
     new Sequence()
     .effect()
-        .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100}})
+        // Sequencer types offset as a full Vector2; a plain point is what it accepts.
+        .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100} as Vector2})
         .fadeIn(500)
         .text("Click!", style)
         .duration(4000)

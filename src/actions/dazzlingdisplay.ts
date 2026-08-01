@@ -35,7 +35,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
                 foundry.utils.mergeObject(
                     demoralizeMacro.toObject(),
                         { "-=_id": null, "ownership.default": CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER },
-                        { performDeletions: true, inplace: true }
+                        { inplace: true }
                 )
             );
             clonedMacro.execute();

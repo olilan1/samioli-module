@@ -1,9 +1,8 @@
 import { ActorPF2e, TokenPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
-import { CrosshairUpdatable } from "./types.ts";
+import { CrosshairUpdatable, RegionShapeGeometry } from "./types.ts";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -168,43 +167,9 @@ export function returnStringOfNamesFromArray(names: string[]): string {
 
 
 export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
-    return tokens.filter(token => token.document.disposition === self.document.disposition * -1);
-}
-
-export async function createRegionAtPoint(
-    point: Point,
-    _userId: string,
-    radius: number,
-    shapeType: MeasuredTemplateType | "ellipse" | "circle" | "rectangle" = "ellipse"
-): Promise<RegionDocumentPF2e> {
-    if (!canvas.scene) throw new Error("No active scene found");
-
-    const shape = {
-        type: shapeType === "circle" ? "ellipse" : shapeType,
-        x: point.x,
-        y: point.y,
-        radiusX: radius,
-        radiusY: radius
-    };
-
-    const regionData = {
-        name: "Custom Region",
-        shapes: [shape],
-        color: "#000000" as `#${string}`
-    };
-
-    const region = await RegionDocument.create(regionData, { parent: canvas.scene });
-    if (!region) throw new Error("Failed to create region");
-    return region as RegionDocumentPF2e;
-}
-
-export async function createTemplateAtPoint(
-    point: Point,
-    userId: string,
-    radius: number,
-    shape: MeasuredTemplateType
-): Promise<RegionDocumentPF2e> {
-    return createRegionAtPoint(point, userId, radius, shape);
+    const selfDisposition = self.document.disposition;
+    if (selfDisposition === null) return [];
+    return tokens.filter(token => token.document.disposition === selfDisposition * -1);
 }
 
 export async function addOrUpdateEffectOnActor(
@@ -420,32 +385,39 @@ export function isConsciousAndAlive(actor: ActorPF2e): boolean {
     return !actor.hasCondition("unconscious");
 }
 
-export function getRegionOrigin(
-    region: RegionDocumentPF2e | { x?: number; y?: number; points?: number[]; base?: unknown }
-): Point | null {
-    if (!region) return null;
-    const target = "shapes" in region ? region.shapes?.at(0) : region;
-    if (!target) return null;
-
-    if ("x" in target && "y" in target && typeof target.x === "number" && typeof target.y === "number") {
-        return { x: target.x, y: target.y };
-    }
-    if ("points" in target && Array.isArray(target.points) && target.points.length >= 2) {
-        return { x: target.points[0], y: target.points[1] };
-    }
-    if ("base" in target && target.base) {
-        return getRegionOrigin(target.base as RegionDocumentPF2e);
-    }
-    return null;
+/**
+ * Returns the origin of a region's first shape, or null if it has none.
+ *
+ * Reads the shape's own `origin` getter, which Foundry defines per shape type: an emanation
+ * resolves to the centre of its base token and a polygon to its stored origin or centroid, neither
+ * of which is the shape's `x`/`y`.
+ */
+export function getRegionOrigin(region: RegionDocumentPF2e): Point | null {
+    const shape = region?.shapes?.at(0) as RegionShapeGeometry | undefined;
+    const origin = shape?.origin;
+    return origin ? { x: origin.x, y: origin.y } : null;
 }
 
-export function getRegionStartPoint(region: RegionDocumentPF2e): Point {
-    const shape = region.shapes?.at(0) as { x?: number; y?: number } | undefined;
-    return { x: shape?.x ?? 0, y: shape?.y ?? 0 };
-}
-
+/**
+ * Returns the rotation of a region's first shape in degrees.
+ *
+ * PF2e emits `line` shapes for line areas, carrying the direction in `rotation`, which corresponds
+ * to the pre-v14 `MeasuredTemplate#direction`.
+ */
 export function getRegionDirection(region: RegionDocumentPF2e): number {
-    return (region.shapes?.at(0) as { rotation?: number })?.rotation ?? 0;
+    const shape = region.shapes?.at(0) as RegionShapeGeometry | undefined;
+    return shape?.rotation ?? 0;
+}
+
+/**
+ * Returns the length of a region's `line` shape in grid units (feet), or null for other shapes.
+ *
+ * Shape dimensions are stored in pixels, so this converts back to the scene's distance units.
+ */
+export function getRegionLengthInUnits(region: RegionDocumentPF2e): number | null {
+    const shape = region.shapes?.at(0) as RegionShapeGeometry | undefined;
+    if (typeof shape?.length !== "number") return null;
+    return (shape.length / canvas.grid.size) * canvas.grid.distance;
 }
 
 export function getTokensWithinRadius(
@@ -457,9 +429,6 @@ export function getTokensWithinRadius(
     if (!scene) return [];
 
     const grid = canvas.grid;
-    const gridDistance = grid.distance;
-    const gridUnits = radiusFeet / gridDistance;
-    const maxPixelDistance = gridUnits * grid.size;
 
     return canvas.tokens.placeables.filter((token: TokenPF2e) => {
         const actor = token.actor;
@@ -485,10 +454,17 @@ export function getTokensWithinRadius(
     });
 }
 
+/**
+ * Deletes an item from its owning actor, reporting whether it happened.
+ *
+ * The collection check keeps a concurrent deletion from reaching the server, which would otherwise
+ * log an error for a document that no longer exists.
+ */
 export async function deleteItemFromActor(
     item: ItemPF2e | null | undefined
 ): Promise<boolean> {
     if (!item?.actor) return false;
+    if (!item.actor.items.has(item.id)) return false;
 
     try {
         await item.delete();

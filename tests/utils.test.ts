@@ -2,37 +2,54 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { deleteItemFromActor, getRegionOrigin, getTokensWithinRadius } from '../src/utils.ts';
 import { TokenPF2e } from 'foundry-pf2e';
 
+const regionWith = (shape: unknown) => ({ shapes: [shape] } as any);
+
 describe('utils: getRegionOrigin', () => {
-  it('returns { x, y } directly for object shapes with x and y properties', () => {
+  it('returns the centre for circle and ellipse shapes', () => {
     const ellipse = new (foundry.data.EllipseShapeData as any)({ x: 100, y: 200, radiusX: 50, radiusY: 50 });
-    expect(getRegionOrigin(ellipse)).toEqual({ x: 100, y: 200 });
+    expect(getRegionOrigin(regionWith(ellipse))).toEqual({ x: 100, y: 200 });
 
+    const circle = new (foundry.data.CircleShapeData as any)({ x: 120, y: 240, radius: 50 });
+    expect(getRegionOrigin(regionWith(circle))).toEqual({ x: 120, y: 240 });
+  });
+
+  it('returns the top-left for rectangle shapes', () => {
     const rectangle = new (foundry.data.RectangleShapeData as any)({ x: 300, y: 400, width: 100, height: 100 });
-    expect(getRegionOrigin(rectangle)).toEqual({ x: 300, y: 400 });
+    expect(getRegionOrigin(regionWith(rectangle))).toEqual({ x: 300, y: 400 });
   });
 
-  it('extracts origin from first coordinate pair for PolygonShapeData', () => {
-    const polygon = new (foundry.data.PolygonShapeData as any)({ points: [150, 250, 300, 400, 500, 600] });
-    expect(getRegionOrigin(polygon)).toEqual({ x: 150, y: 250 });
+  it('returns the line origin, which PF2e uses for line areas', () => {
+    const line = new (foundry.data.LineShapeData as any)({ x: 55, y: 65, length: 300, width: 100, rotation: 90 });
+    expect(getRegionOrigin(regionWith(line))).toEqual({ x: 55, y: 65 });
   });
 
-  it('returns null for empty PolygonShapeData', () => {
+  it('returns the centroid for a polygon, not its first vertex', () => {
+    const polygon = new (foundry.data.PolygonShapeData as any)({ points: [0, 0, 100, 0, 100, 100, 0, 100] });
+    expect(getRegionOrigin(regionWith(polygon))).toEqual({ x: 50, y: 50 });
+  });
+
+  it('honours an explicit polygon origin when present', () => {
+    const polygon = new (foundry.data.PolygonShapeData as any)({
+      points: [0, 0, 100, 0, 100, 100],
+      origin: { x: 12, y: 34 }
+    });
+    expect(getRegionOrigin(regionWith(polygon))).toEqual({ x: 12, y: 34 });
+  });
+
+  it('returns null for an empty polygon', () => {
     const polygon = new (foundry.data.PolygonShapeData as any)({ points: [] });
-    expect(getRegionOrigin(polygon)).toBeNull();
+    expect(getRegionOrigin(regionWith(polygon))).toBeNull();
   });
 
-  it('recursively resolves nested base shape for EmanationShapeData', () => {
-    const baseEllipse = new (foundry.data.EllipseShapeData as any)({ x: 500, y: 600 });
-    const emanation = new (foundry.data.EmanationShapeData as any)({ base: baseEllipse });
-    expect(getRegionOrigin(emanation)).toEqual({ x: 500, y: 600 });
+  it('resolves an emanation to the centre of its base token, not the top-left', () => {
+    // A 2x2 token whose top-left is (500, 600) centres at (600, 700) on a 100px grid.
+    const baseToken = new (foundry.data.TokenShapeData as any)({ x: 500, y: 600, width: 2, height: 2 });
+    const emanation = new (foundry.data.EmanationShapeData as any)({ base: baseToken, radius: 300 });
+    expect(getRegionOrigin(regionWith(emanation))).toEqual({ x: 600, y: 700 });
   });
 
-  it('handles RegionDocumentPF2e shapes collection', () => {
-    const ellipse = new (foundry.data.EllipseShapeData as any)({ x: 750, y: 850 });
-    const regionDoc = {
-      shapes: [ellipse]
-    } as any;
-    expect(getRegionOrigin(regionDoc)).toEqual({ x: 750, y: 850 });
+  it('returns null when the region has no shapes', () => {
+    expect(getRegionOrigin({ shapes: [] } as any)).toBeNull();
   });
 });
 

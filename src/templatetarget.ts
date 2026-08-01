@@ -54,35 +54,24 @@ export function deleteRegionTargets(_region: RegionDocumentPF2e) {
     lastRegionDetails = null;
 }
 
+/**
+ * Returns the tokens inside a region that are valid targets: visible, living creatures, hazards or
+ * vehicles whose footprint overlaps the region's shape.
+ */
 export async function getTemplateTokens(
     regionDocument: RegionDocumentPF2e
 ): Promise<TokenPF2e[]> {
     if (!regionDocument) return [];
 
-    const boundTokens = regionDocument.tokens ? Array.from(regionDocument.tokens)
-        .map(tDoc => tDoc.object)
-        .filter((t): t is TokenPF2e => !!t)
-        .filter((token) => {
-            const actor = token.actor;
-            if (!actor || token.document.hidden) return false;
-            return actor.isOfType("creature", "hazard", "vehicle") && !actor.isDead;
-        }) : [];
+    // testInsideRegion throws when the token and region belong to different scenes.
+    if (!canvas.scene || regionDocument.parent !== canvas.scene) return [];
 
-    if (boundTokens.length === 0 && regionDocument.testPoint) {
-        return canvas.tokens.placeables.filter((token: TokenPF2e) => {
-            const actor = token.actor;
-            if (!actor || token.document.hidden) return false;
-            if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
-
-            return regionDocument.testPoint!({
-                x: token.center.x,
-                y: token.center.y,
-                elevation: token.document.elevation
-            });
-        });
-    }
-
-    return boundTokens;
+    return canvas.tokens.placeables.filter((token: TokenPF2e) => {
+        const actor = token.actor;
+        if (!actor || token.document.hidden) return false;
+        if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+        return token.document.testInsideRegion(regionDocument);
+    });
 }
 
 export function setRegionColorToBlack(region: RegionDocumentPF2e): void {

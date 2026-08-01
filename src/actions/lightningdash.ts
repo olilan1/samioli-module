@@ -8,7 +8,8 @@ import {
     getTokenIdsFromTokens,
     postUINotification,
     getRegionDirection,
-    getRegionStartPoint
+    getRegionLengthInUnits,
+    getRegionOrigin
 } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
@@ -47,10 +48,11 @@ function findDestination(token: TokenPF2e, region: RegionDocumentPF2e) {
     const feetToCoords = canvas.grid.size / canvas.grid.distance;
     const direction = getRegionDirection(region);
     const radianAngle = direction * (Math.PI / 180);
-    const origin = getRegionStartPoint(region);
+    const origin = getRegionOrigin(region);
+    if (!origin) return null;
 
     const scene = canvas.scene;
-    if (!scene) return null;
+    if (!scene || scene.width === null || scene.height === null) return null;
 
     const halfSquare = 2.5 * feetToCoords;
     const minX = scene.width * scene.padding + halfSquare;
@@ -61,9 +63,16 @@ function findDestination(token: TokenPF2e, region: RegionDocumentPF2e) {
     const cos = Math.cos(radianAngle);
     const sin = Math.sin(radianAngle);
 
+    // Reach comes from the placed line: Lightning Dash gains 5ft of length every 3 levels, and the
+    // caster lands in the furthest unblocked square of the area the player placed.
+    const gridDistance = canvas.grid.distance;
+    const lineLength = getRegionLengthInUnits(region);
+    if (lineLength === null) return null;
+    const furthestCentre = lineLength - gridDistance / 2;
+
     let x: number;
     let y: number;
-    for (let dist = 27.5; dist >= 0; dist -= 5) {
+    for (let dist = furthestCentre; dist >= 0; dist -= gridDistance) {
         x = origin.x + dist * feetToCoords * cos;
         y = origin.y + dist * feetToCoords * sin;
         if (x > minX && x < maxX && y > minY && y < maxY
