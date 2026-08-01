@@ -4,10 +4,14 @@
   "scripts": {
     "build": "vite build",
     "pack": "node ./build/pack.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "ui:test": "npx playwright test --headed"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@playwright/test": "^1.62.0",
     "@types/eslint__js": "^8.42.3",
     "@types/jquery": "^3.5.32",
     "@types/node": "^20.14.5",
