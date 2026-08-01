@@ -161,9 +161,13 @@ async function prepareScene(page: import('@playwright/test').Page) {
   await clearPanacheEffect(page);
   await dropActorToScene(page, {
     actorName: 'Sayf Mujalid',
+    x: 2900,
+    y: 2200,
   });
   await dropActorToScene(page, {
     actorName: 'Girtablilu Seer',
+    x: 3100,
+    y: 2200,
   });
   await selectToken(page, 'Sayf Mujalid');
   await targetToken(page, 'Girtablilu Seer');

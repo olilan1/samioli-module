@@ -5,8 +5,8 @@ import { Page } from '@playwright/test';
  */
 export interface DropActorOptions {
   actorName: string;
-  x?: number;
-  y?: number;
+  x: number;
+  y: number;
 }
 
 /**
@@ -34,6 +34,8 @@ export interface ClickChatButtonOptions {
   messageId?: string;
 }
 
+let dropActorQueue: Promise<unknown> = Promise.resolve();
+
 /**
  * Places an actor from the sidebar onto the active scene canvas.
  */
@@ -41,186 +43,101 @@ export async function dropActorToScene(
   page: Page,
   options: DropActorOptions
 ): Promise<string> {
-  const { actorName, x, y } = options;
+  const runDrop = async (): Promise<string> => {
+    const { actorName, x, y } = options;
 
-  const tokenId = await page.evaluate(
-    async ({ name, posX, posY }) => {
-      interface TokenDoc {
-        id: string;
-        width?: number;
-        height?: number;
-        update(data: { x: number; y: number }): Promise<unknown>;
-      }
-      interface PlaceableToken {
-        id: string;
-        name: string;
-        x: number;
-        y: number;
-        width?: number;
-        height?: number;
-        actor?: { name: string };
-        document: TokenDoc;
-      }
-      interface SceneDoc {
-        initial?: { x: number; y: number };
-        createEmbeddedDocuments(
-          type: string,
-          data: unknown[]
-        ): Promise<TokenDoc[]>;
-      }
-      interface ActorDoc {
-        name: string;
-        prototypeToken?: { width?: number; height?: number };
-        getTokenDocument(data: { x: number; y: number }): Promise<unknown>;
-      }
-      interface FoundryGame {
-        actors?: {
-          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
-        };
-      }
-      interface CanvasObj {
-        scene?: SceneDoc;
-        stage?: {
-          pivot?: { x: number; y: number };
-        };
-        dimensions?: {
-          center?: { x: number; y: number };
-        };
-        grid?: {
-          size?: number;
-          getTopLeftPoint?: (pt: { x: number; y: number }) => {
-            x: number;
-            y: number;
+    const tokenId = await page.evaluate(
+      async ({ name, posX, posY }) => {
+        interface TokenDoc {
+          id: string;
+          name?: string;
+          update(data: { x: number; y: number }): Promise<unknown>;
+        }
+        interface PlaceableToken {
+          id: string;
+          name: string;
+          actor?: { name: string };
+          document: TokenDoc;
+        }
+        interface SceneDoc {
+          createEmbeddedDocuments(
+            type: string,
+            data: unknown[]
+          ): Promise<TokenDoc[]>;
+        }
+        interface ActorDoc {
+          name: string;
+          getTokenDocument(data: { x: number; y: number }): Promise<unknown>;
+        }
+        interface FoundryGame {
+          actors?: {
+            find: (
+              predicate: (a: ActorDoc) => boolean
+            ) => ActorDoc | undefined;
           };
-        };
-        tokens?: {
-          placeables?: PlaceableToken[];
-        };
-      }
-
-      const globalObj = window as unknown as {
-        game?: FoundryGame;
-        canvas?: CanvasObj;
-      };
-
-      const existingToken = globalObj.canvas?.tokens?.placeables?.find(
-        (t) =>
-          t.name.toLowerCase() === name.toLowerCase() ||
-          t.actor?.name.toLowerCase() === name.toLowerCase()
-      );
-
-      const actor = globalObj.game?.actors?.find(
-        (a) => a.name.toLowerCase() === name.toLowerCase()
-      );
-      if (!actor && !existingToken) {
-        throw new Error(`Actor "${name}" not found in game.actors.`);
-      }
-
-      let tokenGridW = 1;
-      let tokenGridH = 1;
-      if (existingToken) {
-        tokenGridW =
-          existingToken.document.width ?? existingToken.width ?? 1;
-        tokenGridH =
-          existingToken.document.height ?? existingToken.height ?? 1;
-      } else if (actor?.prototypeToken) {
-        tokenGridW = actor.prototypeToken.width ?? 1;
-        tokenGridH = actor.prototypeToken.height ?? 1;
-      }
-
-      const gridSize = globalObj.canvas?.grid?.size ?? 100;
-      const placeables = globalObj.canvas?.tokens?.placeables || [];
-
-      const tokenW = tokenGridW * gridSize;
-      const tokenH = tokenGridH * gridSize;
-
-      const viewCenter =
-        (globalObj.canvas?.stage?.pivot
-          ? {
-              x: globalObj.canvas.stage.pivot.x,
-              y: globalObj.canvas.stage.pivot.y,
-            }
-          : null) ??
-        globalObj.canvas?.scene?.initial ??
-        globalObj.canvas?.dimensions?.center ?? { x: 1000, y: 1000 };
-
-      let targetX = posX ?? viewCenter.x - tokenW / 2;
-      let targetY = posY ?? viewCenter.y - tokenH / 2;
-
-      if (posX === undefined || posY === undefined) {
-        if (globalObj.canvas?.grid?.getTopLeftPoint) {
-          const snapped = globalObj.canvas.grid.getTopLeftPoint({
-            x: targetX,
-            y: targetY,
-          });
-          if (snapped) {
-            targetX = snapped.x;
-            targetY = snapped.y;
-          }
         }
-      }
-
-      const isOccupied = (xPos: number, yPos: number) => {
-        return placeables.some((t) => {
-          if (existingToken && t.id === existingToken.id) {
-            return false;
-          }
-          const tGridW = t.document?.width ?? t.width ?? 1;
-          const tGridH = t.document?.height ?? t.height ?? 1;
-          const tW = tGridW * gridSize;
-          const tH = tGridH * gridSize;
-
-          return (
-            xPos < t.x + tW &&
-            xPos + tokenW > t.x &&
-            yPos < t.y + tH &&
-            yPos + tokenH > t.y
-          );
-        });
-      };
-
-      while (isOccupied(targetX, targetY)) {
-        targetX += gridSize;
-      }
-
-      if (existingToken) {
-        if (posX !== undefined || posY !== undefined) {
-          await existingToken.document.update({ x: targetX, y: targetY });
+        interface CanvasObj {
+          scene?: SceneDoc;
+          tokens?: {
+            placeables?: PlaceableToken[];
+          };
         }
-        return existingToken.id;
-      }
 
-      if (!actor) {
-        throw new Error(`Actor "${name}" not found in game.actors.`);
-      }
+        const globalObj = window as unknown as {
+          game?: FoundryGame;
+          canvas?: CanvasObj;
+        };
 
-      const scene = globalObj.canvas?.scene;
-      if (!scene) {
-        throw new Error('No active canvas scene available.');
-      }
-
-      const tokenData = await actor.getTokenDocument({
-        x: targetX,
-        y: targetY,
-      });
-      const [tokenDoc] = await scene.createEmbeddedDocuments('Token', [
-        tokenData,
-      ]);
-
-      for (let i = 0; i < 20; i++) {
-        const p = globalObj.canvas?.tokens?.placeables?.find(
-          (t) => t.id === tokenDoc.id
+        const existingToken = globalObj.canvas?.tokens?.placeables?.find(
+          (t) =>
+            t.name.toLowerCase() === name.toLowerCase() ||
+            t.actor?.name.toLowerCase() === name.toLowerCase()
         );
-        if (p) break;
-        await new Promise((r) => setTimeout(r, 100));
-      }
 
-      return tokenDoc.id;
-    },
-    { name: actorName, posX: x, posY: y }
-  );
+        if (existingToken) {
+          await existingToken.document.update({ x: posX, y: posY });
+          return existingToken.id;
+        }
 
-  return tokenId;
+        const actor = globalObj.game?.actors?.find(
+          (a) => a.name.toLowerCase() === name.toLowerCase()
+        );
+        if (!actor) {
+          throw new Error(`Actor "${name}" not found in game.actors.`);
+        }
+
+        const scene = globalObj.canvas?.scene;
+        if (!scene) {
+          throw new Error('No active canvas scene available.');
+        }
+
+        const tokenData = await actor.getTokenDocument({
+          x: posX,
+          y: posY,
+        });
+        const [tokenDoc] = await scene.createEmbeddedDocuments('Token', [
+          tokenData,
+        ]);
+
+        for (let i = 0; i < 20; i++) {
+          const p = globalObj.canvas?.tokens?.placeables?.find(
+            (t) => t.id === tokenDoc.id
+          );
+          if (p) break;
+          await new Promise((r) => setTimeout(r, 100));
+        }
+
+        return tokenDoc.id;
+      },
+      { name: actorName, posX: x, posY: y }
+    );
+
+    return tokenId;
+  };
+
+  const nextDrop = dropActorQueue.then(runDrop, runDrop);
+  dropActorQueue = nextDrop.catch(() => {});
+  return nextDrop;
 }
 
 /**
