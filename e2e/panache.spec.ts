@@ -228,6 +228,62 @@ async function executeDemoralize(
   });
 }
 
+async function prepareDuelingParryStance(
+  page: import('@playwright/test').Page
+) {
+  try {
+    const messageId = await postActorActionToChat(page, {
+      actorNameOrId: 'Sayf Mujalid',
+      actionName: 'Dueling Parry',
+    });
+    await clickChatMessageButton(page, {
+      buttonSelector:
+        '[data-pf2-action="dueling-parry"], [data-pf2-action], button',
+      messageId,
+    });
+  } catch {
+    await page.evaluate(async () => {
+      interface ItemObj {
+        system?: { slug?: string };
+        toObject(): unknown;
+      }
+      interface ActorDoc {
+        name: string;
+        createEmbeddedDocuments(
+          type: string,
+          data: unknown[]
+        ): Promise<unknown>;
+      }
+      interface CompendiumPack {
+        getDocuments(): Promise<ItemObj[]>;
+      }
+      interface FoundryGame {
+        actors?: {
+          find: (predicate: (a: ActorDoc) => boolean) => ActorDoc | undefined;
+        };
+        packs?: {
+          get: (id: string) => CompendiumPack | undefined;
+        };
+      }
+
+      const globalObj = window as unknown as { game?: FoundryGame };
+      const sayf = globalObj.game?.actors?.find(
+        (a) => a.name.toLowerCase() === 'sayf mujalid'
+      );
+      const pack = globalObj.game?.packs?.get('pf2e.feat-effects');
+      if (!sayf || !pack) return;
+
+      const docs = await pack.getDocuments();
+      const effect = docs.find(
+        (d) => d.system?.slug === 'effect-dueling-parry'
+      );
+      if (effect) {
+        await sayf.createEmbeddedDocuments('Item', [effect.toObject()]);
+      }
+    });
+  }
+}
+
 test.describe('Test Panache Functionality on Demoralize', () => {
   test('Critical Success: should apply Panache to Sayf', async ({
     sharedPage,
@@ -314,6 +370,45 @@ test.describe('Test Panache Functionality on Demoralize', () => {
 
     const stateAfter = await waitForPanacheState(sharedPage, false);
     expect(stateAfter.hasPanache).toBe(false);
+  });
+
+  test('Dueling Parry Miss: should grant 1-round Panache when enemy misses', async ({
+    sharedPage,
+  }) => {
+    await prepareScene(sharedPage);
+    await prepareDuelingParryStance(sharedPage);
+
+    await selectToken(sharedPage, 'Girtablilu Seer');
+    await targetToken(sharedPage, 'Sayf Mujalid');
+
+    await setForcedD20(sharedPage, 2);
+    await performActorStrike(sharedPage, {
+      actorNameOrId: 'Girtablilu Seer',
+      strikeNameOrIndex: 0,
+    });
+
+    const state = await waitForPanacheState(sharedPage, true, 1);
+    expect(state.hasPanache).toBe(true);
+    expect(state.durationValue).toBe(1);
+  });
+
+  test('Dueling Parry Hit: should NOT grant Panache when enemy hits', async ({
+    sharedPage,
+  }) => {
+    await prepareScene(sharedPage);
+    await prepareDuelingParryStance(sharedPage);
+
+    await selectToken(sharedPage, 'Girtablilu Seer');
+    await targetToken(sharedPage, 'Sayf Mujalid');
+
+    await setForcedD20(sharedPage, 20);
+    await performActorStrike(sharedPage, {
+      actorNameOrId: 'Girtablilu Seer',
+      strikeNameOrIndex: 0,
+    });
+
+    const state = await waitForPanacheState(sharedPage, false);
+    expect(state.hasPanache).toBe(false);
   });
 
   test.afterAll(async ({ sharedPage }) => {

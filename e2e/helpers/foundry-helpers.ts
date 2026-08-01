@@ -243,7 +243,7 @@ export async function targetToken(
   tokenNameOrId: string,
   options: { releaseOthers?: boolean } = {}
 ): Promise<void> {
-  const { releaseOthers = false } = options;
+  const { releaseOthers = true } = options;
 
   await page.evaluate(
     ({ idOrName, release }) => {
