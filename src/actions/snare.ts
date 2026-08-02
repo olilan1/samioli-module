@@ -61,17 +61,15 @@ export async function createSnareAsGM(location: Point, deployerUuid: string, sna
     const regionData = {
         name: `${deployerName}'s ${snareName}`,
         color: playerColour,
-        visibility: 2,
+        visibility: CONST.REGION_VISIBILITY.ALWAYS,
         shapes: [{
-             type: "rectangle", 
-             width: size, 
-             height: size, 
-             x: location.x, 
-             y: location.y, 
-             rotation: 0 
+             type: "rectangle",
+             width: size,
+             height: size,
+             x: location.x,
+             y: location.y,
+             rotation: 0
         }],
-        x: location.x,
-        y: location.y,
         behaviors: [{
             type: "executeScript", 
             system: {
@@ -93,7 +91,7 @@ export async function createSnareAsGM(location: Point, deployerUuid: string, sna
 function generateSnareScript(deployerUuid: string, snareId: string, itemUuid: string, location: Point) {
 
     const script = `
-if (!game.user.isGM) return;
+if (!game.user.isActiveGM) return;
 const triggererToken = event.data.token;
 const myApi = game.modules.get("samioli-module").api;
 myApi.handleSnareRegionEnter("${snareId}", "${itemUuid}", "${deployerUuid}", triggererToken, ${location.x}, ${location.y});
