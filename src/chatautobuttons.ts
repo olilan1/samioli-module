@@ -1,6 +1,6 @@
 import { startWallOfFire } from "./spells/walloffire.ts";
 import { startDiveAndBreach } from "./spells/diveandbreach.ts";
-import { playRisingHurricaneAtLastPlacedTemplate } from "./actions/risinghurricane.ts";
+import { playRisingHurricane } from "./actions/risinghurricane.ts";
 import { ChatMessagePF2e, TokenPF2e } from "foundry-pf2e";
 import { startSonicDash } from "./actions/sonicdash.ts";
 import { startDazzlingDisplay } from "./actions/dazzlingdisplay.ts";
@@ -63,7 +63,7 @@ const AUTO_BUTTONS_SPELLS: Record<string, ButtonSpec> = {
 const AUTO_BUTTONS_ACTIONS: Record<string, ButtonSpec> = {
     "rising-hurricane": {
         label: "Deploy Rising Hurricane!",
-        function: playRisingHurricaneAtLastPlacedTemplate
+        function: playRisingHurricane
     },
     "sonic-dash": {
         label: "Start dashing!",

@@ -1,35 +1,39 @@
-import { TokenPF2e, UserPF2e } from "foundry-pf2e";
+import { RegionDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
 import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
-import { delay, getTokenIdsFromTokens } from "../utils.ts";
+import { delay, getRegionOrigin, getTokenIdsFromTokens } from "../utils.ts";
 
-export async function playRisingHurricaneAtLastPlacedTemplate() {
-    
-    Hooks.once('createMeasuredTemplate', async (measuredTemplateDocumentPF2e) => {
-        const player = game.user;
-        //get target tokens and store
-        const targets: Set<TokenPF2e> = 
-            new Set<TokenPF2e>(await getTemplateTokens(measuredTemplateDocumentPF2e));
-        //clear targets for the animation
-        await clearTargets(player);
-        //remove template
-        const location = { x: measuredTemplateDocumentPF2e.x, y: measuredTemplateDocumentPF2e.y };
-        await measuredTemplateDocumentPF2e.delete();
-        //animate on target tokens        
-        await playAnimation(targets, location);
-        //add tokens back to player targets 
-        await replaceTargets(getTokenIdsFromTokens(Array.from(targets)))
-    });
-    
-    const templateData = {
-        t: "circle",
-        sort: 99,
-        distance: 15,
-        direction: 0,
-        fillColor: "#87CEEB",
-        borderColor: "#FFFFFF",
-    } as const;
+const HURRICANE_RADIUS_FEET = 15;
 
-    await canvas.templates.createPreview(templateData);
+export async function playRisingHurricane() {
+
+    // Placed with create: false, so the region is never written to the scene — this only needs its
+    // geometry to find targets and the animation's centre.
+    const region = await canvas.regions.placeRegion({
+        name: "Rising Hurricane",
+        shapes: [{
+            type: "circle",
+            x: 0,
+            y: 0,
+            radius: HURRICANE_RADIUS_FEET * canvas.dimensions.distancePixels,
+            gridBased: true
+        }],
+        color: "#87CEEB",
+        highlightMode: "coverage"
+    }, { create: false }) as RegionDocumentPF2e | null;
+
+    if (!region) return;
+
+    const centre = getRegionOrigin(region);
+    if (!centre) return;
+
+    //get target tokens and store
+    const targets = new Set<TokenPF2e>(await getTemplateTokens(region));
+    //clear targets for the animation
+    await clearTargets(game.user);
+    //animate on target tokens
+    await playAnimation(targets, centre);
+    //add tokens back to player targets
+    await replaceTargets(getTokenIdsFromTokens(Array.from(targets)));
 }
 
 async function clearTargets(player: UserPF2e) {
