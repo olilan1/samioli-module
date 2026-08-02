@@ -1,5 +1,5 @@
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 import { CrosshairUpdatable } from "../types.ts";
 import {
     createCrosshairIconSwitcher,
@@ -113,7 +113,7 @@ export async function sustainFloatingFlame(region: RegionDocumentPF2e) {
     // clear user's targets
     replaceTargets([]);
     //capture tokens under the initial region location and store them
-    tokensToCaptureAndTarget.push(...await getTemplateTokens(region));
+    tokensToCaptureAndTarget.push(...getTokensInRegion(region));
 
     // create crosshairs for user to select first location within 5 feet
     ui.notifications.info("Select your first space within 5 feet to move Floating Flame.");
@@ -295,7 +295,7 @@ async function moveRegionShapeTo(region: RegionDocumentPF2e, origin: Point) {
 async function moveRegionAndCaptureTokens(region: RegionDocumentPF2e, newCentre: Point) {
     const half = canvas.grid.size / 2;
     await moveRegionShapeTo(region, { x: newCentre.x - half, y: newCentre.y - half });
-    return getTemplateTokens(region);
+    return getTokensInRegion(region);
 }
 
 export async function removeFloatingFlame(region: RegionDocumentPF2e) {

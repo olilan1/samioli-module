@@ -14,7 +14,7 @@ import {
   postSustainMessagesForActor,
   expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
-import { getTemplateTokens } from '../src/templatetarget.ts';
+import { getTokensInRegion } from '../src/templatetarget.ts';
 import {
   handleStartOfTurnTokenEnter,
   handleStartOfTurnTokenExit,
@@ -561,7 +561,7 @@ describe('Baseline Hook Handlers', () => {
     });
   });
 
-  describe('getTemplateTokens region containment', () => {
+  describe('getTokensInRegion region containment', () => {
     const scene = { id: 'scene-1' };
 
     /**
@@ -616,7 +616,7 @@ describe('Baseline Hook Handlers', () => {
       const outside = makeToken('token-outside', false);
       setCanvas([inside, outside]);
 
-      const tokens = await getTemplateTokens(regionWithShape());
+      const tokens = getTokensInRegion(regionWithShape());
       expect(tokens).toHaveLength(1);
       expect(tokens[0].id).toBe('token-inside');
       expect(inside.document.testInsideRegion).toHaveBeenCalled();
@@ -630,7 +630,7 @@ describe('Baseline Hook Handlers', () => {
       ]);
       setCanvas([large]);
 
-      const tokens = await getTemplateTokens(regionWithShape());
+      const tokens = getTokensInRegion(regionWithShape());
       expect(tokens).toHaveLength(1);
       expect(tokens[0].id).toBe('large-token');
     });
@@ -642,7 +642,7 @@ describe('Baseline Hook Handlers', () => {
       const clear = makeToken('clear-token', true, [{ i: 0, j: 0 }]);
       setCanvas([behindWall, clear], [{ x: 250, y: 250 }]);
 
-      const tokens = await getTemplateTokens(regionWithShape());
+      const tokens = getTokensInRegion(regionWithShape());
       expect(tokens.map(t => t.id)).toEqual(['behind-wall', 'clear-token']);
     });
 
@@ -655,7 +655,7 @@ describe('Baseline Hook Handlers', () => {
         shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
       } as unknown as RegionDocumentPF2e;
 
-      expect(await getTemplateTokens(foreignRegion)).toEqual([]);
+      expect(getTokensInRegion(foreignRegion)).toEqual([]);
       expect(inside.document.testInsideRegion).not.toHaveBeenCalled();
     });
 

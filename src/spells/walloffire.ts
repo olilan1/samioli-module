@@ -1,7 +1,7 @@
 import { ItemPF2e, RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay, getCollidableCallbacks, getTokenIdsFromTokens } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 
 type WallOfFireSideOrientation = 'horizontal' | 'vertical';
 
@@ -156,7 +156,7 @@ async function animateWallOfFireRing(token: TokenPF2e) {
 
     //capture tokens under the ring and add to player's targeting
 
-    const tokensInRing = await getTemplateTokens(ringRegion);
+    const tokensInRing = getTokensInRegion(ringRegion);
     await replaceTargets(getTokenIdsFromTokens(tokensInRing));
 
 }

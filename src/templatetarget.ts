@@ -27,7 +27,7 @@ export async function targetTokensUnderRegion(
         return;
     }
 
-    const tokens = await getTemplateTokens(region);
+    const tokens = getTokensInRegion(region);
     const tokenIds = tokens.map((token) => token.id);
 
     replaceTargets(tokenIds);
@@ -59,9 +59,9 @@ export function deleteRegionTargets(_region: RegionDocumentPF2e) {
  * Returns the tokens inside a region that are valid targets: visible, living creatures, hazards or
  * vehicles whose footprint overlaps the region's shape.
  */
-export async function getTemplateTokens(
+export function getTokensInRegion(
     regionDocument: RegionDocumentPF2e
-): Promise<TokenPF2e[]> {
+): TokenPF2e[] {
     if (!regionDocument) return [];
 
     // testInsideRegion throws when the token and region belong to different scenes.

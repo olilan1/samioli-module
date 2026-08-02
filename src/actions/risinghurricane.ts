@@ -1,5 +1,5 @@
 import { RegionDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 import { delay, getRegionOrigin, getTokenIdsFromTokens } from "../utils.ts";
 
 const HURRICANE_RADIUS_FEET = 15;
@@ -27,7 +27,7 @@ export async function playRisingHurricane() {
     if (!centre) return;
 
     //get target tokens and store
-    const targets = new Set<TokenPF2e>(await getTemplateTokens(region));
+    const targets = new Set<TokenPF2e>(getTokensInRegion(region));
     //clear targets for the animation
     await clearTargets(game.user);
     //animate on target tokens

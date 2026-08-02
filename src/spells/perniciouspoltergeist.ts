@@ -1,5 +1,5 @@
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets, targetTokensUnderRegion } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets, targetTokensUnderRegion } from "../templatetarget.ts";
 import { delay, getActorFromRegion, getRegionOrigin, getTokenFromActor } from "../utils.ts";
 
 const { DialogV2 } = foundry.applications.api;
@@ -41,7 +41,7 @@ export async function chooseEffectOfPerniciousPoltergeist(region: RegionDocument
 }
 
 async function deathlyAssault(region: RegionDocumentPF2e) {
-    const targets = await getTemplateTokens(region);
+    const targets = getTokensInRegion(region);
     if (!targets.length) {
         ui.notifications.warn("There are no valid targets in the area.");
         return;
@@ -290,7 +290,7 @@ async function animateTelekineticStorm(region: RegionDocumentPF2e) {
     const caster = getTokenFromActor(getActorFromRegion(region));
     if (!caster) return;
     const hitAnimation = "jb2a.impact.007.red"
-    const targets = await getTemplateTokens(region);
+    const targets = getTokensInRegion(region);
     const gridSize = canvas.grid.size;
     const impacts = targets.length * 5;
 

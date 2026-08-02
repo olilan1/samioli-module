@@ -9,12 +9,12 @@ import {
     getTokenIdsFromTokens,
     getRegionOrigin
 } from "../utils.ts";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export async function initiateBlazingDive(region: RegionDocumentPF2e) {
     // Store tokens from region
-    const targetTokens = await getTemplateTokens(region);
+    const targetTokens = getTokensInRegion(region);
     // Remove targets from caster
     await replaceTargets([]);
     const locationOfTemplate = getRegionOrigin(region)!;

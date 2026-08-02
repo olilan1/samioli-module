@@ -5,7 +5,7 @@ import {
     sendBasicChatMessage,
     MODULE_ID
 } from "./utils.ts";
-import { getTemplateTokens, replaceTargets } from "./templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "./templatetarget.ts";
 import { RegionOriginFlag } from "./types.ts";
 
 export const START_OF_TURN_SPELLS = [
@@ -106,7 +106,7 @@ export async function addEffectsToTokensInStartOfTurnTemplates(region: RegionDoc
 
     await recordStartOfTurnRegionFlags(region, resolved);
 
-    const tokensWithinRegion = await getTemplateTokens(region);
+    const tokensWithinRegion = getTokensInRegion(region);
 
     // Routed through handleStartOfTurnTokenEnter so this path and the tokenEnter behavior share one
     // existing-effect check and one in-flight lock, keeping them from both creating the effect.

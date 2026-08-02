@@ -7,10 +7,10 @@ import {
     shuffleArray,
     getRegionOrigin
 } from "../utils.ts";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 
 export async function initiateStormSpiral(region: RegionDocumentPF2e) {
-    let targetTokens = await getTemplateTokens(region);
+    let targetTokens = getTokensInRegion(region);
 
     if (targetTokens.length != 0) {
         targetTokens = shuffleArray(targetTokens);

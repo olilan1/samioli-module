@@ -2,7 +2,7 @@ import {
     RegionDocumentPF2e,
     TokenPF2e
 } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
 import {
     getActorFromRegion,
     getTokenFromActor,
@@ -29,7 +29,7 @@ export async function animateLightningDash(region: RegionDocumentPF2e) {
         return;
     }
     
-    const targetTokens = (await getTemplateTokens(region))
+    const targetTokens = (getTokensInRegion(region))
         .filter(token => casterToken.distanceTo(token) <= casterToken.distanceTo(destination));
     await region.delete();
     
