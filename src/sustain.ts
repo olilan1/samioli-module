@@ -86,19 +86,10 @@ export async function addSustainEffectToActor(
         }
     };
 
-    const createdEffect = await addOrUpdateEffectOnActor(
+    return addOrUpdateEffectOnActor(
         actor,
         effect as DeepPartial<EffectSource> as EffectSource
     );
-    const regions = canvas.scene?.regions.contents ?? [];
-    const matchingRegion = regions.find((r) => {
-        const origin = r.flags.pf2e?.origin as RegionOriginFlag | undefined;
-        return origin?.actor === actor.uuid && origin?.slug === spell.system.slug;
-    });
-    if (matchingRegion) {
-        await associateRegionWithSustainedEffect(matchingRegion);
-    }
-    return createdEffect;
 }
 
 export async function postSustainMessagesForActor(actor: ActorPF2e) {
