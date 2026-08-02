@@ -11,7 +11,6 @@ import {
     sustainFloatingFlame, 
     removeFloatingFlame 
 } from "./spells/floatingflame.ts";
-import { removeWallOfFire } from "./spells/walloffire.ts";
 import { sustainDancingBlade, cleanupDancingBlade } from "./spells/dancingblade.ts";
 import { MODULE_ID } from "./utils.ts";
 import { RegionOriginFlag } from "./types.ts";
@@ -57,8 +56,7 @@ const SUSTAIN_MAPPINGS: Record<string, SustainTriggerFunction> = {
  * Mappings for cleanup functions triggered when a Scene Region is deleted.
  */
 const REGION_DELETION_MAPPINGS: Record<string, RegionTriggerFunction> = {
-    "origin:item:floating-flame": removeFloatingFlame as RegionTriggerFunction,
-    "origin:item:wall-of-fire": removeWallOfFire as RegionTriggerFunction
+    "origin:item:floating-flame": removeFloatingFlame as RegionTriggerFunction
 };
 
 /**
