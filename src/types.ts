@@ -21,9 +21,10 @@ export type CustomTemplateData = CustomRegionData;
  */
 export interface CrosshairUpdatable {
   updateCrosshair(options: object): void;
-  x: number;  
-  y: number;  
-  source: Point;  
+  controlIcon: { texture: PIXI.Texture };
+  x: number;
+  y: number;
+  source: Point;
 }
 
 /**

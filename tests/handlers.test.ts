@@ -540,8 +540,13 @@ describe('Baseline Hook Handlers', () => {
 
     it('runMatchingRegionFunctionAsGm: should match via origin.rollOptions for GM triggers', async () => {
       const { runMatchingRegionFunctionAsGm } = await import('../src/triggers.ts');
+      // Matching dispatches the mapped function for real, so the mock needs enough of a region for
+      // initiateFloatingFlame to bail cleanly on a missing caster and shape.
       const mockRegion = {
+        id: 'region-gm-trigger',
         setFlag: vi.fn().mockResolvedValue({}),
+        getFlag: vi.fn().mockReturnValue(undefined),
+        shapes: [],
         flags: {
           pf2e: {
             origin: {

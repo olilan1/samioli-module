@@ -351,6 +351,36 @@ export function getTokensAtLocation(location: Point, includeHidden?: boolean): T
     return visibleTokens;
 }
 
+/** Default icon shown on a crosshair when the hovered square cannot be used. */
+const INVALID_CROSSHAIR_ICON = "icons/svg/cancel.svg";
+
+/**
+ * Preloads a crosshair's valid and invalid icons and returns a function that switches between them.
+ *
+ * Changing the icon through Sequencer's updateCrosshair freezes the canvas on Foundry v14. It
+ * starts an unawaited icon redraw that v14 re-enters through the crosshair's move callbacks, so a
+ * second redraw destroys the icon the first is still writing to. Use this helper instead: the
+ * function it returns assigns an already-loaded texture to the control icon, which repaints in
+ * place with no redraw to re-enter.
+ */
+export async function createCrosshairIconSwitcher(
+    validIcon: string,
+    invalidIcon: string = INVALID_CROSSHAIR_ICON
+): Promise<(crosshair: CrosshairUpdatable, isValid: boolean) => void> {
+    // loadTexture resolves a spritesheet for JSON sources and null for ones it cannot read; an
+    // icon path always yields a texture.
+    const [validTexture, invalidTexture] = await Promise.all(
+        [validIcon, invalidIcon].map(async src => {
+            const texture = await foundry.canvas.loadTexture(src);
+            return texture instanceof PIXI.Texture ? texture : PIXI.Texture.EMPTY;
+        })
+    );
+
+    return (crosshair, isValid) => {
+        crosshair.controlIcon.texture = isValid ? validTexture : invalidTexture;
+    };
+}
+
 export function getCollidableCallbacks(actionName: string, icon: string): CrosshairCallbackData {
     return {
         [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {

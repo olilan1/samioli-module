@@ -130,16 +130,19 @@ Hooks.on("createRegion", async (
     userId: string
 ) => {
     // Check for matching origin and run matching function if found (see triggers.ts)
-    let ranRegionTrigger = hook(runMatchingRegionFunctionAsGm, region)
+    hook(runMatchingRegionFunctionAsGm, region)
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    ranRegionTrigger ||= hook(runMatchingRegionFunctionAsCreator, region)
+    const ranCreatorTrigger = hook(runMatchingRegionFunctionAsCreator, region)
         .ifUser(userId)
         .allowUnfilteredRun()
         .run();
 
-    if (!ranRegionTrigger) {
+    // Only a creator-side trigger suppresses the generic targeting, since that is where a spell
+    // sets its own targets. A GM-side trigger runs on the GM's client whoever cast the spell, so
+    // it says nothing about whether the caster should be given targets.
+    if (!ranCreatorTrigger) {
         // If no matching origin, target tokens if that feature is enabled
         hook(targetTokensUnderRegion, region, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
