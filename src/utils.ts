@@ -460,6 +460,26 @@ export function getRegionLengthInUnits(region: RegionDocumentPF2e): number | nul
     return (shape.length / canvas.grid.size) * canvas.grid.distance;
 }
 
+/**
+ * Whether a token can be affected by a spell area.
+ *
+ * Excludes tokens with no actor, hidden tokens, anything that is not a creature, hazard or vehicle,
+ * and the dead.
+ */
+export function isValidAreaTarget(token: TokenPF2e): boolean {
+    const actor = token.actor;
+    if (!actor || token.document.hidden) return false;
+    return actor.isOfType("creature", "hazard", "vehicle") && !actor.isDead;
+}
+
+/**
+ * Returns the tokens within a radius of a creature, measured outward from its squares.
+ *
+ * Distance is PF2e's token-to-token measurement, so `center` is expected to be a token's centre.
+ * For an area centred on an arbitrary point — a burst placed by a crosshair, which may snap to a
+ * grid corner — use `getTokensInBurst` instead: this measures from the whole grid square containing
+ * `center`, which is offset from a corner by half a square in each axis.
+ */
 export function getTokensWithinRadius(
     center: Point,
     radiusFeet: number,
@@ -471,9 +491,7 @@ export function getTokensWithinRadius(
     const grid = canvas.grid;
 
     return canvas.tokens.placeables.filter((token: TokenPF2e) => {
-        const actor = token.actor;
-        if (!actor || token.document.hidden) return false;
-        if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+        if (!isValidAreaTarget(token)) return false;
 
         const distanceInUnits = token.distanceTo(center);
         if (distanceInUnits > radiusFeet) return false;
@@ -491,6 +509,32 @@ export function getTokensWithinRadius(
         }
 
         return true;
+    });
+}
+
+/**
+ * Returns the tokens covered by a burst of the given radius centred on a point.
+ *
+ * The burst polygon comes from the grid itself, so it follows the world's diagonal rule and is
+ * symmetric about `center` even when that is a grid corner. Every square of a token's footprint is
+ * tested, so a large token counts as covered when any one of its squares is inside.
+ *
+ * Use `getTokensWithinRadius` instead for an area emanating from a creature.
+ */
+export function getTokensInBurst(center: Point, radiusFeet: number): TokenPF2e[] {
+    // The polygon's diagonal edge runs through the centres of the squares at the burst's cut-off —
+    // the ones the grid's diagonal rule counts as out of range — so those centres land exactly on
+    // the boundary, where containment is unreliable. Shrinking the radius fractionally makes the
+    // test strictly interior; it is far smaller than the gap to any square that is genuinely inside.
+    const burst = new PIXI.Polygon(canvas.grid.getCircle(center, radiusFeet - 0.01));
+
+    return canvas.tokens.placeables.filter((token: TokenPF2e) => {
+        if (!isValidAreaTarget(token)) return false;
+
+        return token.footprint.some(offset => {
+            const squareCentre = canvas.grid.getCenterPoint(offset);
+            return burst.contains(squareCentre.x, squareCentre.y);
+        });
     });
 }
 

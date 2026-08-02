@@ -1,5 +1,6 @@
 import { TokenPF2e, RegionDocumentPF2e } from "foundry-pf2e";
 import { getSocket } from "./sockets.ts";
+import { isValidAreaTarget } from "./utils.ts";
 
 interface RegionDetails {
     regionId: string,
@@ -67,9 +68,7 @@ export async function getTemplateTokens(
     if (!canvas.scene || regionDocument.parent !== canvas.scene) return [];
 
     return canvas.tokens.placeables.filter((token: TokenPF2e) => {
-        const actor = token.actor;
-        if (!actor || token.document.hidden) return false;
-        if (!actor.isOfType("creature", "hazard", "vehicle") || actor.isDead) return false;
+        if (!isValidAreaTarget(token)) return false;
         return token.document.testInsideRegion(regionDocument);
     });
 }

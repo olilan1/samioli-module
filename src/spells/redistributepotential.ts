@@ -1,14 +1,14 @@
-import { ChatMessagePF2e, MeasuredTemplateDocumentPF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { CustomTemplateData } from "../types.ts";
+import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
-import { getCollidableCallbacks } from "../utils.ts";
+import { SamiOliHooks } from "../types/hook-types.ts";
+import { replaceTargets } from "../templatetarget.ts";
+import { getCollidableCallbacks, getTokensAtLocation, getTokensInBurst, isValidAreaTarget } from "../utils.ts";
 
 type RedistributePotentialType = "steal-heat" | "concentrate-heat";
 
 const STEAL_HEAT_COLOUR: `#${string}` = "#4134d4";
 const CONCENTRATE_HEAT_COLOUR: `#${string}` = "#f59042";
+const AMPED_RADIUS_FEET = 10;
 
 export async function startRedistributePotential(token: TokenPF2e, message: ChatMessagePF2e) {
 
@@ -20,24 +20,15 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
     const stealHeatLocation = await selectLocation("steal-heat", token, isAmped);
     if (!stealHeatLocation) return;
     
-    // Create Steal Heat template and get target tokens
-    const stealHeatTemplateData = createCustomTemplateData(stealHeatLocation, "steal-heat", isAmped);
-    if (!stealHeatTemplateData) return;
-    const stealHeatTemplate = await createTemplate(stealHeatTemplateData);
-    const stealHeatTargetTokens = await getTemplateTokens(stealHeatTemplate);
+    // Capture the tokens in the Steal Heat area
+    const stealHeatTargetTokens = getTokensInArea(stealHeatLocation, isAmped);
 
     // Select Concentrate Heat location
     const concentrateHeatLocation = await selectLocation("concentrate-heat", stealHeatLocation, isAmped);
-    // If cancelled, clean up previous template
-    if (!concentrateHeatLocation) {
-        stealHeatTemplate.delete();
-        return;
-    }
+    if (!concentrateHeatLocation) return;
 
-    // Create Concentrate Heat template and get target tokens
-    const concentrateHeatTemplateData = createCustomTemplateData(concentrateHeatLocation, "concentrate-heat", isAmped);
-    const concentrateHeatTemplate = await createTemplate(concentrateHeatTemplateData);
-    const concentrateHeatTargetTokens = await getTemplateTokens(concentrateHeatTemplate);
+    // Capture the tokens in the Concentrate Heat area
+    const concentrateHeatTargetTokens = getTokensInArea(concentrateHeatLocation, isAmped);
 
     // Capture additional context for the spell damage message
     const spell = message.item as SpellPF2e;
@@ -58,30 +49,22 @@ export async function startRedistributePotential(token: TokenPF2e, message: Chat
 
     const concentrateHeatFlavour = getFlavour("concentrate-heat", isAmped, damageFormula);
     
+    // Dice So Nice animates the Steal Heat roll, so the Concentrate Heat message waits for that to
+    // finish. Without it there is nothing to wait for and the message is sent directly.
     if (game.modules.get('dice-so-nice')?.active) {
         const hookFunctionDSN = async (id: string) => {
             const message = game.messages.get(id)!;
             if (message.flags["samioli-module"]?.isRedistributePotential) {
                 await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, spell, concentrateHeatTargetTokens);
-                Hooks.off("diceSoNiceRollComplete", hookFunctionDSN);
+                (Hooks as SamiOliHooks).off("diceSoNiceRollComplete", hookFunctionDSN);
             }
         };
-        Hooks.on("diceSoNiceRollComplete", hookFunctionDSN);
+        (Hooks as SamiOliHooks).on("diceSoNiceRollComplete", hookFunctionDSN);
     } else {
-        const hookFunction = async (message: ChatMessagePF2e) => {
-            if (message.flags["samioli-module"]?.isRedistributePotential) {
-                await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, spell, concentrateHeatTargetTokens);
-                Hooks.off("createChatMessage", hookFunction);
-            }
-        };
-        Hooks.on("createChatMessage", hookFunction); 
+        await sendRolledRollToChat(concentrateHeatDamageRoll, concentrateHeatFlavour, spell, concentrateHeatTargetTokens);
     }
 
-    await animateRedistributePotential(token, stealHeatTemplate, concentrateHeatTemplate, isAmped);
-
-    // Clean up templates
-    stealHeatTemplate.delete();
-    concentrateHeatTemplate.delete();
+    await animateRedistributePotential(token, stealHeatLocation, concentrateHeatLocation, isAmped);
 
 }
 
@@ -212,59 +195,18 @@ async function selectLocation(redistributePotentialType: RedistributePotentialTy
     return selectedLocation;
 }
 
-async function createTemplate(templateData: CustomTemplateData): Promise<MeasuredTemplateDocumentPF2e> {
-
-    const myCustomTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
-    if (!myCustomTemplate) {
-        throw new Error("Failed to create template");
-    }
-    return myCustomTemplate as MeasuredTemplateDocumentPF2e;
-}
-
-function createCustomTemplateData(location: Point, type: RedistributePotentialType, isAmped: boolean): CustomTemplateData {
-
-    const offset = isAmped ? 0 : canvas.scene!.grid.size / 2;
-
-    const templateShape = isAmped ? "circle" : "rect";
-    const templateWidth = isAmped ? 0 : 5;
-    const templateDistance = isAmped ? 10 : 7.0710678118654755; // Diagonal for rect template
-    const templateDirection = isAmped ? 0 : 45; // Rect templates work on diagonals for a square
-
-    let flagName = "";
-    let flagSlug = "";
-    let colour = "";
-    if (type === "steal-heat") {
-        flagName = "Redistribute Potential - Steal Heat";
-        flagSlug = "redistribute-potential-steal-heat";
-        colour = STEAL_HEAT_COLOUR;
-    } else if (type === "concentrate-heat") {
-        flagName = "Redistribute Potential - Concentrate Heat";
-        flagSlug = "redistribute-potential-concentrate-heat";
-        colour = CONCENTRATE_HEAT_COLOUR;
-    }
-
-    const templateData: CustomTemplateData = {
-        t: templateShape as MeasuredTemplateType,
-        x: location.x - (offset),
-        y: location.y - (offset),
-        width: templateWidth,
-        distance: templateDistance,
-        direction: templateDirection,
-        fillColor: colour as `#${string}`,
-        borderColor: colour as `#${string}`,
-        flags: {
-            pf2e: {
-                origin: {
-                    name: flagName,
-                    slug: flagSlug
-                }
-            },
-            "samioli-module": {
-                ignoreTemplateColourOverride: true
-            }
-        }
-    };
-    return templateData;
+/**
+ * Returns the tokens in one of the spell's two areas.
+ *
+ * Amped, the area is a 10-foot radius centred on the chosen point; otherwise it is the single
+ * 5-foot square containing it.
+ */
+function getTokensInArea(location: Point, isAmped: boolean): TokenPF2e[] {
+    // getTokensAtLocation reports whatever occupies the square without judging validity, so the
+    // area filter is applied here. getTokensInBurst applies it itself.
+    return isAmped
+        ? getTokensInBurst(location, AMPED_RADIUS_FEET)
+        : getTokensAtLocation(location).filter(isValidAreaTarget);
 }
 
 function createDamageRoll(value: string, redistributePotentialType: RedistributePotentialType): Roll {
@@ -277,9 +219,9 @@ function createDamageRoll(value: string, redistributePotentialType: Redistribute
     return roll;
 }
 
-async function animateRedistributePotential(token: TokenPF2e, 
-    stealHeatTemplate: MeasuredTemplateDocumentPF2e, 
-    concentrateHeatTemplate: MeasuredTemplateDocumentPF2e,
+async function animateRedistributePotential(token: TokenPF2e,
+    stealHeatLocation: Point,
+    concentrateHeatLocation: Point,
     isAmped: boolean
 ) {
 
@@ -298,11 +240,6 @@ async function animateRedistributePotential(token: TokenPF2e,
     const stealHeatSize = isAmped ? 4.5 : 1.5;
     const concentrateHeatSize = isAmped ? 7 : 2;
 
-    const offset = isAmped ? 0 : canvas.scene!.grid.size / 2;
-
-    const stealHeatLocation = { x: stealHeatTemplate.x + offset, y: stealHeatTemplate.y + offset };
-    const concentrateHeatLocation = { x: concentrateHeatTemplate.x + offset, y: concentrateHeatTemplate.y + offset };
-    
     new Sequence()
         // caster animation
         .effect()
