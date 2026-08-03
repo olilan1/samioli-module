@@ -2,12 +2,12 @@ import { ChatMessagePF2e, ConsumablePF2e, TokenDocumentPF2e, TokenPF2e } from "f
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
-import { replaceTargetsForUsers } from "../templatetarget.ts";
+import { replaceTargetsForUsers } from "../targeting.ts";
+import { getTokensAtLocation } from "../areatargeting.ts";
 import {
     getCollidableCallbacks,
     getOwnersFromActor,
-    getRegionOrigin,
-    getTokensAtLocation
+    getRegionOrigin
 } from "../utils.ts";
 
 export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessagePF2e) {

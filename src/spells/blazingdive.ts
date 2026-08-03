@@ -1,15 +1,10 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import {
     RegionDocumentPF2e,
     TokenPF2e
 } from "foundry-pf2e";
-import {
-    delay,
-    getActorFromRegion,
-    getTokenFromActor,
-    getTokenIdsFromTokens,
-    getRegionOrigin
-} from "../utils.ts";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
+import { delay, getActorFromRegion, getTokenFromActor, getTokenIdsFromTokens, getRegionOrigin } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export async function initiateBlazingDive(region: RegionDocumentPF2e) {

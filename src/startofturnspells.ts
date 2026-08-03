@@ -5,7 +5,9 @@ import {
     sendBasicChatMessage,
     MODULE_ID
 } from "./utils.ts";
-import { getTokensInRegion, replaceTargets } from "./templatetarget.ts";
+
+import { getTokensInRegion } from "./areatargeting.ts";
+import { replaceTargets } from "./targeting.ts";
 import { RegionOriginFlag } from "./types.ts";
 
 export const START_OF_TURN_SPELLS = [
@@ -24,6 +26,18 @@ export const START_OF_TURN_SPELLS = [
     'wall-of-fire',
     'wall-of-virtue'
 ];
+
+/**
+ * Determines if the region originates from a known start-of-turn spell.
+ *
+ * PF2e writes the item slug to `flags.pf2e.origin.slug` when it places a spell area
+ * (see `placeRegionFromItem`), so that is the only check needed.
+ */
+export function isStartOfTurnSpellRegion(region: RegionDocumentPF2e): boolean {
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
+
+    return START_OF_TURN_SPELLS.includes(origin?.slug ?? "");
+}
 
 /**
  * Resolves the spell behind a region.
@@ -361,19 +375,6 @@ function createWithinEffectSource(spell: SpellPF2e, region: RegionDocumentPF2e):
     } as DeepPartial<EffectSource> as EffectSource;
 }
 
-/**
- * Determines if the region originates from a known start-of-turn spell.
- *
- * PF2e writes the item slug to `flags.pf2e.origin.slug` when it places a spell area
- * (see `placeRegionFromItem`), so that is the only check needed.
- */
-export function isStartOfTurnSpellRegion(
-    region: RegionDocumentPF2e
-): boolean {
-    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
-
-    return START_OF_TURN_SPELLS.includes(origin?.slug ?? "");
-}
 
 /**
  * Checks if the region has flags indicating it was placed for a start-of-turn spell.

@@ -16,7 +16,7 @@ import {
     deleteRegionTargets,
     setRegionColorToBlack,
     isLastTargetedRegion
-} from "./templatetarget.ts";
+} from "./targeting.ts";
 import { applyUnstableEffectOnFailure } from "./effects/unstablecheck.ts";
 import {
     ChatMessagePF2e,

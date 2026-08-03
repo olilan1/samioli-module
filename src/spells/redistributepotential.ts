@@ -1,8 +1,13 @@
 import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { SamiOliHooks } from "../types/hook-types.ts";
-import { replaceTargets } from "../templatetarget.ts";
-import { getCollidableCallbacks, getTokensAtLocation, getTokensInBurst, isValidAreaTarget } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
+import {
+    getTokensAtLocation,
+    getTokensInBurst,
+    isValidAreaTarget
+} from "../areatargeting.ts";
+import { getCollidableCallbacks } from "../utils.ts";
 
 type RedistributePotentialType = "steal-heat" | "concentrate-heat";
 

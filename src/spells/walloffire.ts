@@ -1,7 +1,8 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import { ItemPF2e, RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { delay, getCollidableCallbacks, getTokenIdsFromTokens } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../targeting.ts";
 
 type WallOfFireSideOrientation = 'horizontal' | 'vertical';
 

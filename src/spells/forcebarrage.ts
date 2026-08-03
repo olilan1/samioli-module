@@ -1,5 +1,6 @@
 import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getCollidableCallbacks, getTokensAtLocation } from "../utils.ts";
+import { getTokensAtLocation } from "../areatargeting.ts";
+import { delay, getCollidableCallbacks } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollSpellDamage } from "../spelldamageroll.ts";
 

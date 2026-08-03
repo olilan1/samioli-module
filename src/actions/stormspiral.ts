@@ -1,13 +1,8 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import {
-    delay,
-    getRandomNumberBetween,
-    getTokenIdsFromTokens,
-    shuffleArray,
-    getRegionOrigin
-} from "../utils.ts";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
+import { delay, getRandomNumberBetween, getTokenIdsFromTokens, shuffleArray, getRegionOrigin } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
 
 export async function initiateStormSpiral(region: RegionDocumentPF2e) {
     let targetTokens = getTokensInRegion(region);

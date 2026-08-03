@@ -1,16 +1,16 @@
 import { TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
 import {
     getTokenIdsFromTokens,
-    getEnemyTokensFromTokenArray,
-    getTokensWithinRadius
+    getEnemyTokensFromTokenArray
 } from "../utils.ts";
+import { getTokensInEmanation } from "../areatargeting.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
-import { replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../targeting.ts";
 import { DAZZLING_DISPLAY, getSocket } from "../sockets.ts";
 
 export async function startDazzlingDisplay(token: TokenPF2e) {
     // Capture all tokens within 30 ft emanation
-    const allTargets = getTokensWithinRadius(token.center, 30, { checkWalls: true });
+    const allTargets = getTokensInEmanation(token.center, 30);
 
     // remove allies and neutrals from the target list
     const enemyTargets = getEnemyTokensFromTokenArray(token, allTargets);

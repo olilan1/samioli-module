@@ -1,14 +1,8 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../targeting.ts";
 import { CrosshairUpdatable } from "../types.ts";
-import {
-    createCrosshairIconSwitcher,
-    deleteLightFromRegion,
-    getActorFromRegion,
-    getRegionOrigin,
-    getTokenFromActor,
-    MODULE_ID
-} from "../utils.ts";
+import { createCrosshairIconSwitcher, deleteLightFromRegion, getActorFromRegion, getRegionOrigin, getTokenFromActor, MODULE_ID } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 const floatingFlameAnimation = "jb2a.flaming_sphere.200px.orange.02";

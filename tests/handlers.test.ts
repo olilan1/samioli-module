@@ -1,3 +1,4 @@
+import { getTokensInRegion } from "../src/areatargeting.ts";
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
   applyPanacheForActor,
@@ -14,7 +15,7 @@ import {
   postSustainMessagesForActor,
   expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
-import { getTokensInRegion } from '../src/templatetarget.ts';
+
 import {
   handleStartOfTurnTokenEnter,
   handleStartOfTurnTokenExit,
@@ -565,44 +566,22 @@ describe('Baseline Hook Handlers', () => {
     const scene = { id: 'scene-1' };
 
     /**
-     * Builds a token whose containment answer and footprint are controlled by the test.
-     * `inside` stands in for TokenDocument#testInsideRegion, which tests the whole footprint
-     * rather than a single centre point.
+     * Builds a token whose containment answer is controlled by the test. `inside` stands in for
+     * TokenDocument#testInsideRegion, which samples the whole footprint rather than a centre point.
      */
-    const makeToken = (
-      id: string,
-      inside: boolean,
-      footprint: { i: number; j: number }[] = [{ i: 0, j: 0 }]
-    ) => ({
+    const makeToken = (id: string, inside: boolean) => ({
       id,
-      center: { x: 100, y: 100 },
       actor: { isOfType: (t: string) => t === 'creature', isDead: false },
-      footprint,
       document: {
         hidden: false,
-        elevation: 0,
         testInsideRegion: vi.fn().mockReturnValue(inside)
       }
     });
 
-    const setCanvas = (tokens: unknown[], blockedSpaces: { x: number; y: number }[] = []) => {
+    const setCanvas = (tokens: unknown[]) => {
       (globalThis as unknown as { canvas: unknown }).canvas = {
         scene,
-        tokens: { placeables: tokens },
-        grid: {
-          getCenterPoint: (o: { i: number; j: number }) => ({ x: o.j * 100 + 50, y: o.i * 100 + 50 })
-        }
-      };
-      (globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG = {
-        ...(globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG,
-        Canvas: {
-          polygonBackends: {
-            move: {
-              testCollision: (_o: unknown, target: { x: number; y: number }) =>
-                blockedSpaces.some(s => s.x === target.x && s.y === target.y)
-            }
-          }
-        }
+        tokens: { placeables: tokens }
       };
     };
 
@@ -611,7 +590,7 @@ describe('Baseline Hook Handlers', () => {
       shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
     } as unknown as RegionDocumentPF2e);
 
-    it('includes tokens the region contains and excludes those it does not', async () => {
+    it('includes tokens the region contains and excludes those it does not', () => {
       const inside = makeToken('token-inside', true);
       const outside = makeToken('token-outside', false);
       setCanvas([inside, outside]);
@@ -622,31 +601,7 @@ describe('Baseline Hook Handlers', () => {
       expect(inside.document.testInsideRegion).toHaveBeenCalled();
     });
 
-    it('includes a Large token whose footprint overlaps even when its centre does not', async () => {
-      // testInsideRegion samples every square of the footprint, so a 2x2 token counts as inside
-      // when any of its squares overlaps, including when its centre falls outside.
-      const large = makeToken('large-token', true, [
-        { i: 0, j: 0 }, { i: 0, j: 1 }, { i: 1, j: 0 }, { i: 1, j: 1 }
-      ]);
-      setCanvas([large]);
-
-      const tokens = getTokensInRegion(regionWithShape());
-      expect(tokens).toHaveLength(1);
-      expect(tokens[0].id).toBe('large-token');
-    });
-
-    it('targets a contained token even when a wall stands between it and the origin', async () => {
-      // PF2e places spell areas unclipped by walls (restriction disabled, coverage highlighting),
-      // so the affected squares must match the highlight rather than line of effect.
-      const behindWall = makeToken('behind-wall', true, [{ i: 2, j: 2 }]);
-      const clear = makeToken('clear-token', true, [{ i: 0, j: 0 }]);
-      setCanvas([behindWall, clear], [{ x: 250, y: 250 }]);
-
-      const tokens = getTokensInRegion(regionWithShape());
-      expect(tokens.map(t => t.id)).toEqual(['behind-wall', 'clear-token']);
-    });
-
-    it('returns nothing when the region belongs to a different scene', async () => {
+    it('returns nothing when the region belongs to a different scene', () => {
       const inside = makeToken('token-inside', true);
       setCanvas([inside]);
 

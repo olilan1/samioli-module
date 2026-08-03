@@ -191,6 +191,6 @@ const createSequenceProxy = (): unknown => {
 // Define a minimal canvas mock
 (globalThis as unknown as { canvas: unknown }).canvas = {
   grid: { size: 100, distance: 5 },
-  scene: { templates: { get: () => undefined }, regions: { get: () => undefined, some: () => false, deleteEmbeddedDocuments: vi.fn() } },
+  scene: { regions: { get: () => undefined, some: () => false, deleteEmbeddedDocuments: vi.fn() } },
   tokens: { placeables: [] }
 };

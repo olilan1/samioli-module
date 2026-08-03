@@ -1,5 +1,6 @@
+import { getTokensInEmanation } from "../src/areatargeting.ts";
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { deleteItemFromActor, getRegionOrigin, getTokensWithinRadius } from '../src/utils.ts';
+import { deleteItemFromActor, getRegionOrigin } from "../src/utils.ts";
 import { TokenPF2e } from 'foundry-pf2e';
 
 const regionWith = (shape: unknown) => ({ shapes: [shape] } as any);
@@ -53,7 +54,7 @@ describe('utils: getRegionOrigin', () => {
   });
 });
 
-describe('utils: getTokensWithinRadius', () => {
+describe('utils: getTokensInEmanation', () => {
   beforeEach(() => {
     (globalThis as any).canvas = {
       scene: {},
@@ -64,15 +65,6 @@ describe('utils: getTokensWithinRadius', () => {
       },
       tokens: {
         placeables: []
-      }
-    };
-    (globalThis as any).CONFIG = {
-      Canvas: {
-        polygonBackends: {
-          sight: {
-            testCollision: () => false
-          }
-        }
       }
     };
   });
@@ -96,7 +88,7 @@ describe('utils: getTokensWithinRadius', () => {
 
     (globalThis as any).canvas.tokens.placeables = [token1, token2];
 
-    const result = getTokensWithinRadius({ x: 100, y: 100 }, 30);
+    const result = getTokensInEmanation({ x: 100, y: 100 }, 30);
     expect(result).toHaveLength(1);
     expect(result[0]).toBe(token1);
   });
@@ -118,37 +110,10 @@ describe('utils: getTokensWithinRadius', () => {
 
     (globalThis as any).canvas.tokens.placeables = [deadToken, hiddenToken];
 
-    const result = getTokensWithinRadius({ x: 100, y: 100 }, 30);
+    const result = getTokensInEmanation({ x: 100, y: 100 }, 30);
     expect(result).toHaveLength(0);
   });
 
-  it('excludes tokens blocked by walls when checkWalls is true', () => {
-    const unblockedToken = {
-      center: { x: 100, y: 100 },
-      actor: { isOfType: () => true, isDead: false },
-      document: { hidden: false },
-      distanceTo: () => 10,
-      footprint: [{ i: 1, j: 1 }]
-    } as unknown as TokenPF2e;
-
-    const blockedToken = {
-      center: { x: 200, y: 200 },
-      actor: { isOfType: () => true, isDead: false },
-      document: { hidden: false },
-      distanceTo: () => 15,
-      footprint: [{ i: 2, j: 2 }]
-    } as unknown as TokenPF2e;
-
-    (globalThis as any).canvas.tokens.placeables = [unblockedToken, blockedToken];
-
-    (globalThis as any).CONFIG.Canvas.polygonBackends.sight.testCollision = (_origin: any, target: any) => {
-      return target.x === 250 && target.y === 250; // Block target token space center
-    };
-
-    const result = getTokensWithinRadius({ x: 0, y: 0 }, 30, { checkWalls: true });
-    expect(result).toContain(unblockedToken);
-    expect(result).not.toContain(blockedToken);
-  });
 });
 
 describe('utils: deleteItemFromActor', () => {

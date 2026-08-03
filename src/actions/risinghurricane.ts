@@ -1,5 +1,6 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import { RegionDocumentPF2e, TokenPF2e, UserPF2e } from "foundry-pf2e";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../targeting.ts";
 import { delay, getRegionOrigin, getTokenIdsFromTokens } from "../utils.ts";
 
 const HURRICANE_RADIUS_FEET = 15;

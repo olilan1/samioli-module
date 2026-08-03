@@ -1,12 +1,13 @@
-import { getTokenIdsFromTokens, getTokensWithinRadius } from "../utils.ts";
-import { replaceTargets } from "../templatetarget.ts";
+import { getTokenIdsFromTokens } from "../utils.ts";
+import { getTokensInEmanation } from "../areatargeting.ts";
+import { replaceTargets } from "../targeting.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenPF2e } from "foundry-pf2e";
 
 export async function startTectonicStomp(token: TokenPF2e) {
 
     // Capture all tokens within 30 ft emanation
-    const allTargets = getTokensWithinRadius(token.center, 30, { checkWalls: true });
+    const allTargets = getTokensInEmanation(token.center, 30);
     
     // remove player's token
     const remainingTargets = allTargets.filter((t) => t.id !== token.id);

@@ -1,5 +1,6 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTokensInRegion, replaceTargets, targetTokensUnderRegion } from "../templatetarget.ts";
+import { replaceTargets, targetTokensUnderRegion } from "../targeting.ts";
 import { delay, getActorFromRegion, getRegionOrigin, getTokenFromActor } from "../utils.ts";
 
 const { DialogV2 } = foundry.applications.api;

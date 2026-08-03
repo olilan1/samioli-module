@@ -1,17 +1,10 @@
+import { getTokensInRegion } from "../areatargeting.ts";
 import {
     RegionDocumentPF2e,
     TokenPF2e
 } from "foundry-pf2e";
-import { getTokensInRegion, replaceTargets } from "../templatetarget.ts";
-import {
-    getActorFromRegion,
-    getTokenFromActor,
-    getTokenIdsFromTokens,
-    postUINotification,
-    getRegionDirection,
-    getRegionLengthInUnits,
-    getRegionOrigin
-} from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
+import { getActorFromRegion, getTokenFromActor, getTokenIdsFromTokens, postUINotification, getRegionDirection, getRegionLengthInUnits, getRegionOrigin } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 export async function animateLightningDash(region: RegionDocumentPF2e) {

@@ -1,7 +1,7 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource } from "foundry-pf2e";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { addOrUpdateEffectOnActor, performFlatCheck } from "./utils.ts";
-import { replaceTargets } from "./templatetarget.ts";
+import { replaceTargets } from "./targeting.ts";
 import { SamiOliHooks } from "./types/hook-types.ts";
 
 export function replaceUnstableCheckWithStrainCheck(

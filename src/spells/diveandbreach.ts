@@ -1,7 +1,8 @@
+import { getTokensInEmanation } from "../areatargeting.ts";
 import { TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { getCollidableCallbacks, getTokensWithinRadius } from "../utils.ts";
-import { replaceTargets } from "../templatetarget.ts";
+import { getCollidableCallbacks } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
 
 /** Each splash damages creatures in a 5-foot emanation from the square it lands in. */
 const SPLASH_EMANATION_FEET = 5;
@@ -14,13 +15,13 @@ export async function startDiveAndBreach(token: TokenPF2e) {
     const firstLocation = await selectLocation(token, 10);
     if (!firstLocation) return;
     
-    const firstTargets = getTokensWithinRadius(firstLocation, SPLASH_EMANATION_FEET);
+    const firstTargets = getTokensInEmanation(firstLocation, SPLASH_EMANATION_FEET);
 
     ui.notifications.info("Select a breach location within 40 feet."); 
     const secondLocation = await selectLocation(firstLocation, 40);
     if (!secondLocation) return;
 
-    const secondTargets = getTokensWithinRadius(secondLocation, SPLASH_EMANATION_FEET);
+    const secondTargets = getTokensInEmanation(secondLocation, SPLASH_EMANATION_FEET);
 
     ui.notifications.info("Select a landing location within 10 feet."); 
     const thirdLocation = await selectLocation(secondLocation, 10);

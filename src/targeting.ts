@@ -1,6 +1,6 @@
-import { TokenPF2e, RegionDocumentPF2e } from "foundry-pf2e";
+import { RegionDocumentPF2e } from "foundry-pf2e";
 import { getSocket } from "./sockets.ts";
-import { isValidAreaTarget } from "./utils.ts";
+import { getTokensInRegion } from "./areatargeting.ts";
 
 interface RegionDetails {
     regionId: string,
@@ -53,24 +53,6 @@ export function deleteRegionTargets(_region: RegionDocumentPF2e) {
         currentTargets.filter(item => !lastDetails.tokenIds.includes(item)));
     replaceTargets(newTargets);
     lastRegionDetails = null;
-}
-
-/**
- * Returns the tokens inside a region that are valid targets: visible, living creatures, hazards or
- * vehicles whose footprint overlaps the region's shape.
- */
-export function getTokensInRegion(
-    regionDocument: RegionDocumentPF2e
-): TokenPF2e[] {
-    if (!regionDocument) return [];
-
-    // testInsideRegion throws when the token and region belong to different scenes.
-    if (!canvas.scene || regionDocument.parent !== canvas.scene) return [];
-
-    return canvas.tokens.placeables.filter((token: TokenPF2e) => {
-        if (!isValidAreaTarget(token)) return false;
-        return token.document.testInsideRegion(regionDocument);
-    });
 }
 
 export function setRegionColorToBlack(region: RegionDocumentPF2e): void {
