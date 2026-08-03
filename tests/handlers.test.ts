@@ -572,22 +572,34 @@ describe('Baseline Hook Handlers', () => {
     const makeToken = (id: string, inside: boolean) => ({
       id,
       actor: { isOfType: (t: string) => t === 'creature', isDead: false },
+      footprint: [{ i: 1, j: 1 }],
       document: {
         hidden: false,
         testInsideRegion: vi.fn().mockReturnValue(inside)
       }
     });
 
-    const setCanvas = (tokens: unknown[]) => {
+    /** `blocked` stands in for a wall between the region's origin and every token. */
+    const setCanvas = (tokens: unknown[], blocked = false) => {
       (globalThis as unknown as { canvas: unknown }).canvas = {
         scene,
-        tokens: { placeables: tokens }
+        tokens: { placeables: tokens },
+        grid: {
+          getCenterPoint: (o: { i: number; j: number }) => ({ x: o.j * 100 + 50, y: o.i * 100 + 50 })
+        }
+      };
+      (globalThis as unknown as { CONFIG: unknown }).CONFIG = {
+        Canvas: { polygonBackends: { move: { testCollision: () => blocked } } }
       };
     };
 
-    const regionWithShape = () => ({
+    const regionWithShape = (type = "circle", shapeCount = 1) => ({
       parent: scene,
-      shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
+      shapes: Array.from({ length: shapeCount }, () => ({
+        type,
+        origin: { x: 0, y: 0 },
+        rotation: 0
+      }))
     } as unknown as RegionDocumentPF2e);
 
     it('includes tokens the region contains and excludes those it does not', () => {
@@ -612,6 +624,36 @@ describe('Baseline Hook Handlers', () => {
 
       expect(getTokensInRegion(foreignRegion)).toEqual([]);
       expect(inside.document.testInsideRegion).not.toHaveBeenCalled();
+    });
+
+    it('excludes a contained token behind a wall when the shape has an origin', () => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      expect(getTokensInRegion(regionWithShape("circle"))).toEqual([]);
+    });
+
+    // The exempt cases matter most: "a line region is never clipped" is the easiest thing to break.
+    it.each([
+      ['line', 'one end of the area is not a point it radiates from'],
+      ['rectangle', 'a corner is not a point it radiates from'],
+      ['ring', 'its centre is the hole, and not part of the area']
+    ])('ignores walls for a %s shape, because %s', (type) => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      expect(getTokensInRegion(regionWithShape(type))).toHaveLength(1);
+    });
+
+    it('ignores walls for a region built from several shapes', () => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      expect(getTokensInRegion(regionWithShape("circle", 4))).toHaveLength(1);
+    });
+
+    it('ignores walls when the caller opts out, as persistent volumes do', () => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      const tokens = getTokensInRegion(regionWithShape("circle"), { lineOfEffect: false });
+      expect(tokens).toHaveLength(1);
     });
 
     it('samiOliModuleAPI: should export handleStartOfTurnTokenEnter', async () => {

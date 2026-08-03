@@ -120,7 +120,10 @@ export async function addEffectsToTokensInStartOfTurnTemplates(region: RegionDoc
 
     await recordStartOfTurnRegionFlags(region, resolved);
 
-    const tokensWithinRegion = getTokensInRegion(region);
+    // No line of effect test: these areas are persistent volumes, and the tokenEnter behavior that
+    // handles everyone arriving later cannot apply one. Checking here would mean a creature behind
+    // a wall was skipped at placement but affected the moment it stepped out and back in.
+    const tokensWithinRegion = getTokensInRegion(region, { lineOfEffect: false });
 
     // Routed through handleStartOfTurnTokenEnter so this path and the tokenEnter behavior share one
     // existing-effect check and one in-flight lock, keeping them from both creating the effect.

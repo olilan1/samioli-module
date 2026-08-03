@@ -28,6 +28,8 @@ export interface RegionOriginFlag {
  * they exist at runtime but are absent from the shape union in `@7h3laughingman/foundry-types`.
  */
 export interface RegionShapeGeometry {
+    /** The shape's kind: `circle`, `line`, `rectangle`, `emanation`, and so on. */
+    type: string;
     /** The shape's origin: an emanation's base token centre, a polygon's centroid, otherwise x/y. */
     origin: Point;
     /** Rotation about the origin, in degrees. */

@@ -1,4 +1,4 @@
-import { getTokensInEmanation } from "../src/areatargeting.ts";
+import { getTokensInEmanation, hasLineOfEffect } from "../src/areatargeting.ts";
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { deleteItemFromActor, getRegionOrigin } from "../src/utils.ts";
 import { TokenPF2e } from 'foundry-pf2e';
@@ -67,6 +67,13 @@ describe('utils: getTokensInEmanation', () => {
         placeables: []
       }
     };
+    (globalThis as any).CONFIG = {
+      Canvas: {
+        polygonBackends: {
+          move: { testCollision: () => false }
+        }
+      }
+    };
   });
 
   it('returns tokens within specified radius', () => {
@@ -114,6 +121,66 @@ describe('utils: getTokensInEmanation', () => {
     expect(result).toHaveLength(0);
   });
 
+  it('excludes a token with no line of effect from the origin', () => {
+    const token = {
+      actor: { isOfType: () => true, isDead: false },
+      document: { hidden: false },
+      distanceTo: () => 10,
+      footprint: [{ i: 1, j: 1 }]
+    } as unknown as TokenPF2e;
+
+    (globalThis as any).canvas.tokens.placeables = [token];
+    (globalThis as any).CONFIG.Canvas.polygonBackends.move.testCollision = () => true;
+
+    expect(getTokensInEmanation({ x: 0, y: 0 }, 30)).toHaveLength(0);
+  });
+
+});
+
+describe('areatargeting: hasLineOfEffect', () => {
+  beforeEach(() => {
+    (globalThis as any).canvas = {
+      grid: {
+        getCenterPoint: (offset: { i: number; j: number }) =>
+          ({ x: offset.j * 100 + 50, y: offset.i * 100 + 50 })
+      }
+    };
+  });
+
+  const tokenOccupying = (footprint: { i: number; j: number }[]) =>
+    ({ footprint } as unknown as TokenPF2e);
+
+  it('is true when the ray to the token reaches it', () => {
+    (globalThis as any).CONFIG = {
+      Canvas: { polygonBackends: { move: { testCollision: () => false } } }
+    };
+
+    expect(hasLineOfEffect({ x: 0, y: 0 }, tokenOccupying([{ i: 1, j: 1 }]))).toBe(true);
+  });
+
+  it('is false when every square is blocked', () => {
+    (globalThis as any).CONFIG = {
+      Canvas: { polygonBackends: { move: { testCollision: () => true } } }
+    };
+
+    expect(hasLineOfEffect({ x: 0, y: 0 }, tokenOccupying([{ i: 1, j: 1 }]))).toBe(false);
+  });
+
+  it('is true for a large token with one square reachable and one blocked', () => {
+    // A creature half behind a wall is still affected: only one of its squares needs a clear line.
+    (globalThis as any).CONFIG = {
+      Canvas: {
+        polygonBackends: {
+          move: {
+            testCollision: (_origin: unknown, target: { x: number; y: number }) => target.x === 250
+          }
+        }
+      }
+    };
+
+    const large = tokenOccupying([{ i: 1, j: 1 }, { i: 1, j: 2 }]);
+    expect(hasLineOfEffect({ x: 0, y: 0 }, large)).toBe(true);
+  });
 });
 
 describe('utils: deleteItemFromActor', () => {

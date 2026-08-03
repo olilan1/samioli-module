@@ -1,5 +1,7 @@
 import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { getRegionOrigin } from "./utils.ts";
+import { RegionShapeGeometry } from "./types.ts";
 
 /**
  * Whether a token can be affected by a spell area.
@@ -14,15 +16,38 @@ export function isValidAreaTarget(token: TokenPF2e): boolean {
 }
 
 /**
- * Applies the rules shared by every area: only valid targets, and only those the area covers.
+ * Whether a straight line from an area's origin reaches any square the token occupies, so a large
+ * creature partly behind a wall still counts.
  *
- * Each area helper supplies its own geometry through `isInArea`.
+ * Uses the `move` restriction, matching PF2e's template highlighting before v14.
  */
-export function getAffectedTokens(isInArea: (token: TokenPF2e) => boolean): TokenPF2e[] {
+export function hasLineOfEffect(origin: Point, token: TokenPF2e): boolean {
+    return token.footprint.some(offset => {
+        const squareCentre = canvas.grid.getCenterPoint(offset);
+        return !CONFIG.Canvas.polygonBackends.move.testCollision(
+            origin, squareCentre, { type: "move", mode: "any" }
+        );
+    });
+}
+
+/**
+ * Applies the rules shared by every area: only valid targets, only those the area covers, and only
+ * those with line of effect from its origin.
+ *
+ * Each area helper supplies its own geometry through `isInArea`. A `null` origin skips the line of
+ * effect test, for areas that have no single point to measure from — a line, a rectangle, or a
+ * region built from several shapes.
+ */
+export function getAffectedTokens(
+    origin: Point | null,
+    isInArea: (token: TokenPF2e) => boolean
+): TokenPF2e[] {
     if (!canvas.scene) return [];
 
-    return canvas.tokens.placeables.filter(
-        (token: TokenPF2e) => isValidAreaTarget(token) && isInArea(token)
+    return canvas.tokens.placeables.filter((token: TokenPF2e) =>
+        isValidAreaTarget(token)
+        && isInArea(token)
+        && (origin === null || hasLineOfEffect(origin, token))
     );
 }
 
@@ -36,7 +61,7 @@ export function getAffectedTokens(isInArea: (token: TokenPF2e) => boolean): Toke
  * half a square in each axis.
  */
 export function getTokensInEmanation(origin: Point, radiusFeet: number): TokenPF2e[] {
-    return getAffectedTokens(token => token.distanceTo(origin) <= radiusFeet);
+    return getAffectedTokens(origin, token => token.distanceTo(origin) <= radiusFeet);
 }
 
 /**
@@ -55,23 +80,50 @@ export function getTokensInBurst(origin: Point, radiusFeet: number): TokenPF2e[]
     // test strictly interior; it is far smaller than the gap to any square that is genuinely inside.
     const burst = new PIXI.Polygon(canvas.grid.getCircle(origin, radiusFeet - 0.01));
 
-    return getAffectedTokens(token => token.footprint.some(offset => {
+    return getAffectedTokens(origin, token => token.footprint.some(offset => {
         const squareCentre = canvas.grid.getCenterPoint(offset);
         return burst.contains(squareCentre.x, squareCentre.y);
     }));
 }
 
+/** Shapes whose `origin` is a point an area genuinely radiates from, and lies within. */
+const SHAPES_WITH_ORIGIN = new Set(["circle", "ellipse", "emanation", "cone"]);
+
+/**
+ * The point line of effect is measured from, or null when the area has no meaningful origin.
+ *
+ * A line's origin is one of its ends and a rectangle's is a corner, neither of which an area
+ * radiates from; a ring's is the hole at its centre, which is not part of the area at all; and a
+ * region built from several shapes has no single origin.
+ */
+function lineOfEffectOriginFor(region: RegionDocumentPF2e): Point | null {
+    if (region.shapes.length !== 1) return null;
+
+    const shape = region.shapes.at(0) as RegionShapeGeometry | undefined;
+    if (!shape || !SHAPES_WITH_ORIGIN.has(shape.type)) return null;
+
+    return getRegionOrigin(region);
+}
+
 /**
  * Returns the tokens inside a region that are valid targets: visible, living creatures, hazards or
  * vehicles whose footprint overlaps the region's shape.
+ *
+ * Line of effect is applied when the region's shape has a point of origin. Pass
+ * `{ lineOfEffect: false }` to skip that test and target everything the region covers.
  */
-export function getTokensInRegion(regionDocument: RegionDocumentPF2e): TokenPF2e[] {
+export function getTokensInRegion(
+    regionDocument: RegionDocumentPF2e,
+    { lineOfEffect = true }: { lineOfEffect?: boolean } = {}
+): TokenPF2e[] {
     if (!regionDocument) return [];
 
     // testInsideRegion throws when the token and region belong to different scenes.
     if (!canvas.scene || regionDocument.parent !== canvas.scene) return [];
 
-    return getAffectedTokens(token => token.document.testInsideRegion(regionDocument));
+    const origin = lineOfEffect ? lineOfEffectOriginFor(regionDocument) : null;
+
+    return getAffectedTokens(origin, token => token.document.testInsideRegion(regionDocument));
 }
 
 /**
