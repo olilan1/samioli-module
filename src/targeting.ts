@@ -56,7 +56,5 @@ export function deleteRegionTargets(_region: RegionDocumentPF2e) {
 }
 
 export function setRegionColorToBlack(region: RegionDocumentPF2e): void {
-    if (!region.getFlag("samioli-module", "ignoreTemplateColourOverride")) {
-        region.updateSource({ color: "#000000" });
-    }
+    region.updateSource({ color: "#000000" });
 }
