@@ -229,10 +229,6 @@ function createWallOfFireRingSideShape(location: Point,
     return createWallOfFireLineShape(location, RING_SIDE_LENGTH_FEET, rotation);
 }
 
-function feetToPixels(feet: number): number {
-    return feet * (canvas.grid.size / canvas.grid.distance);
-}
-
 function createWallOfFireLineShape(startingLocation: Point, lengthInFeet: number,
     direction: number): WallOfFireLineShape {
 
@@ -240,8 +236,8 @@ function createWallOfFireLineShape(startingLocation: Point, lengthInFeet: number
         type: "line",
         x: startingLocation.x,
         y: startingLocation.y,
-        length: feetToPixels(lengthInFeet),
-        width: feetToPixels(WALL_THICKNESS_FEET),
+        length: lengthInFeet * canvas.dimensions.distancePixels,
+        width: WALL_THICKNESS_FEET * canvas.dimensions.distancePixels,
         rotation: direction,
         gridBased: true
     };
@@ -284,7 +280,7 @@ async function createWallOfFireRegion(token: TokenPF2e,
 
 function pixelsToFeet(distance: number): number {
     // Convert the distance from pixels to feet, rounded up to a whole square
-    const distanceInFeet = distance * (canvas.grid.distance / canvas.grid.size);
+    const distanceInFeet = distance / canvas.dimensions.distancePixels;
     return Math.ceil(distanceInFeet / canvas.grid.distance) * canvas.grid.distance;
 }
 

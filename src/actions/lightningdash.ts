@@ -34,7 +34,7 @@ export async function animateLightningDash(region: RegionDocumentPF2e) {
 }
 
 function findDestination(token: TokenPF2e, region: RegionDocumentPF2e) {
-    const feetToCoords = canvas.grid.size / canvas.grid.distance;
+    const feetToCoords = canvas.dimensions.distancePixels;
     const direction = getRegionDirection(region);
     const radianAngle = direction * (Math.PI / 180);
     const origin = getRegionOrigin(region);

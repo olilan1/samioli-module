@@ -252,7 +252,7 @@ function calculateAnimationPath(region: RegionDocumentPF2e, target: TokenPF2e): 
     // Calculate starting location
     const angle = Math.random() * 360;
     const distanceInFeet = 25;
-    const distanceInPixels = distanceInFeet * (canvas.grid.size / canvas.grid.distance);
+    const distanceInPixels = distanceInFeet * canvas.dimensions.distancePixels;
     const start = calculateNewCoordinates(origin.x, origin.y, angle, distanceInPixels);
 
     // Calculate ending location
@@ -262,7 +262,7 @@ function calculateAnimationPath(region: RegionDocumentPF2e, target: TokenPF2e): 
     const angleDegrees = Math.atan2(dy, dx) * (180 / Math.PI);
     const distanceToTargetInPixels = Math.hypot(dx, dy);
     const extraDistanceInFeet = 60;
-    const extraDistanceInPixels = extraDistanceInFeet * (canvas.grid.size / canvas.grid.distance);
+    const extraDistanceInPixels = extraDistanceInFeet * canvas.dimensions.distancePixels;
     const totalDistanceInPixels = distanceToTargetInPixels + extraDistanceInPixels;
     const end = calculateNewCoordinates(start.x, start.y, angleDegrees, totalDistanceInPixels);
 

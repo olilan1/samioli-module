@@ -58,7 +58,7 @@ async function selectLocation(origin: Point | TokenPF2e, range: number) {
 }
 
 function getSequencerLocation(location: Point): Point {
-    const offset = canvas.scene!.grid.size / 2;
+    const offset = canvas.grid.size / 2;
     return {
         x: location.x - offset,
         y: location.y - offset
