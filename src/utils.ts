@@ -427,7 +427,7 @@ export function getRegionDirection(region: RegionDocumentPF2e): number {
 export function getRegionLengthInUnits(region: RegionDocumentPF2e): number | null {
     const shape = region.shapes?.at(0) as RegionShapeGeometry | undefined;
     if (typeof shape?.length !== "number") return null;
-    return (shape.length / canvas.grid.size) * canvas.grid.distance;
+    return shape.length / canvas.dimensions.distancePixels;
 }
 
 /**

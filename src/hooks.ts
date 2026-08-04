@@ -25,7 +25,6 @@ import {
     ItemPF2e,
     RegionDocumentPF2e,
     TokenDocumentPF2e,
-    TokenPF2e,
     UserPF2e
 } from "foundry-pf2e";
 import {
@@ -54,8 +53,7 @@ import {
     postMessagesForWithinEffects,
     deleteWithinEffectsForRegion,
     initialiseStartOfTurnRegion,
-    isStartOfTurnSpellRegion,
-    hasStartOfTurnRegionFlags
+    isStartOfTurnSpellRegion
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
 import { addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
@@ -193,7 +191,7 @@ Hooks.on("deleteRegion", (
     hook(deleteWithinEffectsForRegion, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(hasStartOfTurnRegionFlags)
+        .if(isStartOfTurnSpellRegion)
         .run();
 });
 
@@ -277,9 +275,9 @@ Hooks.on("preDeleteToken", async (token: TokenDocumentPF2e, _action: string, _id
 Hooks.on(
     "moveToken",
     (
-        token: TokenPF2e,
-        movement: { passed: { cost: number }; destination: { x: number; y: number } },
-        _action: string,
+        token: TokenDocumentPF2e,
+        movement: { destination: { x: number; y: number } },
+        _operation: unknown,
         _user: UserPF2e
     ) => {
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
@@ -328,13 +326,11 @@ Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElem
 
 
 function handleChatMessageWithRoll(message: ChatMessagePF2e) {
-    switch (getMessageType(message)) {
-        case "attack-roll":
-            hook(startImaginaryWeapon, message)
-                .ifMessagePosterAndActorOwner()
-                .ifMessageOption("item:imaginary-weapon")
-                .run();
-            break;
+    if (getMessageType(message) === "attack-roll") {
+        hook(startImaginaryWeapon, message)
+            .ifMessagePosterAndActorOwner()
+            .ifMessageOption("item:imaginary-weapon")
+            .run();
     }
 }
 

@@ -217,7 +217,7 @@ async function cleanUpGhostlyCarrierActor(ghostlyCarrierTokenDocument: TokenDocu
     }
 }
 
-export async function moveGhostlyCarrierToCaster(casterToken: TokenPF2e, 
+export async function moveGhostlyCarrierToCaster(casterToken: TokenDocumentPF2e,
     destinationX: number, destinationY: number) {
 
     const effect = getGhostlyCarrierItemFromCasterToken(casterToken);
@@ -236,7 +236,7 @@ async function getGhostlyCarrierTokenUuidFromItem(item: ItemPF2e) {
     return tokenDocumentUUID;
 }
 
-function getGhostlyCarrierItemFromCasterToken(casterToken: TokenPF2e) {
+function getGhostlyCarrierItemFromCasterToken(casterToken: TokenPF2e | TokenDocumentPF2e) {
     
     return casterToken.actor?.items.find(item => item.slug === "samioli-ghostly-carrier")
 }

@@ -28,17 +28,17 @@ type RegionTriggerFunction = (doc: RegionDocumentPF2e) => void;
  * Key: origin:item:[slug] roll option.
  */
 const REGION_MAPPINGS_RUN_AS_CREATOR: Record<string, RegionTriggerFunction> = {
-    "origin:item:storm-spiral": initiateStormSpiral as RegionTriggerFunction,
-    "origin:item:lightning-dash": animateLightningDash as RegionTriggerFunction,
-    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist as RegionTriggerFunction,
-    "origin:item:blazing-dive": initiateBlazingDive as RegionTriggerFunction
+    "origin:item:storm-spiral": initiateStormSpiral,
+    "origin:item:lightning-dash": animateLightningDash,
+    "origin:item:pernicious-poltergeist": initiatePerniciousPoltergeist,
+    "origin:item:blazing-dive": initiateBlazingDive
 };
 
 /**
  * Mappings for region creation functions that must run with GM authority.
  */
 const REGION_MAPPINGS_RUN_AS_GM: Record<string, RegionTriggerFunction> = {
-    "origin:item:floating-flame": initiateFloatingFlame as RegionTriggerFunction
+    "origin:item:floating-flame": initiateFloatingFlame
 };
 
 /**
@@ -56,7 +56,7 @@ const SUSTAIN_MAPPINGS: Record<string, SustainTriggerFunction> = {
  * Mappings for cleanup functions triggered when a Scene Region is deleted.
  */
 const REGION_DELETION_MAPPINGS: Record<string, RegionTriggerFunction> = {
-    "origin:item:floating-flame": removeFloatingFlame as RegionTriggerFunction
+    "origin:item:floating-flame": removeFloatingFlame
 };
 
 /**

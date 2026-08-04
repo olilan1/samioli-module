@@ -55,6 +55,13 @@ export function deleteRegionTargets(_region: RegionDocumentPF2e) {
     lastRegionDetails = null;
 }
 
+/**
+ * Blacks out a spell area at creation.
+ *
+ * Gated on `flags.pf2e.origin`, which PF2e writes only when placing an area from an item. Regions
+ * are a general-purpose scene tool in v14, so an ordinary region a GM draws is left alone.
+ */
 export function setRegionColorToBlack(region: RegionDocumentPF2e): void {
+    if (!region.flags.pf2e?.origin) return;
     region.updateSource({ color: "#000000" });
 }

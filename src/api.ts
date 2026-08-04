@@ -3,7 +3,6 @@ import { triggerSnare } from "./actions/snare.ts";
 import { displayShiftingWeaponDialogViaMacro } from "./actions/shifting.ts";
 import { startEmote } from "./actions/emote.ts";
 import {
-    addEffectsToTokensInStartOfTurnTemplates,
     handleStartOfTurnTokenEnter,
     handleStartOfTurnTokenExit
 } from "./startofturnspells.ts";
@@ -27,10 +26,6 @@ export class samiOliModuleAPI {
 
     static async handleEmote(token: TokenPF2e) {
         startEmote(token);
-    }
-
-    static async addEffectsToTokensInStartOfTurnTemplates(region: RegionDocumentPF2e) {
-        return addEffectsToTokensInStartOfTurnTemplates(region);
     }
 
     static async handleStartOfTurnTokenEnter(token: TokenPF2e, region: RegionDocumentPF2e) {

@@ -377,13 +377,3 @@ function createWithinEffectSource(spell: SpellPF2e, region: RegionDocumentPF2e):
         }
     } as DeepPartial<EffectSource> as EffectSource;
 }
-
-
-/**
- * Checks if the region has flags indicating it was placed for a start-of-turn spell.
- */
-export function hasStartOfTurnRegionFlags(region: RegionDocumentPF2e): boolean {
-    return !!region.getFlag(MODULE_ID, "isStartOfTurnSpell")
-        || !!region.getFlag(MODULE_ID, "spellSource")
-        || isStartOfTurnSpellRegion(region);
-}
