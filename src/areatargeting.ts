@@ -87,14 +87,14 @@ export function getTokensInBurst(origin: Point, radiusFeet: number): TokenPF2e[]
 }
 
 /** Shapes whose `origin` is a point an area genuinely radiates from, and lies within. */
-const SHAPES_WITH_ORIGIN = new Set(["circle", "ellipse", "emanation", "cone"]);
+const SHAPES_WITH_ORIGIN = new Set(["circle", "ellipse", "emanation", "cone", "line"]);
 
 /**
  * The point line of effect is measured from, or null when the area has no meaningful origin.
  *
- * A line's origin is one of its ends and a rectangle's is a corner, neither of which an area
- * radiates from; a ring's is the hole at its centre, which is not part of the area at all; and a
- * region built from several shapes has no single origin.
+ * A line's origin is the end it was drawn from, with the area extending away along it. A
+ * rectangle's is a corner it does not radiate from; a ring's is the hole at its centre, which is
+ * not part of the area at all; and a region built from several shapes has no single origin.
  */
 function lineOfEffectOriginFor(region: RegionDocumentPF2e): Point | null {
     if (region.shapes.length !== 1) return null;

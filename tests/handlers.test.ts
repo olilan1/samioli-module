@@ -624,15 +624,15 @@ describe('Baseline Hook Handlers', () => {
       expect(inside.document.testInsideRegion).not.toHaveBeenCalled();
     });
 
-    it('excludes a contained token behind a wall when the shape has an origin', () => {
-      setCanvas([makeToken('behind-wall', true)], true);
+    it.each(['circle', 'line'])(
+      'excludes a contained token behind a wall for a %s shape', (type) => {
+        setCanvas([makeToken('behind-wall', true)], true);
 
-      expect(getTokensInRegion(regionWithShape("circle"))).toEqual([]);
-    });
+        expect(getTokensInRegion(regionWithShape(type))).toEqual([]);
+      });
 
-    // The exempt cases matter most: "a line region is never clipped" is the easiest thing to break.
+    // The exempt cases matter most: "a ring region is never clipped" is the easiest thing to break.
     it.each([
-      ['line', 'one end of the area is not a point it radiates from'],
       ['rectangle', 'a corner is not a point it radiates from'],
       ['ring', 'its centre is the hole, and not part of the area']
     ])('ignores walls for a %s shape, because %s', (type) => {
