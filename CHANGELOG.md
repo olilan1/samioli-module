@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Migrate to Foundry v14 - previous versions are no longer supported
+- Migrate all uses of MeasuredTemplate to Region
+
 ## [0.66.0] - 2026-08-04
 
 - HookRunner refactor
