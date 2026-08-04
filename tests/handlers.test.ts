@@ -163,12 +163,11 @@ describe('Baseline Hook Handlers', () => {
 
     it('clearPanacheForActor: should clear panache when damage is rolled', async () => {
       const deleteMock = vi.fn();
-      const mockActor = {
-        items: Object.assign([], {
-          contents: [],
-          has: (id: string) => id === 'panache-1'
-        })
-      } as unknown as ActorPF2e;
+      const mockItems = Object.assign([], {
+        contents: [] as object[],
+        has: (id: string) => id === 'panache-1'
+      });
+      const mockActor = { items: mockItems } as unknown as ActorPF2e;
 
       const mockPanache = {
         id: 'panache-1',
@@ -179,7 +178,7 @@ describe('Baseline Hook Handlers', () => {
       };
 
       const itemsList = [mockPanache];
-      (mockActor.items as any).contents = itemsList;
+      mockItems.contents = itemsList;
 
       const mockMessage = {
         actor: mockActor,
@@ -481,12 +480,11 @@ describe('Baseline Hook Handlers', () => {
     );
 
     it('expireUnsustainedEffectsForActor: should delete unsustained effects', async () => {
-      const mockActor = {
-        items: Object.assign([], {
-          filter: vi.fn(),
-          has: (id: string) => id === 'effect-1'
-        })
-      } as unknown as ActorPF2e;
+      const mockItems = Object.assign([], {
+        filter: vi.fn(),
+        has: (id: string) => id === 'effect-1'
+      });
+      const mockActor = { items: mockItems } as unknown as ActorPF2e;
 
       const mockEffect = {
         id: 'effect-1',
@@ -497,7 +495,7 @@ describe('Baseline Hook Handlers', () => {
         delete: vi.fn()
       };
 
-      (mockActor.items as any).filter.mockReturnValue([mockEffect]);
+      mockItems.filter.mockReturnValue([mockEffect]);
 
       await expireUnsustainedEffectsForActor(mockActor);
       expect(mockEffect.delete).toHaveBeenCalled();
