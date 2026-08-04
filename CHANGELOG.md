@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.66.0] - 2026-08-04
+
 - HookRunner refactor
 - Fix to Boost Eidolon requiring a focus point to work
 - Updated flag retrieval to be consistent
@@ -132,7 +134,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.65.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.66.0...HEAD
+
+[0.66.0]: https://github.com/olilan1/samioli-module/compare/v0.65.0...v0.66.0
 
 [0.65.0]: https://github.com/olilan1/samioli-module/compare/v0.64.0...v0.65.0
 
