@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 
-## [1.0.0-beta.0] - 2026-08-09
-
 - Migrate to Foundry v14 - previous versions are no longer supported
 - Migrate all uses of MeasuredTemplate to Region
 
@@ -139,9 +137,7 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.0...HEAD
-
-[1.0.0-beta.0]: https://github.com/olilan1/samioli-module/compare/v0.66.0...v1.0.0-beta.0
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.66.0...HEAD
 
 [0.66.0]: https://github.com/olilan1/samioli-module/compare/v0.65.0...v0.66.0
 
