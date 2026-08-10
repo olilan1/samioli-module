@@ -195,7 +195,7 @@ async function selectLocation(redistributePotentialType: RedistributePotentialTy
             }, 
             gridHighlight: true
         },
-        getCollidableCallbacks("Redistribute Potential", iconTexture));
+        await getCollidableCallbacks("Redistribute Potential", iconTexture));
 
     return selectedLocation;
 }

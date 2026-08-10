@@ -351,17 +351,18 @@ export async function createCrosshairIconSwitcher(
     };
 }
 
-export function getCollidableCallbacks(actionName: string, icon: string): CrosshairCallbackData {
+export async function getCollidableCallbacks(
+    actionName: string,
+    icon: string
+): Promise<CrosshairCallbackData> {
+    const switchIcon = await createCrosshairIconSwitcher(icon);
+
     return {
         [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            });
+            switchIcon(crosshair, false);
         },
         [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": icon
-            });
+            switchIcon(crosshair, true);
         },
         [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
             ui.notifications.warn(`${actionName} cancelled.`);

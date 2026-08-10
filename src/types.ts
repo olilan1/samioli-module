@@ -1,10 +1,12 @@
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 /**
- * Type suitable for use as the parameter in Sequencer crosshair callbacks
+ * Type suitable for use as the parameter in Sequencer crosshair callbacks.
+ *
+ * `updateCrosshair` is deliberately absent: calling it freezes the canvas on v14. Change a
+ * crosshair's icon with `createCrosshairIconSwitcher` instead.
  */
 export interface CrosshairUpdatable {
-  updateCrosshair(options: object): void;
   controlIcon: { texture: PIXI.Texture };
   x: number;
   y: number;

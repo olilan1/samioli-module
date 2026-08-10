@@ -55,7 +55,7 @@ async function selectLocationToDashTo(token: TokenPF2e): Promise<Point | null> {
             },
             t: "circle"
         },
-        getCollidableCallbacks("Sonic Dash", "icons/svg/wingfoot.svg"));
+        await getCollidableCallbacks("Sonic Dash", "icons/svg/wingfoot.svg"));
 
     return moveLocation;
 }

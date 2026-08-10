@@ -173,7 +173,7 @@ async function selectCentrePoint(token: TokenPF2e): Promise<Point | false> {
                 texture: "icons/svg/fire.svg"
             }
         },
-        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
+        await getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
     return centrePoint;
 }
 
@@ -191,7 +191,7 @@ async function selectStartingPoint(token: TokenPF2e): Promise<Point | false> {
                 texture: "icons/svg/fire.svg"
             }
         },
-        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
+        await getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
 
     if (!startingPointTemplate) return false;
 
@@ -212,7 +212,7 @@ async function selectEndPoint(startingPoint: Point): Promise<Point | false> {
                 texture: "icons/svg/fire.svg"
             }
         }, 
-        getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
+        await getCollidableCallbacks("Wall of Fire", "icons/svg/fire.svg"));
 
     if (!endPointTemplate) return false;
 

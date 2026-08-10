@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix the canvas going black when placing a crosshair
+
 ## [1.0.0-beta.0] - 2026-08-09
 
 - Migrate to Foundry v14 - previous versions are no longer supported

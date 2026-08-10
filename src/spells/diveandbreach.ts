@@ -54,7 +54,7 @@ async function selectLocation(origin: Point | TokenPF2e, range: number) {
                 texture: icon
             }
         },
-        getCollidableCallbacks("Dive and Breach", icon));
+        await getCollidableCallbacks("Dive and Breach", icon));
 }
 
 function getSequencerLocation(location: Point): Point {

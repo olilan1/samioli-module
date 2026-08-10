@@ -188,7 +188,7 @@ async function selectSquare(token: TokenPF2e) {
                 position: snapPosition
             }
         },
-        getCollidableCallbacks("Snare placement", iconTexture));
+        await getCollidableCallbacks("Snare placement", iconTexture));
 
     selectedLocation.x -= canvas.grid.size / 2;
     selectedLocation.y -= canvas.grid.size / 2;

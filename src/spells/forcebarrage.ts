@@ -131,7 +131,7 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards:
                 position: snapPosition
             }
         },
-        getCollidableCallbacks("Force Barrage", iconTexture));
+        await getCollidableCallbacks("Force Barrage", iconTexture));
 
     return templateData;
 
