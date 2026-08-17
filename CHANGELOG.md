@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.0-beta.2] - 2026-08-17
+
 - Fix weapon selection dialog for shifting runes
 - Inner Radiance Torrent macro fix
 - General cleanup
@@ -147,7 +149,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.2...HEAD
+
+[1.0.0-beta.2]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.1...v1.0.0-beta.2
 
 [1.0.0-beta.1]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.0...v1.0.0-beta.1
 
