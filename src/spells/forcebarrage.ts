@@ -98,7 +98,7 @@ async function selectNumberOfActionsDialog(): Promise<number | undefined> {
             },
         ],
     })
-    return actions as number;
+    return actions ? parseInt(String(actions), 10) : undefined;
 }
 
 async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards: number) {

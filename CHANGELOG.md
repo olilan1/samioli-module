@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Fix weapon selection dialog for shifting runes
+- Inner Radiance Torrent macro fix
+- General cleanup
+
 ## [1.0.0-beta.1] - 2026-08-10
 
 - Fix the canvas going black when placing a crosshair

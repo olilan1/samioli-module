@@ -21,7 +21,10 @@ import {
   handleStartOfTurnTokenExit,
   deleteWithinEffectsForRegion
 } from '../src/startofturnspells.ts';
-import { ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e, TokenPF2e } from 'foundry-pf2e';
+import { getHeldShiftingWeaponFromToken } from '../src/actions/shifting.ts';
+import {
+  ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e, TokenPF2e, WeaponPF2e
+} from 'foundry-pf2e';
 
 // Mock chatbuttonhelper to avoid real chat message creation
 vi.mock('../src/chatbuttonhelper.ts', () => ({
@@ -921,6 +924,78 @@ describe('Baseline Hook Handlers', () => {
 
       expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
       expect(createdEffects).toHaveLength(1);
+    });
+  });
+
+  describe('Shifting Weapon Retrieval (getHeldShiftingWeaponFromToken)', () => {
+    it('returns null and warns when no shifting weapon is held', async () => {
+      const mockActor = {
+        itemTypes: {
+          weapon: [
+            {
+              id: 'w1',
+              isEquipped: true,
+              system: { runes: { property: ['flaming'] } }
+            }
+          ]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(result).toBeNull();
+      expect(ui.notifications.warn).toHaveBeenCalledWith(
+        'No equipped weapon with a shifting rune was found.'
+      );
+    });
+
+    it('returns weapon directly when exactly one shifting weapon is held', async () => {
+      const weapon = {
+        id: 'w-shift',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const mockActor = {
+        itemTypes: {
+          weapon: [weapon]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(result).toBe(weapon);
+    });
+
+    it('invokes DialogV2.wait when multiple shifting weapons are held', async () => {
+      const weapon1 = {
+        id: 'w1',
+        name: 'Longsword',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const weapon2 = {
+        id: 'w2',
+        name: 'Dagger',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const mockActor = {
+        itemTypes: {
+          weapon: [weapon1, weapon2]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const waitMock = vi.fn().mockResolvedValue('w2');
+      (foundry.applications.api.DialogV2 as unknown as { wait: unknown }).wait = waitMock;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(waitMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          window: { title: 'Select Weapon to Shift' }
+        })
+      );
+      expect(result).toBe(weapon2);
     });
   });
 });

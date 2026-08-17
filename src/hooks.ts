@@ -56,7 +56,7 @@ import {
     isStartOfTurnSpellRegion
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
-import { addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
+import { addDamageHelperButtonToChatUI } from "./damagehelper.ts";
 import { MODULE_ID } from "./utils.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
@@ -317,7 +317,7 @@ Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
 
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
     _data: unknown, _options: unknown) => {
-    hook(addDamageHelperButtonToChatUIv13, cssMappings)
+    hook(addDamageHelperButtonToChatUI, cssMappings)
         .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
         .ifGM()
         .allowUnfilteredRun()

@@ -36,7 +36,7 @@ export async function startTumbleThrough(chatMessage: ChatMessagePF2e) {
     if (!canvas.scene) {
         return;
     }
-    const targetLocationBuffer = canvas.scene.grid.size / 2;
+    const targetLocationBuffer = canvas.grid.size / 2;
 
     let x = targetPositionX - originalTokenPositionX
     let y = targetPositionY - originalTokenPositionY
