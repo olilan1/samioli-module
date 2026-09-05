@@ -2,8 +2,13 @@ import { ChatMessagePF2e, ConsumablePF2e, TokenDocumentPF2e, TokenPF2e } from "f
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { getSocket, CREATE_SNARE, REMOVE_SNARE } from "../sockets.ts";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
-import { replaceTargetsForUsers } from "../templatetarget.ts";
-import { getCollidableCallbacks, getOwnersFromActor, getTokensAtLocation } from "../utils.ts";
+import { replaceTargetsForUsers } from "../targeting.ts";
+import { getTokensAtLocation } from "../areatargeting.ts";
+import {
+    getCollidableCallbacks,
+    getOwnersFromActor,
+    getRegionOrigin
+} from "../utils.ts";
 
 export async function deploySnare(deployerToken: TokenPF2e, message: ChatMessagePF2e) {
    
@@ -56,17 +61,15 @@ export async function createSnareAsGM(location: Point, deployerUuid: string, sna
     const regionData = {
         name: `${deployerName}'s ${snareName}`,
         color: playerColour,
-        visibility: 2,
+        visibility: CONST.REGION_VISIBILITY.ALWAYS,
         shapes: [{
-             type: "rectangle", 
-             width: size, 
-             height: size, 
-             x: location.x, 
-             y: location.y, 
-             rotation: 0 
+             type: "rectangle",
+             width: size,
+             height: size,
+             x: location.x,
+             y: location.y,
+             rotation: 0
         }],
-        x: location.x,
-        y: location.y,
         behaviors: [{
             type: "executeScript", 
             system: {
@@ -88,7 +91,7 @@ export async function createSnareAsGM(location: Point, deployerUuid: string, sna
 function generateSnareScript(deployerUuid: string, snareId: string, itemUuid: string, location: Point) {
 
     const script = `
-if (!game.user.isGM) return;
+if (!game.user.isActiveGM) return;
 const triggererToken = event.data.token;
 const myApi = game.modules.get("samioli-module").api;
 myApi.handleSnareRegionEnter("${snareId}", "${itemUuid}", "${deployerUuid}", triggererToken, ${location.x}, ${location.y});
@@ -165,7 +168,7 @@ async function selectSquare(token: TokenPF2e) {
     const iconTexture = "icons/svg/trap.svg";
     const color = "#000000ff";
     const selectedLocation = await Sequencer.Crosshair.show({
-            t: CONST.MEASURED_TEMPLATE_TYPES.RECTANGLE,
+            t: "rect",
             distance: crosshairWidth,
             fillColor: color,
             label: {
@@ -185,7 +188,7 @@ async function selectSquare(token: TokenPF2e) {
                 position: snapPosition
             }
         },
-        getCollidableCallbacks("Snare placement", iconTexture));
+        await getCollidableCallbacks("Snare placement", iconTexture));
 
     selectedLocation.x -= canvas.grid.size / 2;
     selectedLocation.y -= canvas.grid.size / 2;
@@ -198,7 +201,10 @@ async function selectSquare(token: TokenPF2e) {
 function getSnareAtLocation(location: Point) {
     return canvas.scene?.regions.find((region) => {
         const snareId = region.getFlag("samioli-module", "snareId");
-        return !!snareId && region.x === location.x && region.y === location.y;
+        if (!snareId) return false;
+        // Regions have no top-level x/y; the coordinates live on the shape.
+        const origin = getRegionOrigin(region);
+        return origin?.x === location.x && origin?.y === location.y;
     });
 }
 
@@ -226,7 +232,8 @@ async function animateSnareTrigger(x: number, y: number) {
 
     new Sequence()
     .effect()
-        .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100}})
+        // Sequencer types offset as a full Vector2; a plain point is what it accepts.
+        .atLocation({x: x + centreOfGrid, y: y + centreOfGrid}, {offset: {x:0, y:-100} as Vector2})
         .fadeIn(500)
         .text("Click!", style)
         .duration(4000)

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import '../src/hooks.ts';
 import { hook } from '../src/hookrunner.ts';
 import { SETTINGS } from '../src/settings.ts';
 import { ChatMessagePF2e, GamePF2e } from 'foundry-pf2e';
@@ -161,25 +162,6 @@ describe('HookRunner & hook helper', () => {
     });
   });
 
-  describe('ifV12', () => {
-    it('should run if version starts with 12.', () => {
-      (game as { version: string }).version = '12.328';
-      const callback = vi.fn();
-
-      hook(callback).ifV12().allowUnfilteredRun().run();
-
-      expect(callback).toHaveBeenCalled();
-    });
-
-    it('should NOT run if version does not start with 12.', () => {
-      (game as { version: string }).version = '13.336';
-      const callback = vi.fn();
-
-      hook(callback).ifV12().allowUnfilteredRun().run();
-
-      expect(callback).not.toHaveBeenCalled();
-    });
-  });
 
   describe('ifMessageType', () => {
     it('should run callback if context type matches target type', () => {
@@ -541,33 +523,6 @@ describe('HookRunner & hook helper', () => {
       expect(callback).toHaveBeenCalled();
     });
 
-    it('should satisfy isGuarded check with ifSceneHasTemplateWithFlag', () => {
-      const callback = vi.fn();
-      (globalThis as unknown as { canvas: unknown }).canvas = {
-        templates: {
-          placeables: [
-            {
-              document: {
-                getFlag: (scope: string, key: string) => {
-                  if (scope === 'samioli-module' && key === 'isStartOfTurnSpell') {
-                    return true;
-                  }
-                  return undefined;
-                }
-              }
-            }
-          ]
-        }
-      };
-
-      hook(callback)
-        .ifSceneHasTemplateWithFlag('samioli-module', 'isStartOfTurnSpell')
-        .run();
-      expect(callback).toHaveBeenCalled();
-      
-      delete (globalThis as Record<string, unknown>).canvas;
-    });
-
     it('should satisfy isGuarded check with ifMessageHasFlag', () => {
       const callback = vi.fn();
       const mockMessage = {
@@ -625,6 +580,14 @@ describe('HookRunner & hook helper', () => {
         .run();
 
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Foundry v14 Region Hook Registrations', () => {
+    it('should register region hooks and custom handlers', () => {
+      expect(Hooks.on).toHaveBeenCalledWith('createRegion', expect.any(Function));
+      expect(Hooks.on).toHaveBeenCalledWith('preCreateRegion', expect.any(Function));
+      expect(Hooks.on).toHaveBeenCalledWith('deleteRegion', expect.any(Function));
     });
   });
 });

@@ -1,28 +1,24 @@
 import { TokenPF2e, TokenDocumentPF2e } from "foundry-pf2e";
-import { getTokenIdsFromTokens, getEnemyTokensFromTokenArray, createTemplateAtPoint } from "../utils.ts";
+import {
+    getTokenIdsFromTokens,
+    getEnemyTokensFromTokenArray
+} from "../utils.ts";
+import { getTokensInEmanation } from "../areatargeting.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { replaceTargets } from "../targeting.ts";
 import { DAZZLING_DISPLAY, getSocket } from "../sockets.ts";
 
 export async function startDazzlingDisplay(token: TokenPF2e) {
-    // Create a 30 ft radius template at the token's position
-    const creatorUserId = game?.user.id;
-    const tokenPoint = {x: token.x, y: token.y};
-    const template = await createTemplateAtPoint(tokenPoint, creatorUserId, 30, "circle");
-
-    // capture all targets in the area of effect
-    const allTargets = await getTemplateTokens(template);
+    // Capture all tokens within 30 ft emanation
+    const allTargets = getTokensInEmanation(token.center, 30);
 
     // remove allies and neutrals from the target list
     const enemyTargets = getEnemyTokensFromTokenArray(token, allTargets);
 
     // remove any tokens that have the dazzling display immunity effect
-    const finalTargets = enemyTargets.filter(t => !t.actor?.items.some(item => 
+    const finalTargets = enemyTargets.filter(t => !t.actor!.items.some(item => 
         item.type === "effect" && item.slug === "samioli-dazzling-display-immunity")
     );
-
-    // delete the template
-    await template.delete();
 
     // add tokens to current player's target list
     const finalTargetIds = getTokenIdsFromTokens(finalTargets);
@@ -39,7 +35,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
                 foundry.utils.mergeObject(
                     demoralizeMacro.toObject(),
                         { "-=_id": null, "ownership.default": CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER },
-                        { performDeletions: true, inplace: true }
+                        { inplace: true }
                 )
             );
             clonedMacro.execute();
@@ -47,7 +43,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
             demoralizeMacro.execute();
         }
     } else {
-        ui.notifications?.warn("Workbench Demoralize macro not found.");
+        ui.notifications.warn("Workbench Demoralize macro not found.");
         return;
     }
 
@@ -80,7 +76,9 @@ export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
     };
     
     for (const target of targets) {
-        await target.actor?.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+        if (target.actor) {
+            await target.actor.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
+        }
     }
 }
 

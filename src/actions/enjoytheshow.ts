@@ -102,7 +102,8 @@ export async function startEnjoyTheShow(message: ChatMessagePF2e) {
     const sequence = new Sequence()
 
     .effect()
-        .atLocation(token, {offset: {x:0, y:-100}})
+        // Sequencer types offset as a full Vector2; a plain point is what it accepts.
+        .atLocation(token, {offset: {x:0, y:-100} as Vector2})
         .fadeIn(500)
         .text(randomRetort(outcome), style)
         .duration(animationTime)

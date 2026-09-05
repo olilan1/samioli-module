@@ -1,24 +1,25 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getTokenFromActor, getTokenIdsFromTokens } from "../utils.ts";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion } from "../areatargeting.ts";
+import {
+    RegionDocumentPF2e,
+    TokenPF2e
+} from "foundry-pf2e";
+import { delay, getActorFromRegion, getTokenFromActor, getTokenIdsFromTokens, getRegionOrigin } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
-export async function initiateBlazingDive(template: MeasuredTemplateDocumentPF2e) {
-
-    // Store tokens from template
-    const targetTokens = await getTemplateTokens(template);
+export async function initiateBlazingDive(region: RegionDocumentPF2e) {
+    // Store tokens from region
+    const targetTokens = getTokensInRegion(region);
     // Remove targets from caster
     await replaceTargets([]);
-    // get template location
-    const locationOfTemplate: Point = {x: template.x, y: template.y};
-    // get caster token
-    const casterToken = getTokenFromActor(template.actor);
-    
-    if (!casterToken) {
-        return;
-    }
-    // delete template
-    await template.delete();
+    const locationOfTemplate = getRegionOrigin(region)!;
+
+    const casterToken = getTokenFromActor(getActorFromRegion(region));
+
+    if (!casterToken) return;
+
+    // delete region
+    await region.delete();
 
     // run animation sequence
     await animateBlazingDive(casterToken, locationOfTemplate);

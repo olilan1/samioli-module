@@ -131,5 +131,5 @@ async function selectDestination(token: TokenPF2e, maxRange: number, icon: strin
                 texture: icon
             }
         },
-        getCollidableCallbacks("Teleport", icon));
+        await getCollidableCallbacks("Teleport", icon));
 }

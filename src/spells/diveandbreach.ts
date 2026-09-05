@@ -1,8 +1,11 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { getTokensInEmanation } from "../areatargeting.ts";
+import { TokenPF2e } from "foundry-pf2e";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
-import { delay, getCollidableCallbacks } from "../utils.ts";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getCollidableCallbacks } from "../utils.ts";
+import { replaceTargets } from "../targeting.ts";
+
+/** Each splash damages creatures in a 5-foot emanation from the square it lands in. */
+const SPLASH_EMANATION_FEET = 5;
 
 export async function startDiveAndBreach(token: TokenPF2e) {
     // clear user targets
@@ -12,32 +15,17 @@ export async function startDiveAndBreach(token: TokenPF2e) {
     const firstLocation = await selectLocation(token, 10);
     if (!firstLocation) return;
     
-    const firstTemplate = await createTemplate(firstLocation);
-    const firstTargets = await getTemplateTokens(firstTemplate);
+    const firstTargets = getTokensInEmanation(firstLocation, SPLASH_EMANATION_FEET);
 
     ui.notifications.info("Select a breach location within 40 feet."); 
     const secondLocation = await selectLocation(firstLocation, 40);
-    if (!secondLocation) {
-        await firstTemplate.delete();
-        return;
-    }
+    if (!secondLocation) return;
 
-    const secondTemplate = await createTemplate(secondLocation);
-    const secondTargets = await getTemplateTokens(secondTemplate);
+    const secondTargets = getTokensInEmanation(secondLocation, SPLASH_EMANATION_FEET);
 
     ui.notifications.info("Select a landing location within 10 feet."); 
     const thirdLocation = await selectLocation(secondLocation, 10);
-    if (!thirdLocation) {
-        await firstTemplate.delete();
-        await secondTemplate.delete();
-        return;
-    }
-
-    // clear templates
-    await delay(200);
-    await firstTemplate.delete();
-    await secondTemplate.delete();
-    await delay(200);
+    if (!thirdLocation) return;
 
     const firstLocationSequencer = getSequencerLocation(firstLocation);
     const secondLocationSequencer = getSequencerLocation(secondLocation);
@@ -66,34 +54,15 @@ async function selectLocation(origin: Point | TokenPF2e, range: number) {
                 texture: icon
             }
         },
-        getCollidableCallbacks("Dive and Breach", icon));
+        await getCollidableCallbacks("Dive and Breach", icon));
 }
 
 function getSequencerLocation(location: Point): Point {
-    const offset = canvas.scene!.grid.size / 2;
+    const offset = canvas.grid.size / 2;
     return {
         x: location.x - offset,
         y: location.y - offset
     };
-}
-
-async function createTemplate(atLocation: Point): Promise<MeasuredTemplateDocumentPF2e> {
-    const templateData = {
-        t: "circle" as MeasuredTemplateType,
-        x: atLocation.x,
-        y: atLocation.y,
-        distance: 5,
-        direction: 0,
-        fillColor: "#000000" as `#${string}`,
-        borderColor: "#000000" as `#${string}`,
-    };
-
-    const myTemplate = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene });
-    if (!myTemplate) {
-        throw new Error("Failed to create template");
-    }
-    await delay(100);
-    return myTemplate as MeasuredTemplateDocumentPF2e;
 }
 
 async function fileExistsAtPath(path: string | URL | Request) {

@@ -1,5 +1,5 @@
 import type { ChatMessagePF2e, EffectPF2e, TokenPF2e, WeaponPF2e } from "foundry-pf2e";
-import { getTokensAtLocation } from "../utils.ts";
+import { getTokensAtLocation } from "../areatargeting.ts";
 import type { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollDancingBladeDamage } from "./dancingblade.ts";
 

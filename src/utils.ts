@@ -1,9 +1,8 @@
-import { ActorPF2e, TokenPF2e, MeasuredTemplateDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
+import { ActorPF2e, TokenPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
-import { MeasuredTemplateType } from "foundry-pf2e/foundry/common/constants.mjs";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
-import { CrosshairUpdatable } from "./types.ts";
+import { CrosshairUpdatable, RegionOriginFlag, RegionShapeGeometry } from "./types.ts";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
 
@@ -50,9 +49,9 @@ export function getHashCode(str: string) {
     return hash;
 }
 
-export function logd(message: unknown) {
-    if (getSetting(SETTINGS.DEBUG_LOGGING)) {
-        console.log(message);
+export function logd(...args: unknown[]) {
+    if (game.settings && getSetting(SETTINGS.DEBUG_LOGGING)) {
+        console.log(...args);
     }
 }
 
@@ -70,31 +69,36 @@ export function postUINotification(message: string, type: "info" | "warn" | "err
     }
 }
 
-export async function deleteTemplateById(templateId: string) {
-    if (!canvas.scene) {
-        console.log("No active scene found.");
-        return;
-    }
+export async function deleteRegionById(regionId: string) {
+    if (!canvas.scene) return;
 
-    // Check if the template exists before attempting to delete
-    const template = canvas.scene.templates.get(templateId);
-    if (!template) {
-        console.log(`Measured Template with ID ${templateId} not found on the current scene.`);
+    const region = canvas.scene.regions.get(regionId);
+    if (!region) {
+        logd(`Region with ID ${regionId} not found on current scene.`);
         return;
     }
 
     try {
-        // The deleteEmbeddedDocuments method expects an array of IDs
-        await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [templateId]);
-        console.log(`Deleted Measured Template with ID: ${templateId}`);
+        await canvas.scene.deleteEmbeddedDocuments("Region", [regionId]);
+        logd(`Deleted Region with ID: ${regionId}`);
     } catch (error) {
-        console.error("Error deleting Measured Template:", error);
-        ui.notifications.error(`Failed to delete Measured Template with ID ${templateId}. See console for details.`);
+        console.error("Error deleting Region:", error);
+        ui.notifications.error(`Failed to delete Region with ID ${regionId}.`);
     }
 }
 
 export function getTokenFromActor(actor: ActorPF2e | null): TokenPF2e | null {
     return actor?.getActiveTokens()[0] ?? null;
+}
+
+/**
+ * Returns the actor a region originated from, or null.
+ *
+ * PF2e records the caster's UUID in `flags.pf2e.origin.actor` when it places a spell area.
+ */
+export function getActorFromRegion(region: RegionDocumentPF2e): ActorPF2e | null {
+    const origin = region.flags.pf2e?.origin as RegionOriginFlag | undefined;
+    return origin?.actor ? fromUuidSync<ActorPF2e>(origin.actor) : null;
 }
 
 /**
@@ -108,17 +112,14 @@ export function getOwnersFromActor(actor: ActorPF2e, includeGM: boolean = true):
 }
 
 /**
- * Checks if a template has a flag with a lightId, and if so, deletes the associated light.
+ * Checks if a region has a flag with a lightId, and if so, deletes the associated light.
  */
-export async function deleteLightFromTemplate(template: MeasuredTemplateDocumentPF2e) {
-    // Get the lightId from the template's flag.
-    const lightId = template.getFlag(MODULE_ID, "lightId");
+export async function deleteLightFromRegion(region: RegionDocumentPF2e) {
+    const lightId = region.getFlag(MODULE_ID, "lightId");
     if (!lightId) return;
 
-    // Find the light document in the current scene's lights collection.
     const light = canvas.scene?.lights.find(l => l.id === lightId);
 
-    // If the light is found, delete it.
     if (light) {
         try {
             await light.delete();
@@ -174,33 +175,11 @@ export function returnStringOfNamesFromArray(names: string[]): string {
     return `${allButLast} and ${last}`;
 }
 
-export function getHtmlElement(htmlOrJquery: JQuery | HTMLElement): HTMLElement {
-    if (htmlOrJquery instanceof HTMLElement) {
-        return htmlOrJquery;
-    }
-    // If it is a jQuery object, return the first wrapped element
-    return (htmlOrJquery as JQuery)[0] as HTMLElement;
-}
 
 export function getEnemyTokensFromTokenArray(self: TokenPF2e, tokens: TokenPF2e[]): TokenPF2e[] {
-    return tokens.filter(token => token.document.disposition === (self.document.disposition ?? 0) * -1)
-}
-
-export async function createTemplateAtPoint(point: Point, userId: string, radius: number, shape: MeasuredTemplateType): Promise<MeasuredTemplateDocumentPF2e> {
-
-    const templateData = {
-        t: shape,
-        distance: radius,
-        x: point.x,
-        y: point.y,
-        user: userId
-    };
-
-    const template = await MeasuredTemplateDocument.create(templateData, { parent: canvas.scene }) as MeasuredTemplateDocumentPF2e;
-    if (!template) {
-        throw new Error("Failed to create template");
-    }
-    return template;
+    const selfDisposition = self.document.disposition;
+    if (selfDisposition === null) return [];
+    return tokens.filter(token => token.document.disposition === selfDisposition * -1);
 }
 
 export async function addOrUpdateEffectOnActor(
@@ -220,7 +199,7 @@ export async function addOrUpdateEffectOnActor(
         }
     }
     const [newEffect] = await actor.createEmbeddedDocuments("Item", [sourceClone]) as EffectPF2e[];
-    return newEffect as EffectPF2e;
+    return newEffect;
 }
 
 export async function performFlatCheck(actor: ActorPF2e, dc: number, title: string, rollOptions: string[] = []): Promise<void> {
@@ -342,47 +321,48 @@ export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWal
     await token.document.move(waypoints, moveOptions);
 }
 
+/** Default icon shown on a crosshair when the hovered square cannot be used. */
+const INVALID_CROSSHAIR_ICON = "icons/svg/cancel.svg";
+
 /**
- * Returns all tokens at a given location, except for loot and party tokens.
+ * Preloads a crosshair's valid and invalid icons and returns a function that switches between them.
+ *
+ * Changing the icon through Sequencer's updateCrosshair freezes the canvas on Foundry v14. It
+ * starts an unawaited icon redraw that v14 re-enters through the crosshair's move callbacks, so a
+ * second redraw destroys the icon the first is still writing to. Use this helper instead: the
+ * function it returns assigns an already-loaded texture to the control icon, which repaints in
+ * place with no redraw to re-enter.
  */
-export function getTokensAtLocation(location: Point, includeHidden?: boolean): TokenPF2e[] {
+export async function createCrosshairIconSwitcher(
+    validIcon: string,
+    invalidIcon: string = INVALID_CROSSHAIR_ICON
+): Promise<(crosshair: CrosshairUpdatable, isValid: boolean) => void> {
+    // loadTexture resolves a spritesheet for JSON sources and null for ones it cannot read; an
+    // icon path always yields a texture.
+    const [validTexture, invalidTexture] = await Promise.all(
+        [validIcon, invalidIcon].map(async src => {
+            const texture = await foundry.canvas.loadTexture(src);
+            return texture instanceof PIXI.Texture ? texture : PIXI.Texture.EMPTY;
+        })
+    );
 
-    const locationGridOffset = canvas.grid.getOffset(location);
-    const allTokensOnScene = canvas.tokens.placeables;
-
-    const validTokens = allTokensOnScene.filter(token => {
-
-        const actorType = token.actor?.type;
-        if (actorType === "loot" || actorType === "party") {
-            return false;
-        }
-        return token.footprint.some(footprint => {
-            return footprint.i === locationGridOffset.i && footprint.j === locationGridOffset.j;
-        });
-    }) as TokenPF2e[];
-
-    if (includeHidden) {
-        return validTokens;
-    }
-
-    const visibleTokens = validTokens.filter(token => {
-        return token.document.hidden === false;
-    });
-
-    return visibleTokens;
+    return (crosshair, isValid) => {
+        crosshair.controlIcon.texture = isValid ? validTexture : invalidTexture;
+    };
 }
 
-export function getCollidableCallbacks(actionName: string, icon: string): CrosshairCallbackData {
+export async function getCollidableCallbacks(
+    actionName: string,
+    icon: string
+): Promise<CrosshairCallbackData> {
+    const switchIcon = await createCrosshairIconSwitcher(icon);
+
     return {
         [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            });
+            switchIcon(crosshair, false);
         },
         [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": icon
-            });
+            switchIcon(crosshair, true);
         },
         [Sequencer.Crosshair.CALLBACKS.CANCEL]: () => {
             ui.notifications.warn(`${actionName} cancelled.`);
@@ -412,5 +392,61 @@ export function getTokenFromUuid(uuid: string | null): TokenPF2e | null {
  * Checks if an actor is conscious and alive based on their HP and conditions.
  */
 export function isConsciousAndAlive(actor: ActorPF2e): boolean {
-    return !actor.isDead && !actor.hasCondition("unconscious");
+    if (!actor || actor.isDead) return false;
+    return !actor.hasCondition("unconscious");
 }
+
+/**
+ * Returns the origin of a region's first shape, or null if it has none.
+ *
+ * Reads the shape's own `origin` getter, which Foundry defines per shape type: an emanation
+ * resolves to the centre of its base token and a polygon to its stored origin or centroid, neither
+ * of which is the shape's `x`/`y`.
+ */
+export function getRegionOrigin(region: RegionDocumentPF2e): Point | null {
+    const shape = region?.shapes?.at(0) as RegionShapeGeometry | undefined;
+    const origin = shape?.origin;
+    return origin ? { x: origin.x, y: origin.y } : null;
+}
+
+/**
+ * Returns the rotation of a region's first shape in degrees.
+ *
+ * PF2e emits `line` shapes for line areas, carrying the direction in `rotation`, which corresponds
+ * to the pre-v14 `MeasuredTemplate#direction`.
+ */
+export function getRegionDirection(region: RegionDocumentPF2e): number {
+    const shape = region.shapes?.at(0) as RegionShapeGeometry | undefined;
+    return shape?.rotation ?? 0;
+}
+
+/**
+ * Returns the length of a region's `line` shape in grid units (feet), or null for other shapes.
+ *
+ * Shape dimensions are stored in pixels, so this converts back to the scene's distance units.
+ */
+export function getRegionLengthInUnits(region: RegionDocumentPF2e): number | null {
+    const shape = region.shapes?.at(0) as RegionShapeGeometry | undefined;
+    if (typeof shape?.length !== "number") return null;
+    return shape.length / canvas.dimensions.distancePixels;
+}
+
+/**
+ * Deletes an item from its owning actor, reporting whether it happened.
+ *
+ * The collection check keeps a concurrent deletion from reaching the server, which would otherwise
+ * log an error for a document that no longer exists.
+ */
+export async function deleteItemFromActor(
+    item: ItemPF2e | null | undefined
+): Promise<boolean> {
+    if (!item?.actor) return false;
+    if (!item.actor.items.has(item.id)) return false;
+
+    try {
+        await item.delete();
+        return true;
+    } catch {
+        return false;
+    }
+}

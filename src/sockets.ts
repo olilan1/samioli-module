@@ -5,7 +5,7 @@ import { deleteGhostlyCarrierTokenAsGM, summonGhostlyCarrierAsGM } from "./spell
 import { createSnareAsGM, removeSnareAsGM } from "./actions/snare.ts";
 import { applyTargetEffectAsGM, applyGuardEffectAsGM, cleanupDancingBladeAsGM } from "./spells/dancingblade.ts";
 import { MODULE_ID } from "./utils.ts";
-import { replaceTargets } from "./templatetarget.ts";
+import { replaceTargets } from "./targeting.ts";
 import { deleteSummonAsGM } from "./sustain.ts";
 import { applyCourageousAnthemEffectAsGM } from "./spells/courageousanthem.ts";
 

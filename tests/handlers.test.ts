@@ -1,3 +1,4 @@
+import { getTokensInRegion } from "../src/areatargeting.ts";
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import {
   applyPanacheForActor,
@@ -10,11 +11,20 @@ import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
 import {
   addSustainEffectToCaster,
-  associateTemplateWithSustainedEffect,
+  associateRegionWithSustainedEffect,
   postSustainMessagesForActor,
   expireUnsustainedEffectsForActor
 } from '../src/sustain.ts';
-import { ActorPF2e, ChatMessagePF2e, ItemPF2e, MeasuredTemplateDocumentPF2e } from 'foundry-pf2e';
+
+import {
+  handleStartOfTurnTokenEnter,
+  handleStartOfTurnTokenExit,
+  deleteWithinEffectsForRegion
+} from '../src/startofturnspells.ts';
+import { getHeldShiftingWeaponFromToken } from '../src/actions/shifting.ts';
+import {
+  ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e, TokenPF2e, WeaponPF2e
+} from 'foundry-pf2e';
 
 // Mock chatbuttonhelper to avoid real chat message creation
 vi.mock('../src/chatbuttonhelper.ts', () => ({
@@ -156,15 +166,22 @@ describe('Baseline Hook Handlers', () => {
 
     it('clearPanacheForActor: should clear panache when damage is rolled', async () => {
       const deleteMock = vi.fn();
+      const mockItems = Object.assign([], {
+        contents: [] as object[],
+        has: (id: string) => id === 'panache-1'
+      });
+      const mockActor = { items: mockItems } as unknown as ActorPF2e;
+
       const mockPanache = {
+        id: 'panache-1',
         type: 'effect',
         system: { slug: 'effect-panache' },
+        actor: mockActor,
         delete: deleteMock
       };
+
       const itemsList = [mockPanache];
-      const mockActor = {
-        items: Object.assign(itemsList, { contents: itemsList })
-      } as unknown as ActorPF2e;
+      mockItems.contents = itemsList;
 
       const mockMessage = {
         actor: mockActor,
@@ -175,7 +192,7 @@ describe('Baseline Hook Handlers', () => {
         }
       } as unknown as ChatMessagePF2e;
 
-      clearPanacheForActor(mockMessage);
+      await clearPanacheForActor(mockMessage);
       expect(deleteMock).toHaveBeenCalled();
     });
 
@@ -387,7 +404,7 @@ describe('Baseline Hook Handlers', () => {
       );
     });
 
-    it('associateTemplateWithSustainedEffect: should associate template with effect', async () => {
+    it('associateRegionWithSustainedEffect: should associate region with effect', async () => {
       const mockEffect = {
         type: 'effect',
         slug: 'sustaining-effect-bless',
@@ -404,16 +421,25 @@ describe('Baseline Hook Handlers', () => {
         })
       } as unknown as ActorPF2e;
 
-      const mockTemplate = {
-        id: 'template-id',
-        actor: mockActor,
-        item: { slug: 'bless' },
-        update: vi.fn()
-      } as unknown as MeasuredTemplateDocumentPF2e;
+      // A real region carries no `actor` or `item`; both are resolved from the PF2e origin flags.
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi
+        .fn()
+        .mockReturnValue(mockActor);
 
-      await associateTemplateWithSustainedEffect(mockTemplate);
+      const mockRegion = {
+        id: 'region-id',
+        flags: {
+          pf2e: {
+            origin: { actor: 'Actor.abc123', slug: 'bless' }
+          }
+        },
+        getFlag: vi.fn(),
+        update: vi.fn()
+      } as unknown as RegionDocumentPF2e;
+
+      await associateRegionWithSustainedEffect(mockRegion);
       expect(mockEffect.update).toHaveBeenCalledWith({
-        'flags.samioli-module.sustainedTemplateId': 'template-id'
+        'flags.samioli-module.sustainedRegionId': 'region-id'
       });
     });
 
@@ -457,21 +483,519 @@ describe('Baseline Hook Handlers', () => {
     );
 
     it('expireUnsustainedEffectsForActor: should delete unsustained effects', async () => {
+      const mockItems = Object.assign([], {
+        filter: vi.fn(),
+        has: (id: string) => id === 'effect-1'
+      });
+      const mockActor = { items: mockItems } as unknown as ActorPF2e;
+
       const mockEffect = {
+        id: 'effect-1',
         type: 'effect',
         slug: 'sustaining-effect-bless',
+        actor: mockActor,
         getFlag: vi.fn().mockReturnValue(false),
         delete: vi.fn()
       };
 
-      const mockActor = {
-        items: Object.assign([mockEffect], {
-          filter: vi.fn().mockReturnValue([mockEffect])
-        })
-      } as unknown as ActorPF2e;
+      mockItems.filter.mockReturnValue([mockEffect]);
 
       await expireUnsustainedEffectsForActor(mockActor);
       expect(mockEffect.delete).toHaveBeenCalled();
+    });
+  });
+
+  describe('Region Trigger Handlers', () => {
+    it('runMatchingRegionFunctionAsCreator: should match via origin.rollOptions', async () => {
+      const { runMatchingRegionFunctionAsCreator } = await import('../src/triggers.ts');
+      const mockRegion = {
+        flags: {
+          pf2e: {
+            origin: {
+              rollOptions: ['origin:item:storm-spiral']
+            }
+          }
+        }
+      } as unknown as RegionDocumentPF2e;
+
+      const matched = runMatchingRegionFunctionAsCreator(mockRegion);
+      expect(matched).toBe(true);
+    });
+
+    it('runMatchingRegionFunctionAsCreator: should not match when no roll option corresponds', async () => {
+      const { runMatchingRegionFunctionAsCreator } = await import('../src/triggers.ts');
+      // A real item UUID ends in a random document ID, never a readable slug, so there is nothing
+      // to fall back on when rollOptions is absent.
+      const mockRegion = {
+        flags: {
+          pf2e: {
+            origin: {
+              uuid: 'Compendium.pf2e.spells-srd.Item.aB3xY9kLmN2pQr7s'
+            }
+          }
+        }
+      } as unknown as RegionDocumentPF2e;
+
+      const matched = runMatchingRegionFunctionAsCreator(mockRegion);
+      expect(matched).toBe(false);
+    });
+
+    it('runMatchingRegionFunctionAsGm: should match via origin.rollOptions for GM triggers', async () => {
+      const { runMatchingRegionFunctionAsGm } = await import('../src/triggers.ts');
+      // Matching dispatches the mapped function for real, so the mock needs enough of a region for
+      // initiateFloatingFlame to bail cleanly on a missing caster and shape.
+      const mockRegion = {
+        id: 'region-gm-trigger',
+        setFlag: vi.fn().mockResolvedValue({}),
+        getFlag: vi.fn().mockReturnValue(undefined),
+        shapes: [],
+        flags: {
+          pf2e: {
+            origin: {
+              rollOptions: ['origin:item:floating-flame']
+            }
+          }
+        }
+      } as unknown as RegionDocumentPF2e;
+
+      const matched = runMatchingRegionFunctionAsGm(mockRegion);
+      expect(matched).toBe(true);
+    });
+  });
+
+  describe('getTokensInRegion region containment', () => {
+    const scene = { id: 'scene-1' };
+
+    /**
+     * Builds a token whose containment answer is controlled by the test. `inside` stands in for
+     * TokenDocument#testInsideRegion, which samples the whole footprint rather than a centre point.
+     */
+    const makeToken = (id: string, inside: boolean) => ({
+      id,
+      actor: { isOfType: (t: string) => t === 'creature', isDead: false },
+      footprint: [{ i: 1, j: 1 }],
+      document: {
+        hidden: false,
+        testInsideRegion: vi.fn().mockReturnValue(inside)
+      }
+    });
+
+    /** `blocked` stands in for a wall between the region's origin and every token. */
+    const setCanvas = (tokens: unknown[], blocked = false) => {
+      (globalThis as unknown as { canvas: unknown }).canvas = {
+        scene,
+        tokens: { placeables: tokens },
+        grid: {
+          getCenterPoint: (o: { i: number; j: number }) => ({ x: o.j * 100 + 50, y: o.i * 100 + 50 })
+        }
+      };
+      (globalThis as unknown as { CONFIG: unknown }).CONFIG = {
+        Canvas: { polygonBackends: { move: { testCollision: () => blocked } } }
+      };
+    };
+
+    const regionWithShape = (type = "circle", shapeCount = 1) => ({
+      parent: scene,
+      shapes: Array.from({ length: shapeCount }, () => ({
+        type,
+        origin: { x: 0, y: 0 },
+        rotation: 0
+      }))
+    } as unknown as RegionDocumentPF2e);
+
+    it('includes tokens the region contains and excludes those it does not', () => {
+      const inside = makeToken('token-inside', true);
+      const outside = makeToken('token-outside', false);
+      setCanvas([inside, outside]);
+
+      const tokens = getTokensInRegion(regionWithShape());
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].id).toBe('token-inside');
+      expect(inside.document.testInsideRegion).toHaveBeenCalled();
+    });
+
+    it('returns nothing when the region belongs to a different scene', () => {
+      const inside = makeToken('token-inside', true);
+      setCanvas([inside]);
+
+      const foreignRegion = {
+        parent: { id: 'other-scene' },
+        shapes: [{ origin: { x: 0, y: 0 }, rotation: 0 }]
+      } as unknown as RegionDocumentPF2e;
+
+      expect(getTokensInRegion(foreignRegion)).toEqual([]);
+      expect(inside.document.testInsideRegion).not.toHaveBeenCalled();
+    });
+
+    it.each(['circle', 'line'])(
+      'excludes a contained token behind a wall for a %s shape', (type) => {
+        setCanvas([makeToken('behind-wall', true)], true);
+
+        expect(getTokensInRegion(regionWithShape(type))).toEqual([]);
+      });
+
+    // The exempt cases matter most: "a ring region is never clipped" is the easiest thing to break.
+    it.each([
+      ['rectangle', 'a corner is not a point it radiates from'],
+      ['ring', 'its centre is the hole, and not part of the area']
+    ])('ignores walls for a %s shape, because %s', (type) => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      expect(getTokensInRegion(regionWithShape(type))).toHaveLength(1);
+    });
+
+    it('ignores walls for a region built from several shapes', () => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      expect(getTokensInRegion(regionWithShape("circle", 4))).toHaveLength(1);
+    });
+
+    it('ignores walls when the caller opts out, as persistent volumes do', () => {
+      setCanvas([makeToken('behind-wall', true)], true);
+
+      const tokens = getTokensInRegion(regionWithShape("circle"), { lineOfEffect: false });
+      expect(tokens).toHaveLength(1);
+    });
+
+    it('samiOliModuleAPI: should export handleStartOfTurnTokenEnter', async () => {
+      const { samiOliModuleAPI } = await import('../src/api.ts');
+      expect(typeof samiOliModuleAPI.handleStartOfTurnTokenEnter).toBe('function');
+    });
+
+    it('handleStartOfTurnTokenEnter: should ignore subsequent calls if token already has effect for region', async () => {
+      const mockEffect = {
+        type: 'effect',
+        flags: {
+          'samioli-module': {
+            startOfTurnRegionId: 'region-1'
+          }
+        }
+      };
+
+      const mockActor = {
+        items: [mockEffect],
+        createEmbeddedDocuments: vi.fn()
+      };
+
+      const mockToken = {
+        id: 'token-1',
+        actor: mockActor
+      } as unknown as TokenPF2e;
+
+      const mockRegion = {
+        id: 'region-1',
+        flags: {
+          pf2e: {
+            origin: {
+              slug: 'ash-cloud'
+            }
+          }
+        },
+        getFlag: () => undefined
+      } as unknown as RegionDocumentPF2e;
+
+      await handleStartOfTurnTokenEnter(mockToken, mockRegion);
+
+      // Bails on the existing-effect check, so nothing new is created.
+      expect(mockActor.items).toHaveLength(1);
+      expect(mockActor.createEmbeddedDocuments).not.toHaveBeenCalled();
+    });
+
+    it('deleteWithinEffectsForRegion: should find and delete matching startOfTurnRegionId effects on scene tokens', async () => {
+      const mockDelete = vi.fn().mockResolvedValue({});
+      const mockEffect = {
+        id: 'effect-1',
+        type: 'effect',
+        flags: {
+          'samioli-module': {
+            startOfTurnRegionId: 'region-1'
+          }
+        },
+        delete: mockDelete
+      };
+
+      const mockActor = {
+        items: Object.assign([mockEffect], {
+          has: (id: string) => id === 'effect-1'
+        })
+      };
+      (mockEffect as unknown as { actor: unknown }).actor = mockActor;
+
+      (globalThis as unknown as { canvas: unknown }).canvas = {
+        tokens: {
+          placeables: [
+            { actor: mockActor }
+          ]
+        }
+      };
+
+      const mockRegion = {
+        id: 'region-1',
+        getFlag: vi.fn().mockReturnValue(undefined)
+      } as unknown as RegionDocumentPF2e;
+
+      await deleteWithinEffectsForRegion(mockRegion);
+      expect(mockDelete).toHaveBeenCalled();
+    });
+
+    it('handleStartOfTurnTokenExit: should handle exit and deduplicate concurrent exit calls', async () => {
+      const mockEffect = {
+        id: 'effect-exit-1',
+        type: 'effect',
+        flags: {
+          'samioli-module': {
+            startOfTurnRegionId: 'region-exit-1'
+          }
+        },
+        delete: vi.fn().mockResolvedValue({})
+      };
+
+      const mockActor = {
+        items: Object.assign([mockEffect], {
+          has: (id: string) => id === 'effect-exit-1'
+        })
+      };
+
+      (globalThis as unknown as { canvas: unknown }).canvas = {
+        scene: {
+          regions: {
+            has: (id: string) => id === 'region-exit-1'
+          }
+        }
+      };
+
+      const mockToken = {
+        id: 'token-exit-1',
+        actor: mockActor
+      } as unknown as TokenPF2e;
+
+      const mockRegion = {
+        id: 'region-exit-1'
+      } as unknown as RegionDocumentPF2e;
+
+      // Run 2 concurrent exit calls
+      await Promise.all([
+        handleStartOfTurnTokenExit(mockToken, mockRegion),
+        handleStartOfTurnTokenExit(mockToken, mockRegion)
+      ]);
+
+      expect(mockEffect.delete).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Start of Turn behavior attachment', () => {
+    const regionForSpell = (slug: string) => ({
+      id: 'region-behaviors',
+      flags: { pf2e: { origin: { slug } } },
+      createEmbeddedDocuments: vi.fn().mockResolvedValue([])
+    } as unknown as RegionDocumentPF2e);
+
+    it('attaches tokenEnter and tokenExit behaviors after creation', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('ash-cloud');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      expect(region.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+      const [documentName, behaviors] = (
+        region.createEmbeddedDocuments as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+
+      // Behaviors must be created as their own embedded documents: a Region carrying behaviors in
+      // its creation payload is rejected outright for non-GM users.
+      expect(documentName).toBe('RegionBehavior');
+      expect(behaviors.map((b: { system: { events: string[] } }) => b.system.events[0]))
+        .toEqual(['tokenEnter', 'tokenExit']);
+    });
+
+    it('guards every behavior script against running on non-GM clients', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('frozen-fog');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      const [, behaviors] = (
+        region.createEmbeddedDocuments as unknown as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+
+      // Foundry dispatches region events to every connected client with no user filtering.
+      for (const behavior of behaviors as { system: { source: string } }[]) {
+        expect(behavior.system.source).toContain('if (!game.user.isActiveGM) return;');
+      }
+    });
+
+    it('does nothing for a region that is not a start-of-turn spell', async () => {
+      const { attachStartOfTurnBehaviorsToRegion } = await import('../src/startofturnspells.ts');
+      const region = regionForSpell('fireball');
+
+      await attachStartOfTurnBehaviorsToRegion(region);
+
+      expect(region.createEmbeddedDocuments).not.toHaveBeenCalled();
+    });
+
+    it('writes the region flags before attaching behaviors', async () => {
+      const { initialiseStartOfTurnRegion } = await import('../src/startofturnspells.ts');
+
+      // createWithinEffectSource reads the region flags, and attaching the behaviors fires
+      // tokenEnter for tokens already in the area, which builds an effect. Flags written after that
+      // point leave a wand-cast spell without its stored source.
+      const callOrder: string[] = [];
+      const region = {
+        id: 'region-ordering',
+        flags: { pf2e: { origin: { slug: 'ash-cloud', uuid: 'Actor.a.Item.b' } } },
+        parent: { id: 'scene-1' },
+        createEmbeddedDocuments: vi.fn().mockImplementation(async () => {
+          callOrder.push('attach-behaviors');
+          return [];
+        }),
+        getFlag: vi.fn().mockReturnValue(undefined),
+        setFlag: vi.fn().mockImplementation(async () => {
+          callOrder.push('write-flags');
+        })
+      } as unknown as RegionDocumentPF2e;
+
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi.fn().mockReturnValue({
+        name: 'Ash Cloud',
+        toObject: () => ({ _id: 'spell-1' }),
+        actor: { uuid: 'Actor.a' }
+      });
+      (globalThis as unknown as { canvas: unknown }).canvas = {
+        scene: { id: 'scene-other' },
+        tokens: { placeables: [] }
+      };
+
+      await initialiseStartOfTurnRegion(region);
+
+      expect(callOrder).toContain('write-flags');
+      expect(callOrder).toContain('attach-behaviors');
+      expect(callOrder.indexOf('write-flags'))
+        .toBeLessThan(callOrder.indexOf('attach-behaviors'));
+    });
+
+    it('recovers a wand-cast spell from the stored region flag once the chat message is gone', async () => {
+      const { handleStartOfTurnTokenEnter } = await import('../src/startofturnspells.ts');
+
+      // A spell cast from an item activation is transient and its UUID does not resolve. The
+      // source stored on the region outlives the originating chat message.
+      const createdEffects: unknown[] = [];
+      const mockActor = {
+        items: Object.assign([], {
+          find: () => undefined,
+          get: () => undefined
+        }),
+        createEmbeddedDocuments: vi.fn().mockImplementation(async (_t: string, data: unknown[]) => {
+          createdEffects.push(...data);
+          return data;
+        })
+      };
+      const token = { id: 'token-late', actor: mockActor } as unknown as TokenPF2e;
+
+      const region = {
+        id: 'region-wand',
+        flags: { pf2e: { origin: { slug: 'ash-cloud', uuid: 'Item.doesNotResolve' } } },
+        getFlag: (_scope: string, key: string) =>
+          key === 'spellSource' ? { _id: 'spell-x', name: 'Ash Cloud' } : undefined
+      } as unknown as RegionDocumentPF2e;
+
+      (globalThis as unknown as { fromUuidSync: unknown }).fromUuidSync = vi
+        .fn()
+        .mockReturnValue(null);
+      (globalThis as unknown as { game: Record<string, unknown> }).game = {
+        ...(globalThis as unknown as { game: Record<string, unknown> }).game,
+        // No chat message to fall back on.
+        messages: { get: () => undefined }
+      };
+      (globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG = {
+        ...(globalThis as unknown as { CONFIG: Record<string, unknown> }).CONFIG,
+        Item: {
+          documentClass: class {
+            id = 'spell-x';
+            name = 'Ash Cloud';
+            uuid = 'Item.spell-x';
+            img = 'icons/svg/aura.svg';
+            actor = null;
+            system = { level: { value: 3 }, slug: 'ash-cloud', description: { value: '' } };
+            constructor(public source: unknown) {}
+          }
+        }
+      };
+
+      await handleStartOfTurnTokenEnter(token, region);
+
+      expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
+      expect(createdEffects).toHaveLength(1);
+    });
+  });
+
+  describe('Shifting Weapon Retrieval (getHeldShiftingWeaponFromToken)', () => {
+    it('returns null and warns when no shifting weapon is held', async () => {
+      const mockActor = {
+        itemTypes: {
+          weapon: [
+            {
+              id: 'w1',
+              isEquipped: true,
+              system: { runes: { property: ['flaming'] } }
+            }
+          ]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(result).toBeNull();
+      expect(ui.notifications.warn).toHaveBeenCalledWith(
+        'No equipped weapon with a shifting rune was found.'
+      );
+    });
+
+    it('returns weapon directly when exactly one shifting weapon is held', async () => {
+      const weapon = {
+        id: 'w-shift',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const mockActor = {
+        itemTypes: {
+          weapon: [weapon]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(result).toBe(weapon);
+    });
+
+    it('invokes DialogV2.wait when multiple shifting weapons are held', async () => {
+      const weapon1 = {
+        id: 'w1',
+        name: 'Longsword',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const weapon2 = {
+        id: 'w2',
+        name: 'Dagger',
+        isEquipped: true,
+        system: { runes: { property: ['shifting'] } }
+      } as unknown as WeaponPF2e;
+      const mockActor = {
+        itemTypes: {
+          weapon: [weapon1, weapon2]
+        }
+      } as unknown as ActorPF2e;
+      const token = { actor: mockActor } as unknown as TokenPF2e;
+
+      const waitMock = vi.fn().mockResolvedValue('w2');
+      (foundry.applications.api.DialogV2 as unknown as { wait: unknown }).wait = waitMock;
+
+      const result = await getHeldShiftingWeaponFromToken(token);
+      expect(waitMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          window: { title: 'Select Weapon to Shift' }
+        })
+      );
+      expect(result).toBe(weapon2);
     });
   });
 });

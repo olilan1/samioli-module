@@ -1,6 +1,6 @@
 import { ActorPF2e, ChatMessagePF2e } from "foundry-pf2e";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
-import { logd } from "../utils.ts";
+import { deleteItemFromActor, logd } from "../utils.ts";
 
 export async function applyPanacheForActor(chatMessage: ChatMessagePF2e) {
   const actor = chatMessage.actor;
@@ -140,11 +140,11 @@ export function onRemovePanacheClick(chatMessagePF2e: ChatMessagePF2e) {
   clearPanache(actor);
 }
 
-function clearPanache(actor: ActorPF2e) {
+async function clearPanache(actor: ActorPF2e) {
   const panacheItems = getPanacheItems(actor);
   if (panacheItems.length > 0) {
     for (const panacheItem of panacheItems) {
-      panacheItem.delete();
+      await deleteItemFromActor(panacheItem);
     }
   }
 }
@@ -213,5 +213,5 @@ async function removeDemoralizeImmunity(chatMessage: ChatMessagePF2e) {
           effect.flags?.demoralize?.source === attacker.id
   );
 
-  await immunityEffect?.delete();
-}
+  await deleteItemFromActor(immunityEffect);
+}

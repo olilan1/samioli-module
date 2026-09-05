@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.0.0-beta.2] - 2026-08-17
+
+- Fix weapon selection dialog for shifting runes
+- Inner Radiance Torrent macro fix
+- General cleanup
+
+## [1.0.0-beta.1] - 2026-08-10
+
+- Fix the canvas going black when placing a crosshair
+
+## [1.0.0-beta.0] - 2026-08-09
+
+- Migrate to Foundry v14 - previous versions are no longer supported
+- Migrate all uses of MeasuredTemplate to Region
+
 ## [0.66.0] - 2026-08-04
 
 - HookRunner refactor
@@ -134,7 +149,13 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v0.66.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.2...HEAD
+
+[1.0.0-beta.2]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.1...v1.0.0-beta.2
+
+[1.0.0-beta.1]: https://github.com/olilan1/samioli-module/compare/v1.0.0-beta.0...v1.0.0-beta.1
+
+[1.0.0-beta.0]: https://github.com/olilan1/samioli-module/compare/v0.66.0...v1.0.0-beta.0
 
 [0.66.0]: https://github.com/olilan1/samioli-module/compare/v0.65.0...v0.66.0
 

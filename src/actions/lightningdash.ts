@@ -1,25 +1,30 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
-import { getTokenIdsFromTokens, postUINotification } from "../utils.ts";
+import { getTokensInRegion } from "../areatargeting.ts";
+import {
+    RegionDocumentPF2e,
+    TokenPF2e
+} from "foundry-pf2e";
+import { replaceTargets } from "../targeting.ts";
+import { getActorFromRegion, getTokenFromActor, getTokenIdsFromTokens, postUINotification, getRegionDirection, getRegionLengthInUnits, getRegionOrigin } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
-export async function animateLightningDash(template: MeasuredTemplateDocumentPF2e) {
-    const casterToken = template.actor?.getActiveTokens()[0];
+export async function animateLightningDash(region: RegionDocumentPF2e) {
+    const casterToken = getTokenFromActor(getActorFromRegion(region));
+
     if (!casterToken) {
         postUINotification("No caster token", "warn");
         return;
     }
 
-    const destination = findDestination(casterToken, template);
+    const destination = findDestination(casterToken, region);
 
     if (!destination) {
         postUINotification("No valid destination", "warn");
         return;
     }
     
-    const targetTokens = (await getTemplateTokens(template))
+    const targetTokens = (getTokensInRegion(region))
         .filter(token => casterToken.distanceTo(token) <= casterToken.distanceTo(destination));
-    template.delete();
+    await region.delete();
     
     const seq = buildSequence(casterToken, destination, targetTokens);
     await preloadAnimations();
@@ -28,30 +33,39 @@ export async function animateLightningDash(template: MeasuredTemplateDocumentPF2
     replaceTargets(getTokenIdsFromTokens(targetTokens));
 }
 
-function findDestination(token: TokenPF2e, template: MeasuredTemplateDocumentPF2e) {
-    const feetToCoords = canvas.grid.size / canvas.grid.distance;
-    const radianAngle = template.direction * (Math.PI / 180);
+function findDestination(token: TokenPF2e, region: RegionDocumentPF2e) {
+    const feetToCoords = canvas.dimensions.distancePixels;
+    const direction = getRegionDirection(region);
+    const radianAngle = direction * (Math.PI / 180);
+    const origin = getRegionOrigin(region);
+    if (!origin) return null;
+
+    const scene = canvas.scene;
+    if (!scene || scene.width === null || scene.height === null) return null;
+
     const halfSquare = 2.5 * feetToCoords;
-    const width = canvas.scene?.width ?? 0;
-    const height = canvas.scene?.height ?? 0;
-    const padding = canvas.scene?.padding ?? 0;
-    const minX = width * padding + halfSquare;
-    const minY = height * padding + halfSquare;
-    const maxX = width + minX - 2 * halfSquare;
-    const maxY = height + minY - 2 * halfSquare;
+    const minX = scene.width * scene.padding + halfSquare;
+    const minY = scene.height * scene.padding + halfSquare;
+    const maxX = scene.width + minX - 2 * halfSquare;
+    const maxY = scene.height + minY - 2 * halfSquare;
     
     const cos = Math.cos(radianAngle);
     const sin = Math.sin(radianAngle);
 
+    // Reach comes from the placed line: Lightning Dash gains 5ft of length every 3 levels, and the
+    // caster lands in the furthest unblocked square of the area the player placed.
+    const gridDistance = canvas.grid.distance;
+    const lineLength = getRegionLengthInUnits(region);
+    if (lineLength === null) return null;
+    const furthestCentre = lineLength - gridDistance / 2;
+
     let x: number;
     let y: number;
-    // Test destination points from the end of the line backwards
-    for (let dist = 27.5; dist >= 0; dist -= 5) {
-        x = template.x + dist * feetToCoords * cos;
-        y = template.y + dist * feetToCoords * sin;
+    for (let dist = furthestCentre; dist >= 0; dist -= gridDistance) {
+        x = origin.x + dist * feetToCoords * cos;
+        y = origin.y + dist * feetToCoords * sin;
         if (x > minX && x < maxX && y > minY && y < maxY
                 && !token.checkCollision({x, y}) ) {
-            // Found valid destination
             return {
                 x: x,
                 y: y

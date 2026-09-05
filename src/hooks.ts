@@ -1,3 +1,4 @@
+import { SamiOliHooks } from "./types/hook-types.ts";
 import { registerSettings, SETTINGS } from "./settings.ts";
 import { addAutoButtonToMessage, canAddAutoButton } from "./chatautobuttons.ts";
 import { startTumbleThrough } from "./actions/tumblethrough.ts";
@@ -11,36 +12,34 @@ import {
 } from "./effects/panache.ts";
 import { startHuntPrey } from "./actions/huntprey.ts";
 import {
-    targetTokensUnderTemplate,
-    deleteTemplateTargets,
-    setTemplateColorToBlack,
-    isLastTargetedTemplate
-} from "./templatetarget.ts";
+    targetTokensUnderRegion,
+    deleteRegionTargets,
+    setRegionColorToBlack,
+    isLastTargetedRegion
+} from "./targeting.ts";
 import { applyUnstableEffectOnFailure } from "./effects/unstablecheck.ts";
 import {
     ChatMessagePF2e,
     CombatantPF2e,
-    EffectPF2e,
     EncounterPF2e,
     ItemPF2e,
-    MeasuredTemplateDocumentPF2e,
+    RegionDocumentPF2e,
     TokenDocumentPF2e,
-    TokenPF2e,
     UserPF2e
 } from "foundry-pf2e";
 import {
-    runMatchingTemplateDeletionFunction,
-    runMatchingTemplateFunctionAsCreator,
-    runMatchingTemplateFunctionAsGm
+    runMatchingRegionDeletionFunction,
+    runMatchingRegionFunctionAsCreator,
+    runMatchingRegionFunctionAsGm
 } from "./triggers.ts";
 import {
     postSustainMessagesForActor,
     addSustainEffectToCaster,
-    associateTemplateWithSustainedEffect,
+    associateRegionWithSustainedEffect,
+    hasSustainingEffect,
     handleSustainedEffectDeletion,
     createSpellNotSustainedChatMessage,
     isAutomaticSustainSpell,
-    hasSustainingEffect,
     expireUnsustainedEffectsForActor
 } from "./sustain.ts";
 import {
@@ -52,15 +51,13 @@ import { handleFrightenedAtTurnEnd } from "./effects/frightened.ts";
 import { addButtonClickHandlers } from "./chatbuttonhelper.ts";
 import {
     postMessagesForWithinEffects,
-    deleteWithinEffectsForTemplate,
-    addEffectsToTokensInStartOfTurnTemplates,
-    addOrRemoveWithinEffectIfNeeded,
-    isStartOfTurnSpellTemplate,
-    hasStartOfTurnFlags
+    deleteWithinEffectsForRegion,
+    initialiseStartOfTurnRegion,
+    isStartOfTurnSpellRegion
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
-import { addDamageHelperButtonToChatUIv12, addDamageHelperButtonToChatUIv13 } from "./damagehelper.ts";
-import { getHtmlElement, MODULE_ID } from "./utils.ts";
+import { addDamageHelperButtonToChatUI } from "./damagehelper.ts";
+import { MODULE_ID } from "./utils.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
@@ -74,7 +71,6 @@ import {
     moveGhostlyCarrierToCaster
 } from "./spells/ghostlycarrier.ts";
 import { samiOliModuleAPI } from "./api.ts";
-import Module from "foundry-pf2e/foundry/client/packages/module.mjs";
 import {
     resolveMirrorImageOnAttack,
     handleMirrorImageCreated,
@@ -86,11 +82,13 @@ import { hook } from "./hookrunner.ts";
 
 export { hook, HookRunner } from "./hookrunner.ts";
 
+const Hooks = globalThis.Hooks as SamiOliHooks;
+
 Hooks.on("init", () => {
     registerSettings();
     const module = game.modules.get("samioli-module");
     if (module) {
-        (module as Module & { api: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
+        (module as { api?: typeof samiOliModuleAPI }).api = samiOliModuleAPI;
     }
 });
 
@@ -124,71 +122,80 @@ Hooks.on(
     }
 );
 
-Hooks.on("createMeasuredTemplate", async (
-    template: MeasuredTemplateDocumentPF2e,
-    _context,
-    userId
+Hooks.on("createRegion", async (
+    region: RegionDocumentPF2e,
+    _context: unknown,
+    userId: string
 ) => {
     // Check for matching origin and run matching function if found (see triggers.ts)
-    let ranTemplateTrigger = hook(runMatchingTemplateFunctionAsGm, template)
+    hook(runMatchingRegionFunctionAsGm, region)
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    ranTemplateTrigger ||= hook(runMatchingTemplateFunctionAsCreator, template)
+    const ranCreatorTrigger = hook(runMatchingRegionFunctionAsCreator, region)
         .ifUser(userId)
         .allowUnfilteredRun()
         .run();
 
-    if (!ranTemplateTrigger) {
+    // Only a creator-side trigger suppresses the generic targeting, since that is where a spell
+    // sets its own targets. A GM-side trigger runs on the GM's client whoever cast the spell, so
+    // it says nothing about whether the caster should be given targets.
+    if (!ranCreatorTrigger) {
         // If no matching origin, target tokens if that feature is enabled
-        hook(targetTokensUnderTemplate, template, userId)
+        hook(targetTokensUnderRegion, region, userId)
             .ifEnabled(SETTINGS.TEMPLATE_TARGET)
             .allowUnfilteredRun()
             .run();
     }
 
-    hook(associateTemplateWithSustainedEffect, template)
+    hook(associateRegionWithSustainedEffect, region)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifGM()
         .if(hasSustainingEffect)
         .run();
 
-    hook(addEffectsToTokensInStartOfTurnTemplates, template)
+    // Runs after creation and as GM: a non-GM cannot create a Region that already carries
+    // behaviors, so they are attached to the placed region rather than injected at preCreate.
+    hook(initialiseStartOfTurnRegion, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(isStartOfTurnSpellTemplate)
+        .if(isStartOfTurnSpellRegion)
         .run();
 });
 
-Hooks.on("preCreateMeasuredTemplate", (
-    template: MeasuredTemplateDocumentPF2e,
-    _data,
-    _context,
-    _userId
+Hooks.on("preCreateRegion", (
+    region: RegionDocumentPF2e,
+    _data: unknown,
+    _context: unknown,
+    _userId: string
 ) => {
-    hook(setTemplateColorToBlack, template)
+    hook(setRegionColorToBlack, region)
         .ifEnabled(SETTINGS.TEMPLATE_COLOUR_OVERRIDE)
         .allowUnfilteredRun()
         .run();
 });
 
-Hooks.on("deleteMeasuredTemplate", (template: MeasuredTemplateDocumentPF2e) => {
-    hook(runMatchingTemplateDeletionFunction, template)
+Hooks.on("deleteRegion", (
+    region: RegionDocumentPF2e,
+    _options: unknown,
+    _userId: string
+) => {
+    hook(runMatchingRegionDeletionFunction, region)
         .ifGM()
         .allowUnfilteredRun()
         .run();
-    hook(deleteTemplateTargets, template)
+    hook(deleteRegionTargets, region)
         .ifEnabled(SETTINGS.TEMPLATE_TARGET)
-        .if(() => isLastTargetedTemplate(template.id))
+        .if(() => isLastTargetedRegion(region.id))
         .run();
-    hook(deleteWithinEffectsForTemplate, template)
+    hook(deleteWithinEffectsForRegion, region)
         .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
         .ifGM()
-        .if(hasStartOfTurnFlags)
+        .if(isStartOfTurnSpellRegion)
         .run();
 });
 
-Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode, _userId) => {
+Hooks.on("createChatMessage", (message: ChatMessagePF2e, _rollmode: unknown, _userId: string) => {
     handleChatMessageWithRoll(message);
     if (game.modules.get("dice-so-nice")?.active
         && message.isRoll
@@ -207,7 +214,7 @@ Hooks.on("diceSoNiceRollComplete", (id: string) => {
 });
 
 // pf2e.startTurn only runs for the GM
-Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id: string) => {
     if (!combatant.actor) return;
     hook(postSustainMessagesForActor, combatant.actor)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
@@ -224,7 +231,7 @@ Hooks.on("pf2e.startTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e,
 });
 
 // pf2e.endTurn only runs for the GM
-Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id) => {
+Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _id: string) => {
     if (!combatant.actor) return;
     hook(expireUnsustainedEffectsForActor, combatant.actor)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
@@ -236,7 +243,7 @@ Hooks.on("pf2e.endTurn", (combatant: CombatantPF2e, _encounter: EncounterPF2e, _
         .run();
 });
 
-Hooks.on("preDeleteItem", async (item: ItemPF2e, _action, _id) => {
+Hooks.on("preDeleteItem", async (item: ItemPF2e, _action: string, _id: string) => {
     hook(createSpellNotSustainedChatMessage, item)
         .ifEnabled(SETTINGS.AUTO_SUSTAIN_CHECK)
         .ifItemType("effect")
@@ -258,19 +265,21 @@ Hooks.on("preDeleteItem", async (item: ItemPF2e, _action, _id) => {
         .run();
 });
 
-Hooks.on("preDeleteToken", async (token: TokenDocumentPF2e, _action, _id) => {
+Hooks.on("preDeleteToken", async (token: TokenDocumentPF2e, _action: string, _id: string) => {
     hook(deleteGhostlyCarrierEffectFromCaster, token)
         .ifGM()
         .ifTokenHasFlag("samioli-module", "ghostlyCarrierEffectUUID")
         .run();
 });
 
-Hooks.on("moveToken", (token: TokenPF2e, movement, _action, _user: UserPF2e) => {
-    hook(addOrRemoveWithinEffectIfNeeded, token, movement.passed.cost)
-        .ifGM()
-        .ifEnabled(SETTINGS.AUTO_START_OF_TURN_SPELL_CHECK)
-        .ifSceneHasTemplateWithFlag("samioli-module", "isStartOfTurnSpell")
-        .run();
+Hooks.on(
+    "moveToken",
+    (
+        token: TokenDocumentPF2e,
+        movement: { destination: { x: number; y: number } },
+        _operation: unknown,
+        _user: UserPF2e
+    ) => {
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
         .ifGM()
         .ifActorHasEffect("samioli-ghostly-carrier")
@@ -278,7 +287,7 @@ Hooks.on("moveToken", (token: TokenPF2e, movement, _action, _user: UserPF2e) => 
 });
 
 Hooks.on("createItem", (item: ItemPF2e, _context: unknown, userId: string) => {
-    hook(handleMirrorImageCreated, item as EffectPF2e)
+    hook(handleMirrorImageCreated, item)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
@@ -291,7 +300,7 @@ Hooks.on("updateItem", (
     _context: unknown,
     userId: string
 ) => {
-    hook(handleMirrorImageUpdated, item as EffectPF2e, changes)
+    hook(handleMirrorImageUpdated, item, changes)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
@@ -299,53 +308,29 @@ Hooks.on("updateItem", (
 });
 
 Hooks.on("deleteItem", (item: ItemPF2e, _context: unknown, userId: string) => {
-    hook(handleMirrorImageDeleted, item as EffectPF2e)
+    hook(handleMirrorImageDeleted, item)
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
         .run();
 });
 
-// V13 Only
 Hooks.on("renderChatInput", (_app: ChatLog, cssMappings: Record<string, HTMLElement>,
-    _data, _options) => {
-    hook(addDamageHelperButtonToChatUIv13, cssMappings)
+    _data: unknown, _options: unknown) => {
+    hook(addDamageHelperButtonToChatUI, cssMappings)
         .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
         .ifGM()
         .allowUnfilteredRun()
         .run();
 });
 
-Hooks.on("renderChatLog", (_app: ChatLog, htmlOrJQuery: JQuery | HTMLElement,
-    _data: Record<string, unknown>, _options: Record<string, unknown>) => {
-    const html = getHtmlElement(htmlOrJQuery);
-    hook(addDamageHelperButtonToChatUIv12, html)
-        .ifEnabled(SETTINGS.DAMAGE_HELPER_BUTTON)
-        .ifGM()
-        .ifV12()
-        .allowUnfilteredRun()
-        .run();
-});
 
 function handleChatMessageWithRoll(message: ChatMessagePF2e) {
-    switch (getMessageType(message)) {
-        case "attack-roll":
-            hook(startImaginaryWeapon, message)
-                .ifMessagePosterAndActorOwner()
-                .ifMessageOption("item:imaginary-weapon")
-                .run();
-            break;
-        case "damage-roll":
-            break;
-        case "skill-check":
-            break;
-        case "flat-check":
-            break;
-        case "action":
-            break;
-        case "spell":
-        case "spell-cast":
-            break;
+    if (getMessageType(message) === "attack-roll") {
+        hook(startImaginaryWeapon, message)
+            .ifMessagePosterAndActorOwner()
+            .ifMessageOption("item:imaginary-weapon")
+            .run();
     }
 }
 

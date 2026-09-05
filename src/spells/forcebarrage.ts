@@ -1,5 +1,6 @@
 import { ChatMessagePF2e, SpellPF2e, TokenPF2e } from "foundry-pf2e";
-import { delay, getCollidableCallbacks, getTokensAtLocation } from "../utils.ts";
+import { getTokensAtLocation } from "../areatargeting.ts";
+import { delay, getCollidableCallbacks } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 import { rollSpellDamage } from "../spelldamageroll.ts";
 
@@ -97,7 +98,7 @@ async function selectNumberOfActionsDialog(): Promise<number | undefined> {
             },
         ],
     })
-    return actions as number;
+    return actions ? parseInt(String(actions), 10) : undefined;
 }
 
 async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards: number) {
@@ -130,7 +131,7 @@ async function startCrosshairsTargetSelection(token: TokenPF2e, remainingShards:
                 position: snapPosition
             }
         },
-        getCollidableCallbacks("Force Barrage", iconTexture));
+        await getCollidableCallbacks("Force Barrage", iconTexture));
 
     return templateData;
 

@@ -1,7 +1,8 @@
 /* {"name":"Inner Radiance Torrent","img":"icons/magic/fire/beam-jet-stream-embers.webp","_id":"9uSja2wWVN7EeqBp"} */
 
 const [tokenD, tokenScale] = await pf2eAnimations.macroHelpers(args)
-const template = args[1]?.templateData ?? canvas.templates.placeables[canvas.templates.placeables.length - 1];
+const template = args[1]?.templateData;
+if (!template) return;
 
 const colouredBolts = new Array("jb2a.energy_strands.range.standard.purple", "jb2a.energy_strands.range.standard.blue", "jb2a.magic_missile.purple", "jb2a.magic_missile.blue");
 let targetTokens = Array.from(game.user.targets)

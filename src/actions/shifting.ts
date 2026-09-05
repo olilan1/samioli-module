@@ -53,7 +53,7 @@ export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<
     }
 
     const optionsHtml = shiftingWeapons
-        .map(w => new Option(w.name, w.id).outerHTML)
+        .map(w => `<option value="${w.id}">${w.name}</option>`)
         .join("");
 
     // Show dialog if more than one shifting weapon available.
@@ -74,8 +74,8 @@ export async function getHeldShiftingWeaponFromToken(token: TokenPF2e): Promise<
             label: "Shift",
             default: true,
             callback: async (_event, _button, dialog) => {
-                // @ts-expect-error querySelector is valid on dialog
-                const selectElement = dialog.querySelector<HTMLSelectElement>(
+                const dialogV2 = dialog as InstanceType<typeof DialogV2>;
+                const selectElement = dialogV2.element.querySelector<HTMLSelectElement>(
                     '[name="shiftingWeaponSelect"]'
                 );
                 return selectElement?.value;

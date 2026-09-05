@@ -1,7 +1,5 @@
 on:
   pull_request:
-    branches:
-    - main
     types: [closed]
 
 name: '[autorelease] PR merged'

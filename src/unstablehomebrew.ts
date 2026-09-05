@@ -1,7 +1,8 @@
 import { ActorPF2e, ChatMessagePF2e, EffectSource } from "foundry-pf2e";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { addOrUpdateEffectOnActor, performFlatCheck } from "./utils.ts";
-import { replaceTargets } from "./templatetarget.ts";
+import { replaceTargets } from "./targeting.ts";
+import { SamiOliHooks } from "./types/hook-types.ts";
 
 export function replaceUnstableCheckWithStrainCheck(
     chatMessage: ChatMessagePF2e,
@@ -100,11 +101,11 @@ async function createFireDamageChatMessage(actor: ActorPF2e) {
     const hookFunction = async (chatMessage: ChatMessagePF2e) => {
         if (chatMessage.flags["samioli-module"]?.unstableCheckCriticalFailure) {
             await replaceTargets([...currentTargets.map(t => t.id)]);
-            Hooks.off("renderChatMessageHTML", hookFunction);
+            (Hooks as SamiOliHooks).off("renderChatMessageHTML", hookFunction);
         }
     };
 
-    Hooks.on("renderChatMessageHTML", hookFunction);
+    (Hooks as SamiOliHooks).on("renderChatMessageHTML", hookFunction);
 }
 
 

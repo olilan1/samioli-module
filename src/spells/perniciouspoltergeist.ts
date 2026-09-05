@@ -1,59 +1,72 @@
-import { MeasuredTemplateDocumentPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets, targetTokensUnderTemplate } from "../templatetarget.ts";
-import { delay, getTokenFromActor } from "../utils.ts";
+import { getTokensInRegion } from "../areatargeting.ts";
+import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { replaceTargets, targetTokensUnderRegion } from "../targeting.ts";
+import { delay, getActorFromRegion, getRegionOrigin, getTokenFromActor } from "../utils.ts";
 
-export async function initiatePerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e) {
-    animateTemplate(template);
-    chooseEffectOfPerniciousPoltergeist(template);
+const { DialogV2 } = foundry.applications.api;
+
+export async function initiatePerniciousPoltergeist(region: RegionDocumentPF2e) {
+    animateRegion(region);
+    chooseEffectOfPerniciousPoltergeist(region);
 }
 
-export async function chooseEffectOfPerniciousPoltergeist(template: MeasuredTemplateDocumentPF2e) {
+export async function chooseEffectOfPerniciousPoltergeist(region: RegionDocumentPF2e) {
 
-    const dialogOptions = {
-        left: (window.innerWidth - 450) / 2,
-        top: 200,
-    };
-    const dialog = new Dialog({
-        title: "Which Effect Do You Want To Apply?",
-        buttons: {
-            deathlyassault: {
+    const dialog = new DialogV2({
+        window: {
+            title: "Which Effect Do You Want To Apply?"
+        },
+        position: {
+            left: (window.innerWidth - 450) / 2,
+            top: 200
+        },
+        buttons: [
+            {
+                action: "deathlyassault",
                 label: "Deathly Assault",
-                callback: () => deathlyAssault(template)
+                callback: async () => { await deathlyAssault(region); }
             },
-            frighten: {
+            {
+                action: "frighten",
                 label: "Frighten",
-                callback: () => frighten(template)
+                callback: async () => { await frighten(region); }
             },
-            telekineticstorm: {
+            {
+                action: "telekineticstorm",
                 label: "Telekinetic Storm",
-                callback: () => telekineticStorm(template)
+                callback: async () => { await telekineticStorm(region); }
             }
-        }
-    }, dialogOptions);
+        ]
+    });
     dialog.render(true);
 }
 
-async function deathlyAssault(template: MeasuredTemplateDocumentPF2e) {
-    const targets = await getTemplateTokens(template);
+async function deathlyAssault(region: RegionDocumentPF2e) {
+    const targets = getTokensInRegion(region);
     if (!targets.length) {
         ui.notifications.warn("There are no valid targets in the area.");
         return;
     }
 
-    const originalTargetIds = game.user.targets.map((t) => t.id);
-    let assaultClicked = false;
+    const originalTargetIds = Array.from(game.user.targets).map((t) => t.id);
 
+    // Rows use core's `label.checkbox`, which sizes the radio and stops it being flex-shrunk.
+    //
+    // The first target is pre-selected because a radio group with nothing checked is
+    // `:indeterminate`, and core paints an indeterminate radio's mark in
+    // --checkbox-checkmark-color, which is transparent. Every radio would be invisible until the
+    // first click.
     let dialogContent = `
         <form style="display: flex; flex-direction: column;">
             <p style="margin-bottom: 5px;">Choose a target for Deathly Assault:</p>
-            <div class="form-group" style="display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto;">
+            <div style="display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto;">
     `;
 
-    for (const target of targets) {
+    for (const [index, target] of targets.entries()) {
         dialogContent += `
-            <label style="display: flex; align-items: center; padding: 2px; cursor: pointer;">
-                <input type="radio" name="target" value="${target.id}" style="margin-right: 8px;">
-                <img src="${target.document.texture.src}" width="36" height="36" style="vertical-align: middle; border: 1px solid #000; margin-right: 8px;">
+            <label class="checkbox" style="gap: 8px; padding: 2px; cursor: pointer;">
+                <input type="radio" name="target" value="${target.id}"${index === 0 ? " checked" : ""}>
+                <img src="${target.document.texture.src}" width="36" height="36" style="border: 1px solid #000;">
                 <span>${target.name}</span>
             </label>
         `;
@@ -62,75 +75,91 @@ async function deathlyAssault(template: MeasuredTemplateDocumentPF2e) {
     dialogContent += `</div></form>`;
 
     const dialogWidth = 250;
-    const assaultDialogOptions = {
-        width: dialogWidth,
-        height: "auto",
-        left: (window.innerWidth - dialogWidth) / 2,
-        top: 200,
-    };
-    new Dialog({
-        title: "Deathly Assault Target",
+
+    // Resolves to the chosen token id, or null if the dialog was cancelled or dismissed. Restoring
+    // targets is done on the result rather than in `close`, which also fires after a button press.
+    const selectedId = await DialogV2.wait({
+        window: {
+            title: "Deathly Assault Target"
+        },
+        position: {
+            width: dialogWidth,
+            height: "auto",
+            left: (window.innerWidth - dialogWidth) / 2,
+            top: 200
+        },
         content: dialogContent,
-        buttons: {
-            assault: {
-                icon: '<i class="fas fa-skull-crossbones"></i>',
+        buttons: [
+            {
+                action: "assault",
+                icon: "fas fa-skull-crossbones",
                 label: "Assault",
-                callback: (html) => {
-                    assaultClicked = true;
-                    const selectedId = (html.find('input[name="target"]:checked')[0] as HTMLInputElement)?.value;
-                    if (selectedId) {
-                        const selectedTarget = canvas.tokens.get(selectedId);
-                        animateDeathlyAssault(template, selectedTarget);
-                    } else {
-                        ui.notifications.warn("You must select a target.");
-                        replaceTargets(originalTargetIds);
-                    }
+                default: true,
+                callback: (_event: PointerEvent | SubmitEvent, _button: HTMLButtonElement,
+                    dialog: InstanceType<typeof DialogV2>) => {
+                    const checked = dialog.element.querySelector<HTMLInputElement>(
+                        'input[name="target"]:checked');
+                    return checked?.value ?? null;
                 }
             },
-            cancel: {
-                icon: '<i class="fas fa-times"></i>',
-                label: "Cancel"
+            {
+                action: "cancel",
+                icon: "fas fa-times",
+                label: "Cancel",
+                callback: () => null
             }
-        },
-        default: "assault",
-        render: (html) => {
-            // Clear any existing targets when the dialog appears
-            replaceTargets([]);
+        ],
+        // The typings declare this parameter as HTMLDialogElement, but v14 passes the DialogV2
+        // instance (client/applications/api/dialog.mjs:421).
+        render: (_event: Event, dialog: unknown) => {
+            const element = (dialog as InstanceType<typeof DialogV2>).element;
 
-            html.find('input[name="target"]').on("change", (event) => {
-                const selectedId = (event.currentTarget as HTMLInputElement).value;
-                replaceTargets([selectedId]);
-            });
-        },
-        close: () => {
-            if (!assaultClicked) {
-                replaceTargets(originalTargetIds);
+            // Preview the pre-selected target when the dialog appears, then each new selection
+            const checked = element.querySelector<HTMLInputElement>('input[name="target"]:checked');
+            replaceTargets(checked ? [checked.value] : []);
+
+            const inputs = element.querySelectorAll<HTMLInputElement>('input[name="target"]');
+            for (const input of Array.from(inputs)) {
+                input.addEventListener("change", () => replaceTargets([input.value]));
             }
-        },
-    }, assaultDialogOptions).render(true);
+        }
+    }) as string | null;
+
+    if (!selectedId) {
+        replaceTargets(originalTargetIds);
+        return;
+    }
+
+    const selectedTarget = canvas.tokens.get(selectedId);
+    if (!selectedTarget) {
+        replaceTargets(originalTargetIds);
+        return;
+    }
+
+    animateDeathlyAssault(region, selectedTarget);
 }
 
-async function frighten(template: MeasuredTemplateDocumentPF2e) {
-    animateFrighten(template);
+async function frighten(region: RegionDocumentPF2e) {
+    animateFrighten(region);
     await delay(2000);
-    targetTokensUnderTemplate(template, game.user.id);
+    targetTokensUnderRegion(region, game.user.id);
 }
 
-async function telekineticStorm(template: MeasuredTemplateDocumentPF2e) {
-    animateTelekineticStorm(template);
+async function telekineticStorm(region: RegionDocumentPF2e) {
+    animateTelekineticStorm(region);
     await delay(10000);
-    targetTokensUnderTemplate(template, game.user.id);
+    targetTokensUnderRegion(region, game.user.id);
 }
 
-function animateTemplate(template: MeasuredTemplateDocumentPF2e) {
-    
+function animateRegion(region: RegionDocumentPF2e) {
+
     const castAnimation = "jb2a.template_circle.vortex.loop.purple"
-    const templateAnimation = "jb2a.spirit_guardians.dark_purple.particles"
+    const regionAnimation = "jb2a.spirit_guardians.dark_purple.particles"
 
     const sequence = new Sequence()
         .effect()
             .file(castAnimation)
-            .atLocation(template)
+            .atLocation(region)
             .opacity(0.5)
             .fadeIn(500)
             .fadeOut(500)
@@ -139,17 +168,18 @@ function animateTemplate(template: MeasuredTemplateDocumentPF2e) {
             .mirrorY(true)
             .delay(1000)
             .fadeIn(750)
-            .file(templateAnimation)
-            .attachTo(template)
+            .file(regionAnimation)
+            .attachTo(region)
             .loopOptions({loopDelay: 0, loops: 3600, endOnLastLoop: false})
         sequence.play();
 }
 
-function animateFrighten(template: MeasuredTemplateDocumentPF2e) {
+function animateFrighten(region: RegionDocumentPF2e) {
 
     const skullAnimation = "jb2a.toll_the_dead.purple.skull_smoke";
     const castingAnimation = "jb2a.soundwave.01.purple"
-    const caster = getTokenFromActor(template.actor);
+    const caster = getTokenFromActor(getActorFromRegion(region));
+    if (!caster) return;
 
     const sequence = new Sequence()
         .effect()
@@ -158,19 +188,23 @@ function animateFrighten(template: MeasuredTemplateDocumentPF2e) {
         .effect()
             .delay(200)
             .file(skullAnimation)
-            .atLocation(template)
+            .atLocation(region)
             .scale(1.7)
         sequence.play()
 }
 
-function animateDeathlyAssault(template: MeasuredTemplateDocumentPF2e, target: Token) {
+function animateDeathlyAssault(region: RegionDocumentPF2e, target: TokenPF2e) {
 
     const skullAnimation = "jb2a.icon.skull.purple";
     const projectileAnimation = "jb2a.spell_projectile.skull.pinkpurple.90ft";
-    const { start, end } = calculateAnimationPath(template, target);
     const impactAnimation = "jb2a.impact.004.pinkpurple";
     const castingAnimation = "jb2a.soundwave.01.purple"
-    const caster = getTokenFromActor(template.actor);
+    const caster = getTokenFromActor(getActorFromRegion(region));
+    if (!caster) return;
+
+    const path = calculateAnimationPath(region, target);
+    if (!path) return;
+    const { start, end } = path;
 
     const sequence = new Sequence()
         .effect()
@@ -210,12 +244,16 @@ function animateDeathlyAssault(template: MeasuredTemplateDocumentPF2e, target: T
     sequence.play();
 }
 
-function calculateAnimationPath(template: MeasuredTemplateDocumentPF2e, target: Token): { start: { x: number, y: number }, end: { x: number, y: number } } {
+function calculateAnimationPath(region: RegionDocumentPF2e, target: TokenPF2e): { start: { x: number, y: number }, end: { x: number, y: number } } | null {
+    // The burst's centre, which a circle shape reports as its origin
+    const origin = getRegionOrigin(region);
+    if (!origin) return null;
+
     // Calculate starting location
     const angle = Math.random() * 360;
     const distanceInFeet = 25;
-    const distanceInPixels = distanceInFeet * (canvas.scene.grid.size / canvas.scene.grid.distance);
-    const start = calculateNewCoordinates(template.x, template.y, angle, distanceInPixels);
+    const distanceInPixels = distanceInFeet * canvas.dimensions.distancePixels;
+    const start = calculateNewCoordinates(origin.x, origin.y, angle, distanceInPixels);
 
     // Calculate ending location
     const targetCenter = target.center;
@@ -224,7 +262,7 @@ function calculateAnimationPath(template: MeasuredTemplateDocumentPF2e, target: 
     const angleDegrees = Math.atan2(dy, dx) * (180 / Math.PI);
     const distanceToTargetInPixels = Math.hypot(dx, dy);
     const extraDistanceInFeet = 60;
-    const extraDistanceInPixels = extraDistanceInFeet * (canvas.scene.grid.size / canvas.scene.grid.distance);
+    const extraDistanceInPixels = extraDistanceInFeet * canvas.dimensions.distancePixels;
     const totalDistanceInPixels = distanceToTargetInPixels + extraDistanceInPixels;
     const end = calculateNewCoordinates(start.x, start.y, angleDegrees, totalDistanceInPixels);
 
@@ -246,14 +284,15 @@ function calculateNewCoordinates(x: number, y: number, angleDegrees: number, hyp
     return { x: newX, y: newY };
 }
 
-async function animateTelekineticStorm(template: MeasuredTemplateDocumentPF2e) {
+async function animateTelekineticStorm(region: RegionDocumentPF2e) {
     const vortexAnimation = "jb2a.aura_themed.01.orbit.loop.metal.01.red"
     const castingAnimation = "jb2a.soundwave.01.purple"
     const debrisAnimation1 = "jb2a.explosion.side_fracture.flask.02.1"
-    const caster = getTokenFromActor(template.actor);
+    const caster = getTokenFromActor(getActorFromRegion(region));
+    if (!caster) return;
     const hitAnimation = "jb2a.impact.007.red"
-    const targets = await getTemplateTokens(template);
-    const gridSize = canvas.scene!.grid.size;
+    const targets = getTokensInRegion(region);
+    const gridSize = canvas.grid.size;
     const impacts = targets.length * 5;
 
     const sequence = new Sequence()
@@ -285,10 +324,10 @@ async function animateTelekineticStorm(template: MeasuredTemplateDocumentPF2e) {
                 contrast: 1, 
                 saturate: -1
             })
-            .atLocation(template)
+            .atLocation(region)
             .tint("#800080")
             .file(vortexAnimation)
-            .atLocation(template)
+            .atLocation(region)
             .scale(1.2)
             .duration(10000)
             .playbackRate(1.3)
@@ -298,7 +337,7 @@ async function animateTelekineticStorm(template: MeasuredTemplateDocumentPF2e) {
             .delay(200)
             .fadeIn(500)
             .file(debrisAnimation1)
-            .atLocation(template)
+            .atLocation(region)
             .timeRange(2000, 4500)
             .scale({ x: 1.7, y: 1.2 })
             .loopOptions({ loopDelay: 0, loops: 3, endOnLastLoop: false })

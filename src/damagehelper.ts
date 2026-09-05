@@ -18,7 +18,7 @@ export const DAMAGE_TAG_CONFIG = {
 
 type DamageTrait = { key: string; label: string; group: string; value: string; hasTag: boolean; };
 
-export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTMLElement>) {
+export function addDamageHelperButtonToChatUI(cssMappings: Record<string, HTMLElement>) {
 
     const html = cssMappings["#chat-controls"];
     if (!html) {
@@ -47,11 +47,6 @@ export function addDamageHelperButtonToChatUIv13(cssMappings: Record<string, HTM
     });
 }
 
-export function addDamageHelperButtonToChatUIv12(_html: HTMLElement) {
-    
-    //TODO: build support for v12 injection
-    logd("Foundry v12 is not yet supported for the damage helper button.");
-}
 
 async function showDamageHelperDialog() {
 

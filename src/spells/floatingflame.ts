@@ -1,16 +1,33 @@
-import { MeasuredTemplateDocumentPF2e, TokenPF2e } from "foundry-pf2e";
-import { getTemplateTokens, replaceTargets } from "../templatetarget.ts";
+import { getTokensInRegion } from "../areatargeting.ts";
+import { RegionDocumentPF2e, TokenPF2e } from "foundry-pf2e";
+import { replaceTargets } from "../targeting.ts";
 import { CrosshairUpdatable } from "../types.ts";
-import { deleteLightFromTemplate, MODULE_ID } from "../utils.ts";
+import { createCrosshairIconSwitcher, deleteLightFromRegion, getActorFromRegion, getRegionOrigin, getTokenFromActor, MODULE_ID } from "../utils.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
 
 const floatingFlameAnimation = "jb2a.flaming_sphere.200px.orange.02";
 const floatingFlameCastAnimation = "jb2a.cast_generic.fire.01.orange.0";
 const castSound = "sound/BG2-Sounds/sim_pulsfire.wav";
 const fireLoopSound = "sound/NWN2-Sounds/al_cv_firesmldr1.WAV"
+const VALID_ICON = "icons/svg/fire.svg";
 
-export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF2e) {
-    const caster = template.actor?.getActiveTokens()[0];
+/**
+ * Returns the centre of the single grid square a Floating Flame region occupies.
+ *
+ * PF2e places the spell's 5-foot square area as a `rectangle` shape, whose origin is its top-left
+ * corner.
+ */
+function getFlameCentre(region: RegionDocumentPF2e): Point | null {
+    const origin = getRegionOrigin(region);
+    if (!origin) return null;
+    const half = canvas.grid.size / 2;
+    return { x: origin.x + half, y: origin.y + half };
+}
+
+export async function initiateFloatingFlame(region: RegionDocumentPF2e) {
+    const caster = getTokenFromActor(getActorFromRegion(region));
+    const flameCentre = getFlameCentre(region);
+    if (!caster || !flameCentre) return;
 
     await new Sequence()
         .sound()
@@ -22,15 +39,14 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
             .waitUntilFinished(-1300)
         .play()
 
-    // Create a new source of light at the template location
+    // Create a new source of light on the region's square
     const floatingFlameLight = await AmbientLightDocument.create({
-        x: template.x + canvas.grid.size / 2,
-        y: template.y + canvas.grid.size / 2,
-        permission: 1,
-    
+        x: flameCentre.x,
+        y: flameCentre.y,
+
         flags: {
             [MODULE_ID]: {
-                templateId: template.id
+                regionId: region.id
             }
         },
 
@@ -60,9 +76,9 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
         }
     }, { parent: canvas.scene });
 
-    // add light id to template flags for later reference
+    // add light id to region flags for later reference
     if (floatingFlameLight){
-        await template.setFlag(MODULE_ID, "lightId", floatingFlameLight.id);
+        await region.setFlag(MODULE_ID, "lightId", floatingFlameLight.id);
     }
 
     const seq = new Sequence()
@@ -72,42 +88,41 @@ export async function initiateFloatingFlame(template: MeasuredTemplateDocumentPF
             .duration(2500)
             .fadeOutAudio(200)
         .effect()
-            .atLocation({ x: template.x + canvas.grid.size / 2, y: template.y + canvas.grid.size / 2 })
+            .atLocation(flameCentre)
             .file(floatingFlameAnimation)
             .scale(1)
             .scaleIn(0, 1000, { ease: "easeOutCubic" })
             .persist()
             .loopOptions({ loopDelay: 0, loops: 3600, endOnLastLoop: false })
-            .name(`floating-flame-${template.id}`)
-            // Attaching to template allows the template owner to modify/delete it
-            .attachTo(template);
+            .name(`floating-flame-${region.id}`);
     await seq.play()
 }
 
-export async function sustainFloatingFlame(template: MeasuredTemplateDocumentPF2e) {
-    const templateLocation = { x: template.x, y: template.y };
-    const templateCenter = { x: templateLocation.x + canvas.grid.size / 2, y: templateLocation.y + canvas.grid.size / 2 };
+export async function sustainFloatingFlame(region: RegionDocumentPF2e) {
+    const startingOrigin = getRegionOrigin(region);
+    const startingCentre = getFlameCentre(region);
+    if (!startingOrigin || !startingCentre) return;
     const tokensToCaptureAndTarget: TokenPF2e[] = [];
 
     // clear user's targets
     replaceTargets([]);
-    //capture tokens under the initial template location and store them
-    tokensToCaptureAndTarget.push(...await getTemplateTokens(template));
+    //capture tokens under the initial region location and store them
+    tokensToCaptureAndTarget.push(...getTokensInRegion(region));
 
     // create crosshairs for user to select first location within 5 feet
     ui.notifications.info("Select your first space within 5 feet to move Floating Flame.");
-    const firstLocationCenter = await selectLocation(templateCenter, true);
+    const firstLocationCenter = await selectLocation(startingCentre, true);
     // Check for cancellation
     if (!firstLocationCenter) {
         ui.notifications.warn("Floating Flame movement cancelled.");
         return;
     }
 
-    // move template and capture target tokens in the area and store them
-    tokensToCaptureAndTarget.push(...await moveTemplateAndCaptureTokens(template, firstLocationCenter));
+    // move region and capture target tokens in the area and store them
+    tokensToCaptureAndTarget.push(...await moveRegionAndCaptureTokens(region, firstLocationCenter));
 
     // check if first movement was diagonal
-    const diagonalMove = isDiagonalMove(templateCenter, firstLocationCenter);
+    const diagonalMove = isDiagonalMove(startingCentre, firstLocationCenter);
 
     // create crosshairs for user to select second location within 5 feet of first location
     // (if first movement is diagonal, second must not be diagonal)
@@ -115,24 +130,35 @@ export async function sustainFloatingFlame(template: MeasuredTemplateDocumentPF2
     const secondLocationCenter = await selectLocation(firstLocationCenter, !diagonalMove);
     // Check for cancellation
     if (!secondLocationCenter) {
-        // reset template to original location
-        await template.update({ x: templateLocation.x, y: templateLocation.y });
+        // reset region to original location
+        await moveRegionShapeTo(region, startingOrigin);
         ui.notifications.warn("Floating Flame movement cancelled.");
         return;
     }
 
-    // move template and capture target tokens in the area and store them
-    tokensToCaptureAndTarget.push(...await moveTemplateAndCaptureTokens(template, secondLocationCenter));
+    // move region and capture target tokens in the area and store them
+    tokensToCaptureAndTarget.push(...await moveRegionAndCaptureTokens(region, secondLocationCenter));
 
     // animate flame moving between the two locations
-    await animateFloatingFlameMove(templateCenter, firstLocationCenter, secondLocationCenter, template);
+    await animateFloatingFlameMove(startingCentre, firstLocationCenter, secondLocationCenter, region);
     // Add targets to user
     replaceTargets(tokensToCaptureAndTarget.map(token => token.id));
 }
 
-async function selectLocation(startLocation: Point, allowDiagonal: boolean): Promise<Point> {
+async function selectLocation(startLocation: Point, allowDiagonal: boolean): Promise<Point | false> {
 
     const validLocations = getValidMoveLocations(startLocation, allowDiagonal);
+
+    // Two independent reasons a square can be invalid: it is not a legal move, or line of sight to
+    // it is blocked. They are tracked separately because their callbacks fire on different
+    // schedules — MOUSE_MOVE on every pointer move, COLLIDE only when the collision state changes.
+    let isLegalMove = true;
+    let isBlocked = false;
+
+    const switchIcon = await createCrosshairIconSwitcher(VALID_ICON);
+    const refreshIcon = (crosshair: CrosshairUpdatable) => {
+        switchIcon(crosshair, isLegalMove && !isBlocked);
+    };
 
     const moveLocation = await Sequencer.Crosshair.show({
         location: {
@@ -141,30 +167,24 @@ async function selectLocation(startLocation: Point, allowDiagonal: boolean): Pro
             wallBehavior: Sequencer.Crosshair.PLACEMENT_RESTRICTIONS.NO_COLLIDABLES,
         },
         icon: {
-            texture: "icons/svg/fire.svg"
+            texture: VALID_ICON
         },
         snap: {
             position: CONST.GRID_SNAPPING_MODES.CENTER,
         },
-        t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE
+        t: "circle"
     }, {
         [Sequencer.Crosshair.CALLBACKS.COLLIDE]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/cancel.svg"
-            });
+            isBlocked = true;
+            refreshIcon(crosshair);
         },
         [Sequencer.Crosshair.CALLBACKS.STOP_COLLIDING]: (crosshair: CrosshairUpdatable) => {
-            crosshair.updateCrosshair({
-                "icon.texture": "icons/svg/fire.svg"
-            });
+            isBlocked = false;
+            refreshIcon(crosshair);
         },
         [Sequencer.Crosshair.CALLBACKS.MOUSE_MOVE]: (crosshair: CrosshairUpdatable) => {
-            const locationKey = `${crosshair.x},${crosshair.y}`;
-            if (validLocations.has(locationKey)) {
-                crosshair.updateCrosshair({ "icon.texture": "icons/svg/fire.svg" });
-            } else {
-                crosshair.updateCrosshair({ "icon.texture": "icons/svg/cancel.svg" });
-            }
+            isLegalMove = validLocations.has(`${crosshair.x},${crosshair.y}`);
+            refreshIcon(crosshair);
         },
         [Sequencer.Crosshair.CALLBACKS.PLACED]: (crosshair: CrosshairUpdatable) => {
             const locationKey = `${crosshair.source.x},${crosshair.source.y}`;
@@ -184,17 +204,32 @@ async function selectLocation(startLocation: Point, allowDiagonal: boolean): Pro
     return moveLocation;
 }
 
-async function animateFloatingFlameMove(startLocation: Point, midLocation: Point, endLocation: Point, template: MeasuredTemplateDocumentPF2e) {
+/**
+ * Copies a light's document position onto its placeable.
+ *
+ * v14's AmbientLight positions only its controls and tooltip, leaving x/y on the placeable itself
+ * at 0. Sequencer reads the placeable to decide where an animation starts, so a light animates from
+ * the top-left of the scene unless its position is copied across first.
+ */
+function syncLightPlaceablePosition(light: AmbientLightDocument<Scene | null> | undefined) {
+    if (!light?.object) return;
+    light.object.x = light.x;
+    light.object.y = light.y;
+}
+
+async function animateFloatingFlameMove(startLocation: Point, midLocation: Point, endLocation: Point, region: RegionDocumentPF2e) {
     // Animation logic for moving Floating Flame
-    const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${template.id}` })[0];
+    const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${region.id}` })[0];
 
     if (floatingFlameEffect) {
-        Sequencer.EffectManager.endEffects({ name: `floating-flame-${template.id}` });
+        Sequencer.EffectManager.endEffects({ name: `floating-flame-${region.id}` });
     }
 
     const floatingFlameLight = canvas.scene?.lights.find(light => {
-        return light.getFlag(MODULE_ID, "templateId") === template.id;
-    }) as AmbientLightDocument<Scene | null>;
+        return light.getFlag(MODULE_ID, "regionId") === region.id;
+    }) as AmbientLightDocument<Scene | null> | undefined;
+
+    syncLightPlaceablePosition(floatingFlameLight);
 
     await new Sequence()
         .sound()
@@ -214,11 +249,7 @@ async function animateFloatingFlameMove(startLocation: Point, midLocation: Point
             .fadeOut(50)
             .waitUntilFinished(-100)
         .thenDo(async () => {
-            // Workaround for Sequencer issue when animating light object
-            if (floatingFlameLight.object) {
-                floatingFlameLight.object.x = midLocation.x;
-                floatingFlameLight.object.y = midLocation.y;
-            }
+            syncLightPlaceablePosition(floatingFlameLight);
         })
         .animation()
             .on(floatingFlameLight)
@@ -239,35 +270,44 @@ async function animateFloatingFlameMove(startLocation: Point, midLocation: Point
             .scale(1)
             .persist()
             .loopOptions({ loopDelay: 0, loops: 3600, endOnLastLoop: false })
-            .name(`floating-flame-${template.id}`)
-        .thenDo(async () => {
-            if (floatingFlameLight.object) {
-                floatingFlameLight.object.x = endLocation.x;
-                floatingFlameLight.object.y = endLocation.y;
-            }
-        })
+            .name(`floating-flame-${region.id}`)
         .play();
 }
 
-async function moveTemplateAndCaptureTokens(template: MeasuredTemplateDocumentPF2e, newLocation: Point) {
-    await template.update({ x: newLocation.x - canvas.grid.size / 2, y: newLocation.y - canvas.grid.size / 2 });
-    const tokensInArea = await getTemplateTokens(template);
-    return tokensInArea;
+/**
+ * Repositions a region's single shape to a new top-left origin.
+ *
+ * A region has no position of its own; its coordinates live on the shape, so moving it means
+ * rewriting the shape rather than updating x/y on the document.
+ */
+async function moveRegionShapeTo(region: RegionDocumentPF2e, origin: Point) {
+    const shape = region.shapes.at(0)?.toObject();
+    if (!shape) return;
+    await region.update({ shapes: [{ ...shape, x: origin.x, y: origin.y }] });
 }
 
-export async function removeFloatingFlame(template: MeasuredTemplateDocumentPF2e) {
+async function moveRegionAndCaptureTokens(region: RegionDocumentPF2e, newCentre: Point) {
+    const half = canvas.grid.size / 2;
+    await moveRegionShapeTo(region, { x: newCentre.x - half, y: newCentre.y - half });
+    return getTokensInRegion(region);
+}
+
+export async function removeFloatingFlame(region: RegionDocumentPF2e) {
+    const flameCentre = getFlameCentre(region);
+    if (!flameCentre) return;
+
     // Animate flame disappearing
     await new Sequence()
     .effect()
-        .atLocation({ x: template.x + canvas.grid.size / 2, y: template.y + canvas.grid.size / 2 })
+        .atLocation(flameCentre)
         .file("jb2a.impact.fire.01.orange.0")
         .scale(0.7)
         .waitUntilFinished(-1300)
     .thenDo(async function() {
-        deleteLightFromTemplate(template);
-        const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${template.id}` })[0];
+        await deleteLightFromRegion(region);
+        const floatingFlameEffect = Sequencer.EffectManager.getEffects({ name: `floating-flame-${region.id}` })[0];
         if (floatingFlameEffect) {
-            Sequencer.EffectManager.endEffects({ name: `floating-flame-${template.id}` });
+            Sequencer.EffectManager.endEffects({ name: `floating-flame-${region.id}` });
         }
     })
     .play()

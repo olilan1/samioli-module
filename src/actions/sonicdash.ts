@@ -13,10 +13,17 @@ export async function startSonicDash(token: TokenPF2e) {
     await animateSonicDash(token, locationToDashTo);
 }
 
-async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
+async function selectLocationToDashTo(token: TokenPF2e): Promise<Point | null> {
 
-    // @ts-expect-error speed does exist on actor attributes
-    const landSpeed = token.actor?.system.attributes.speed.total;
+    const actor = token.actor;
+    const landSpeed = actor?.isOfType("creature")
+        ? actor.movement.speeds.land.value
+        : 0;
+
+    if (!landSpeed) {
+        ui.notifications.warn("Sonic Dash requires a creature with a land Speed.");
+        return null;
+    }
 
     const moveLocation = await Sequencer.Crosshair.show({
             location: {
@@ -35,7 +42,7 @@ async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
                 offset: {
                     x: 0,
                     y: 0
-                }, 
+                },
             },
             icon: {
                 texture: "icons/svg/wingfoot.svg" as ImageFilePath,
@@ -46,9 +53,9 @@ async function selectLocationToDashTo(token: TokenPF2e): Promise<Point> {
                 direction: 0,
                 size: CONST.GRID_SNAPPING_MODES.CENTER
             },
-            t: CONST.MEASURED_TEMPLATE_TYPES.CIRCLE
+            t: "circle"
         },
-        getCollidableCallbacks("Sonic Dash", "icons/svg/wingfoot.svg"));
+        await getCollidableCallbacks("Sonic Dash", "icons/svg/wingfoot.svg"));
 
     return moveLocation;
 }

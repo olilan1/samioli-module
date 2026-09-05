@@ -1,5 +1,6 @@
-import { ChatMessagePF2e, EffectPF2e, EffectSource, TokenPF2e } from "foundry-pf2e";
+import { ChatMessagePF2e, EffectPF2e, EffectSource, ItemPF2e, TokenPF2e } from "foundry-pf2e";
 import { createChatMessageWithButton } from "../chatbuttonhelper.ts";
+import { isEffect } from "../utils.ts";
 
 interface MirrorImageRollFlags {
     type: "mirror-image-roll";
@@ -117,8 +118,8 @@ export async function resolveMirrorImageRoll(message: ChatMessagePF2e): Promise<
     }
 }
 
-export async function handleMirrorImageCreated(item: EffectPF2e): Promise<void> {
-    if (item.slug !== "spell-effect-mirror-image") return;
+export async function handleMirrorImageCreated(item: ItemPF2e): Promise<void> {
+    if (!isEffect(item) || item.slug !== "spell-effect-mirror-image") return;
     const token = item.actor?.getActiveTokens()[0];
     if (!token) return;
 
@@ -152,10 +153,10 @@ export async function handleMirrorImageCreated(item: EffectPF2e): Promise<void> 
 }
 
 export async function handleMirrorImageUpdated(
-    item: EffectPF2e,
+    item: ItemPF2e,
     changes: DeepPartial<EffectSource>
 ): Promise<void> {
-    if (item.slug !== "spell-effect-mirror-image") return;
+    if (!isEffect(item) || item.slug !== "spell-effect-mirror-image") return;
     const rawBadgeValue = changes?.system?.badge?.value;
     if (rawBadgeValue === undefined) return;
 
@@ -184,8 +185,8 @@ export async function handleMirrorImageUpdated(
     }
 }
 
-export async function handleMirrorImageDeleted(item: EffectPF2e): Promise<void> {
-    if (item.slug !== "spell-effect-mirror-image") return;
+export async function handleMirrorImageDeleted(item: ItemPF2e): Promise<void> {
+    if (!isEffect(item) || item.slug !== "spell-effect-mirror-image") return;
     await Sequencer.EffectManager.endEffects({ origin: item.uuid });
 }
 

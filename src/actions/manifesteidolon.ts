@@ -139,6 +139,6 @@ async function selectEidolonManifestLocation(summonerToken: TokenDocumentPF2e, e
                 direction: 0
             }
         },
-        getCollidableCallbacks("Manifest Eidolon", eidolonImg));
+        await getCollidableCallbacks("Manifest Eidolon", eidolonImg));
     return centrePoint;
 }
