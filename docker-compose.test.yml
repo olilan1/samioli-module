@@ -1,0 +1,22 @@
+services:
+  foundry:
+    image: felddy/foundryvtt:latest
+    container_name: foundryvtt-test-server
+    hostname: "foundryvtt-test-host"
+    user: "root"
+    restart: unless-stopped
+    ports:
+      - "30001:30000"
+    environment:
+      - FOUNDRY_ADMIN_KEY=admin
+      - CONTAINER_CACHE=/data/container_cache
+      - FOUNDRY_IP_DISCOVERY=false
+      - FOUNDRY_MINIFY_STATIC_FILES=false
+      - FOUNDRY_TELEMETRY=false
+      - FOUNDRY_WORLD=playwright-test-world
+      - FOUNDRY_SYSTEMS=https://github.com/foundryvtt/pf2e/releases/latest/download/system.json
+      - FOUNDRY_MODULES=https://github.com/theripper93/autoanimations/releases/latest/download/module.json;https://github.com/theripper93/Combat-Booster/releases/latest/download/module.json;https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/raw/master/module/module.json;https://github.com/rupin/fvtt-lib-wrapper/releases/latest/download/module.json;https://r2.foundryvtt.com/packages-public/pf2e-tokens-bestiaries/module.json;https://r2.foundryvtt.com/packages-public/pf2e-tokens-characters/module.json;https://cdn.paizo.com/foundry/modules/pf2e-tokens-monster-core/module.json;https://raw.githubusercontent.com/reonZ/pf2e-dailies/master/module.json;https://github.com/MrVauxs/pf2e-jb2a-macros/releases/latest/download/module.json;https://raw.githubusercontent.com/reonZ/pf2e-toolbelt/master/module.json;https://github.com/theripper93/portal-lib/releases/latest/download/module.json;https://gitlab.com/fvtt-modules-lab/quick-insert/-/releases/permalink/latest/downloads/module.json;https://github.com/fantasycalendar/FoundryVTT-Sequencer/releases/latest/download/module.json;https://github.com/farling42/foundryvtt-socketlib/releases/latest/download/module.json;https://github.com/Larkinabout/fvtt-token-action-hud-core/releases/latest/download/module.json;https://github.com/Larkinabout/fvtt-token-action-hud-pf2e/releases/latest/download/module.json;https://github.com/xdy/xdy-pf2e-workbench/releases/latest/download/module.json
+    volumes:
+      - ./data:/data
+      - ./:/data/Data/modules/samioli-module
+      - ./tests/fixtures/base-test-world:/data/Data/worlds/playwright-test-world

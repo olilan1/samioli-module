@@ -1,0 +1,103 @@
+{
+  "id": "playwright-test-world",
+  "title": "Playwright Test World",
+  "description": "Base test world fixture for Playwright automated testing",
+  "system": "pf2e",
+  "background": "systems/pf2e/assets/icons/default-icons/mystery.svg",
+  "coreVersion": "14.365",
+  "systemVersion": "8.4.0",
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {}
+      }
+    ],
+    "modules": [
+      {
+        "id": "samioli-module",
+        "type": "module"
+      },
+      {
+        "id": "autoanimations",
+        "type": "module"
+      },
+      {
+        "id": "combatbooster",
+        "type": "module"
+      },
+      {
+        "id": "dice-so-nice",
+        "type": "module"
+      },
+      {
+        "id": "jb2a_patreon",
+        "type": "module"
+      },
+      {
+        "id": "lib-wrapper",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-dailies",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-jb2a-macros",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-tokens-bestiaries",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-tokens-characters",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-tokens-monster-core",
+        "type": "module"
+      },
+      {
+        "id": "pf2e-toolbelt",
+        "type": "module"
+      },
+      {
+        "id": "portal-lib",
+        "type": "module"
+      },
+      {
+        "id": "quick-insert",
+        "type": "module"
+      },
+      {
+        "id": "sequencer",
+        "type": "module"
+      },
+      {
+        "id": "socketlib",
+        "type": "module"
+      },
+      {
+        "id": "token-action-hud-core",
+        "type": "module"
+      },
+      {
+        "id": "token-action-hud-pf2e",
+        "type": "module"
+      },
+      {
+        "id": "xdy-pf2e-workbench",
+        "type": "module"
+      }
+    ]
+  },
+  "compatibility": {
+    "verified": "14.365",
+    "minimum": "14"
+  },
+  "lastPlayed": "Mon Aug 03 2026 10:38:04 GMT+0000 (Coordinated Universal Time)",
+  "playtime": 1944,
+  "flags": {}
+}

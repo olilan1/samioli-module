@@ -1,0 +1,23 @@
+{
+  "targetModule": "samioli-module",
+  "additionalModules": [
+    "autoanimations",
+    "combatbooster",
+    "dice-so-nice",
+    "jb2a_patreon",
+    "lib-wrapper",
+    "pf2e-dailies",
+    "pf2e-jb2a-macros",
+    "pf2e-tokens-bestiaries",
+    "pf2e-tokens-characters",
+    "pf2e-tokens-monster-core",
+    "pf2e-toolbelt",
+    "portal-lib",
+    "quick-insert",
+    "sequencer",
+    "socketlib",
+    "token-action-hud-core",
+    "token-action-hud-pf2e",
+    "xdy-pf2e-workbench"
+  ]
+}
