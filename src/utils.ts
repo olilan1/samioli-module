@@ -1,7 +1,7 @@
 import { ActorPF2e, TokenPF2e, RegionDocumentPF2e, ItemPF2e, ConditionPF2e, EffectPF2e, EffectSource, CharacterPF2e, TokenDocumentPF2e, SpellPF2e } from "foundry-pf2e";
 import { getSetting, SETTINGS } from "./settings.ts";
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
-import { TokenMovementMethod } from "foundry-pf2e/foundry/client/documents/_module.mjs";
+import { TokenMovementMethod, TokenMovementOperation } from "foundry-pf2e/foundry/client/documents/_types.mjs";
 import { CrosshairUpdatable, RegionOriginFlag, RegionShapeGeometry } from "./types.ts";
 
 export type Tradition = "occult" | "arcane" | "divine" | "primal";
@@ -319,6 +319,17 @@ export async function moveTokenToPoint(token: TokenPF2e, point: Point, ignoreWal
     };
 
     await token.document.move(waypoints, moveOptions);
+}
+
+export function isVoluntaryMoveAction(movement: TokenMovementOperation): boolean {
+    if (movement.method !== "dragging" && movement.method !== "keyboard") {
+        return false;
+    }
+    if (!(movement.passed.distance > 0)) {
+        return false;
+    }
+    const movementActions = CONFIG.Token?.movement?.actions;
+    return !movement.passed.waypoints.some(w => movementActions?.[w.action]?.teleport);
 }
 
 /** Default icon shown on a crosshair when the hovered square cannot be used. */

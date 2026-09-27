@@ -16,6 +16,7 @@ export const SETTINGS = {
     DAMAGE_HELPER_BUTTON: "damage_helper_button_enable",
     AUTO_MIRROR_IMAGE: "automatic_mirror_image_enable",
     AUTO_TUMBLE_BEHIND: "automatic_tumble_behind_enable",
+    AUTO_GHOSTS_IN_THE_STORM: "automatic_ghosts_in_the_storm_enable",
     MOOD_CLOUD_HAPPY_IMAGE: "mood_cloud_happy_image",
     MOOD_CLOUD_ANGRY_IMAGE: "mood_cloud_angry_image",
     MOOD_CLOUD_INSCRUTABLE_IMAGE: "mood_cloud_inscrutable_image",
@@ -146,6 +147,16 @@ export function registerSettings() {
         name: "Tumble Behind Automation",
         hint: "Automatically apply Off-Guard to the target of Tumble Through " +
             "if the actor has the Tumble Behind feat.",
+        scope: "world",
+        config: true,
+        default: false,
+        type: Boolean
+    });
+
+    game.settings.register(SETTINGS_NAMESPACE, SETTINGS.AUTO_GHOSTS_IN_THE_STORM, {
+        name: "Ghosts in the Storm Automation",
+        hint: "Automatically apply the Ghosts in the Storm (Move) effect " +
+            "when an affected creature moves during an encounter.",
         scope: "world",
         config: true,
         default: false,

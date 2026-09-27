@@ -56,8 +56,13 @@ import {
     isStartOfTurnSpellRegion
 } from "./startofturnspells.ts";
 import ChatLog from "foundry-pf2e/foundry/client/applications/sidebar/tabs/chat.mjs";
+import { TokenMovementOperation } from "foundry-pf2e/foundry/client/documents/_types.mjs";
 import { addDamageHelperButtonToChatUI } from "./damagehelper.ts";
-import { MODULE_ID } from "./utils.ts";
+import { isVoluntaryMoveAction, MODULE_ID } from "./utils.ts";
+import {
+    applyGhostsInTheStormMoveEffect,
+    GHOSTS_IN_THE_STORM_EFFECT_SLUG
+} from "./effects/ghostsinthestorm.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
 import { manifestEidolon } from "./actions/manifesteidolon.ts";
@@ -276,13 +281,20 @@ Hooks.on(
     "moveToken",
     (
         token: TokenDocumentPF2e,
-        movement: { destination: { x: number; y: number } },
+        movement: TokenMovementOperation,
         _operation: unknown,
         _user: UserPF2e
     ) => {
     hook(moveGhostlyCarrierToCaster, token, movement.destination.x, movement.destination.y)
         .ifGM()
         .ifActorHasEffect("samioli-ghostly-carrier")
+        .run();
+    hook(applyGhostsInTheStormMoveEffect, token)
+        .ifEnabled(SETTINGS.AUTO_GHOSTS_IN_THE_STORM)
+        .ifGM()
+        .ifInCombat()
+        .ifActorHasEffect(GHOSTS_IN_THE_STORM_EFFECT_SLUG)
+        .if(() => isVoluntaryMoveAction(movement))
         .run();
 });
 

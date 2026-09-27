@@ -232,6 +232,20 @@ export class HookRunner<T extends unknown[]> {
         return this;
     }
 
+    /**
+     * Restricts execution to when an encounter is active and the resolved actor is in combat.
+     * 
+     * @note This is a general environment check and does not count as a filter to allow the hook
+     *       to run (a content-specific filter or `allowUnfilteredRun()` must still be called).
+     * @returns The HookRunner instance for chaining.
+     */
+    ifInCombat(): this {
+        if (!game.combat?.started || !this.getActor()?.inCombat) {
+            this.shouldRun = false;
+        }
+        return this;
+    }
+
 
     /**
      * Restricts execution to a specific type of chat message (e.g. "attack-roll", "damage-roll").
