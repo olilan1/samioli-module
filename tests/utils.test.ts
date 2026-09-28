@@ -1,8 +1,9 @@
 import { getTokensInEmanation, hasLineOfEffect } from "../src/areatargeting.ts";
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { deleteItemFromActor, getRegionOrigin } from "../src/utils.ts";
+import { deleteItemFromActor, getRegionOrigin, isVoluntaryMoveAction } from "../src/utils.ts";
 import { ItemPF2e, RegionDocumentPF2e, TokenPF2e } from 'foundry-pf2e';
 import { Point } from "foundry-pf2e/foundry/common/_types.mjs";
+import { TokenMovementOperation } from "foundry-pf2e/foundry/client/documents/_types.mjs";
 
 /** The shape mocks from tests/setup.ts, whose constructors do not match the typed Foundry classes. */
 type ShapeConstructor = new (data?: object) => object;
@@ -227,5 +228,55 @@ describe('utils: deleteItemFromActor', () => {
     const result = await deleteItemFromActor(mockItem);
     expect(result).toBe(true);
     expect(deleteFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('utils: isVoluntaryMoveAction', () => {
+  beforeEach(() => {
+    (globalThis as unknown as { CONFIG: unknown }).CONFIG = {
+      Token: {
+        movement: {
+          actions: {
+            walk: {},
+            fly: {},
+            blink: { teleport: true },
+            displace: { teleport: true }
+          }
+        }
+      }
+    };
+  });
+
+  const buildMovement = (
+    method: string,
+    distance: number,
+    actions: string[] = ['walk']
+  ): TokenMovementOperation => ({
+    method,
+    passed: {
+      distance,
+      waypoints: actions.map(action => ({ action }))
+    }
+  } as unknown as TokenMovementOperation);
+
+  it('returns true for dragging or keyboard movement with non-teleport actions', () => {
+    expect(isVoluntaryMoveAction(buildMovement('dragging', 15, ['walk']))).toBe(true);
+    expect(isVoluntaryMoveAction(buildMovement('keyboard', 5, ['fly']))).toBe(true);
+  });
+
+  it('returns false for undo, config, or api movement methods', () => {
+    expect(isVoluntaryMoveAction(buildMovement('undo', 15, ['walk']))).toBe(false);
+    expect(isVoluntaryMoveAction(buildMovement('config', 15, ['walk']))).toBe(false);
+    expect(isVoluntaryMoveAction(buildMovement('api', 15, ['walk']))).toBe(false);
+  });
+
+  it('returns false for zero-distance updates', () => {
+    expect(isVoluntaryMoveAction(buildMovement('dragging', 0, ['walk']))).toBe(false);
+  });
+
+  it('returns false for forced movement (displace) or teleportation (blink)', () => {
+    expect(isVoluntaryMoveAction(buildMovement('dragging', 15, ['displace']))).toBe(false);
+    expect(isVoluntaryMoveAction(buildMovement('dragging', 15, ['blink']))).toBe(false);
+    expect(isVoluntaryMoveAction(buildMovement('dragging', 15, ['walk', 'blink']))).toBe(false);
   });
 });

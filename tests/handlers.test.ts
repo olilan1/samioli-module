@@ -9,6 +9,7 @@ import {
 } from '../src/effects/panache.ts';
 import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
+import { applyGhostsInTheStormMoveEffect } from '../src/effects/ghostsinthestorm.ts';
 import {
   addSustainEffectToCaster,
   associateRegionWithSustainedEffect,
@@ -23,7 +24,13 @@ import {
 } from '../src/startofturnspells.ts';
 import { getHeldShiftingWeaponFromToken } from '../src/actions/shifting.ts';
 import {
-  ActorPF2e, ChatMessagePF2e, ItemPF2e, RegionDocumentPF2e, TokenPF2e, WeaponPF2e
+  ActorPF2e,
+  ChatMessagePF2e,
+  ItemPF2e,
+  RegionDocumentPF2e,
+  TokenDocumentPF2e,
+  TokenPF2e,
+  WeaponPF2e
 } from 'foundry-pf2e';
 
 // Mock chatbuttonhelper to avoid real chat message creation
@@ -996,6 +1003,81 @@ describe('Baseline Hook Handlers', () => {
         })
       );
       expect(result).toBe(weapon2);
+    });
+  });
+
+  describe('Ghosts in the Storm Handlers', () => {
+    const mockMoveEffectSource = {
+      name: 'Effect: Ghosts in the Storm (Move)',
+      type: 'effect',
+      system: { slug: 'effect-ghosts-in-the-storm-move' }
+    };
+
+    beforeEach(() => {
+      mockGetDocument.mockResolvedValue({
+        toObject: () => mockMoveEffectSource
+      });
+    });
+
+    it('creates the move effect when not already present on the actor', async () => {
+      const createEmbeddedDocuments = vi.fn().mockResolvedValue([{}]);
+      const mockToken = {
+        actor: {
+          items: [],
+          createEmbeddedDocuments
+        }
+      } as unknown as TokenDocumentPF2e;
+
+      await applyGhostsInTheStormMoveEffect(mockToken);
+
+      expect(mockGetDocument).toHaveBeenCalledWith('Sb3ZdFs61atILypS');
+      expect(createEmbeddedDocuments).toHaveBeenCalledWith('Item', [mockMoveEffectSource]);
+    });
+
+    it('returns early when a non-expired move effect already exists on the actor', async () => {
+      const createEmbeddedDocuments = vi.fn();
+      const existingEffect = {
+        type: 'effect',
+        slug: 'effect-ghosts-in-the-storm-move',
+        isExpired: false,
+        remainingDuration: { expired: false },
+        update: vi.fn()
+      };
+      const mockToken = {
+        actor: {
+          items: [existingEffect],
+          createEmbeddedDocuments
+        }
+      } as unknown as TokenDocumentPF2e;
+
+      await applyGhostsInTheStormMoveEffect(mockToken);
+
+      expect(mockGetDocument).not.toHaveBeenCalled();
+      expect(createEmbeddedDocuments).not.toHaveBeenCalled();
+      expect(existingEffect.update).not.toHaveBeenCalled();
+    });
+
+    it('deletes an expired move effect and creates a fresh one', async () => {
+      const deleteFn = vi.fn().mockResolvedValue({});
+      const createEmbeddedDocuments = vi.fn().mockResolvedValue([{}]);
+      const expiredEffect = {
+        type: 'effect',
+        slug: 'effect-ghosts-in-the-storm-move',
+        isExpired: true,
+        remainingDuration: { expired: true },
+        delete: deleteFn
+      };
+      const mockToken = {
+        actor: {
+          items: [expiredEffect],
+          createEmbeddedDocuments
+        }
+      } as unknown as TokenDocumentPF2e;
+
+      await applyGhostsInTheStormMoveEffect(mockToken);
+
+      expect(deleteFn).toHaveBeenCalledTimes(1);
+      expect(createEmbeddedDocuments).toHaveBeenCalledWith('Item', [mockMoveEffectSource]);
     });
   });
 });

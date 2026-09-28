@@ -106,6 +106,48 @@ describe('HookRunner & hook helper', () => {
     });
   });
 
+  describe('ifInCombat', () => {
+    it('should run callback when encounter is started and actor is in combat', () => {
+      (game as unknown as { combat: { started: boolean } }).combat = { started: true };
+      const mockActor = { documentName: 'Actor', inCombat: true };
+      const callback = vi.fn();
+
+      hook(callback, mockActor).ifInCombat().allowUnfilteredRun().run();
+
+      expect(callback).toHaveBeenCalled();
+    });
+
+    it('should NOT run callback when encounter is not started', () => {
+      (game as unknown as { combat: { started: boolean } }).combat = { started: false };
+      const mockActor = { documentName: 'Actor', inCombat: true };
+      const callback = vi.fn();
+
+      hook(callback, mockActor).ifInCombat().allowUnfilteredRun().run();
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('should NOT run callback when actor is not in combat', () => {
+      (game as unknown as { combat: { started: boolean } }).combat = { started: true };
+      const mockActor = { documentName: 'Actor', inCombat: false };
+      const callback = vi.fn();
+
+      hook(callback, mockActor).ifInCombat().allowUnfilteredRun().run();
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('should throw if ifInCombat is used without a content filter or allowUnfilteredRun', () => {
+      (game as unknown as { combat: { started: boolean } }).combat = { started: true };
+      const mockActor = { documentName: 'Actor', inCombat: true };
+      const callback = vi.fn();
+
+      expect(() => hook(callback, mockActor).ifInCombat().run()).toThrowError(
+        /HookRunner: You must add guards/
+      );
+    });
+  });
+
   describe('ifMessagePoster', () => {
     it('should run callback if user matches message author', () => {
       const callback = vi.fn();

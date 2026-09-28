@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Ghosts in the Storm automation
+
 ## [1.0.0] - 2026-09-05
 
 - Fix weapon selection dialog for shifting runes
