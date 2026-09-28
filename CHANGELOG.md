@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-28
+
 - Ghosts in the Storm automation
 
 ## [1.0.0] - 2026-09-05
@@ -145,7 +147,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.1.0...HEAD
+
+[1.1.0]: https://github.com/olilan1/samioli-module/compare/v1.0.0...v1.1.0
 
 [1.0.0]: https://github.com/olilan1/samioli-module/compare/v0.66.0...v1.0.0
 
