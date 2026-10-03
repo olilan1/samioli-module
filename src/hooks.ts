@@ -61,7 +61,9 @@ import { addDamageHelperButtonToChatUI } from "./damagehelper.ts";
 import { isVoluntaryMoveAction, MODULE_ID } from "./utils.ts";
 import {
     applyGhostsInTheStormMoveEffect,
-    GHOSTS_IN_THE_STORM_EFFECT_SLUG
+    GHOSTS_IN_THE_STORM_EFFECT_SLUG,
+    GHOSTS_IN_THE_STORM_MOVE_SLUG,
+    handleGhostsInTheStormCreated
 } from "./effects/ghostsinthestorm.ts";
 import { handleHomebrewUnstableCheckResult, replaceUnstableCheckWithStrainCheck } from "./unstablehomebrew.ts";
 import { runBoostEidolonAutomation } from "./spells/boosteidolon.ts";
@@ -303,6 +305,12 @@ Hooks.on("createItem", (item: ItemPF2e, _context: unknown, userId: string) => {
         .ifUser(userId)
         .ifItemType("effect")
         .ifItemSlug("spell-effect-mirror-image")
+        .run();
+
+    hook(handleGhostsInTheStormCreated, item)
+        .ifUser(userId)
+        .ifItemType("effect")
+        .ifItemSlug(GHOSTS_IN_THE_STORM_MOVE_SLUG)
         .run();
 });
 
