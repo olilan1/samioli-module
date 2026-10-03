@@ -1,4 +1,4 @@
-import { EffectPF2e, EffectSource, ItemPF2e, TokenDocumentPF2e } from "foundry-pf2e";
+import { EffectPF2e, EffectSource, ItemPF2e, TokenDocumentPF2e, TokenPF2e } from "foundry-pf2e";
 import { addOrUpdateEffectOnActor, isEffect } from "../utils.ts";
 
 export const GHOSTS_IN_THE_STORM_EFFECT_SLUG = "effect-ghosts-in-the-storm";
@@ -33,17 +33,17 @@ export async function applyGhostsInTheStormMoveEffect(token: TokenDocumentPF2e):
 
 export async function handleGhostsInTheStormCreated(item: ItemPF2e): Promise<void> {
     if (!isEffect(item) || item.slug !== GHOSTS_IN_THE_STORM_MOVE_SLUG) return;
-    const token = item.actor?.getActiveTokens()[0]?.document;
-    if (!token) return;
+    const tokens = item.actor?.getActiveTokens() ?? [];
+    if (tokens.length === 0) return;
 
-    await playGhostsInTheStormAnimation(token, item);
+    await playGhostsInTheStormAnimation(tokens, item);
 }
 
 export async function playGhostsInTheStormAnimation(
-    token: TokenDocumentPF2e,
+    tokens: TokenPF2e[],
     effect: EffectPF2e
 ): Promise<void> {
-    const tokenObject = token.object ?? token;
+    if (tokens.length === 0) return;
 
     await Sequencer.Preloader.preloadForClients([
         MOVE_PUFF_ANIMATION,
@@ -51,33 +51,45 @@ export async function playGhostsInTheStormAnimation(
         CONCEALMENT_CLOUD_ANIMATION,
     ]);
 
-    new Sequence()
+    const sequence = new Sequence()
+        .sound()
+            .file(MOVE_SOUND)
+            .volume(0.35);
+
+    for (const token of tokens) {
+        sequence.addSequence(getGhostsInTheStormTokenSequence(token, effect));
+    }
+
+    await sequence.play();
+}
+
+function getGhostsInTheStormTokenSequence(
+    token: TokenPF2e,
+    effect: EffectPF2e
+): Sequence {
+    return new Sequence()
         .effect()
             .file(MOVE_PUFF_ANIMATION)
-            .attachTo(tokenObject)
+            .attachTo(token)
             .scaleToObject(1.4)
             .opacity(0.7)
             .fadeOut(400)
         .effect()
             .file(MOVE_SPARK_ANIMATION)
-            .attachTo(tokenObject)
+            .attachTo(token)
             .scaleToObject(1.2)
             .opacity(0.6)
             .fadeOut(400)
-        .sound()
-            .file(MOVE_SOUND)
-            .volume(0.35)
         .effect()
             .file(CONCEALMENT_CLOUD_ANIMATION)
-            .name(`ghosts-in-the-storm-${token.id}`)
-            .attachTo(tokenObject)
+            .attachTo(token)
             .belowTokens()
             .scaleToObject(1.9)
             .opacity(0.75)
             .filter("ColorMatrix", { saturate: -0.7 })
+            .origin(effect.uuid)
             .persist()
             .tieToDocuments(effect)
             .fadeIn(400)
-            .fadeOut(400)
-        .play();
+            .fadeOut(400);
 }
