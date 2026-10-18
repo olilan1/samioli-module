@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Demoralize action button for chat cards
+
 ## [1.1.0] - 2026-09-28
 
 - Ghosts in the Storm automation

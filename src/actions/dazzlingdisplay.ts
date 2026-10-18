@@ -7,8 +7,18 @@ import { getTokensInEmanation } from "../areatargeting.ts";
 import { ImageFilePath } from "foundry-pf2e/foundry/common/constants.mjs";
 import { replaceTargets } from "../targeting.ts";
 import { DAZZLING_DISPLAY, getSocket } from "../sockets.ts";
+import { executeDemoralizeMacro } from "./demoralize.ts";
 
 export async function startDazzlingDisplay(token: TokenPF2e) {
+    if (!token.actor?.isOwner) {
+        ui.notifications.warn(
+            `You do not have permission to perform Dazzling Display with ${token.name}.`
+        );
+        return;
+    }
+
+    token.control({ releaseOthers: true });
+
     // Capture all tokens within 30 ft emanation
     const allTargets = getTokensInEmanation(token.center, 30);
 
@@ -28,24 +38,7 @@ export async function startDazzlingDisplay(token: TokenPF2e) {
     await animateDazzlingDisplay(token);
 
     // run demoralize action on the remaining targets
-    const demoralizeMacro = await getDemoralizeMacro();
-    if (demoralizeMacro) {
-        if (!demoralizeMacro.canExecute) {
-            const clonedMacro = new Macro(
-                foundry.utils.mergeObject(
-                    demoralizeMacro.toObject(),
-                        { "-=_id": null, "ownership.default": CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER },
-                        { inplace: true }
-                )
-            );
-            clonedMacro.execute();
-        } else {
-            demoralizeMacro.execute();
-        }
-    } else {
-        ui.notifications.warn("Workbench Demoralize macro not found.");
-        return;
-    }
+    if (!(await executeDemoralizeMacro())) return;
 
     getSocket().executeAsGM(DAZZLING_DISPLAY, finalTargets.map(token => token.document.uuid));
 
@@ -80,16 +73,6 @@ export async function startDazzlingDisplayAsGM(targetsUuids: string[]) {
             await target.actor.createEmbeddedDocuments("Item", [dazzingDisplayImmunityEffectData]);
         }
     }
-}
-
-async function getDemoralizeMacro(): Promise<Macro | null> {
-    const compendiumName = "xdy-pf2e-workbench.asymonous-benefactor-macros-internal";
-    const macroName = "XDY DO_NOT_IMPORT Demoralize";
-    const pack = game.packs.get(compendiumName);
-    if (!pack) return null;
-    const macro = await pack.getDocuments({name: macroName}) as Macro[];
-    if (macro.length === 0) return null;
-    return macro[0];
 }
 
 async function animateDazzlingDisplay(token: TokenPF2e) {
