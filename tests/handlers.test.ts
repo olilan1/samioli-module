@@ -23,6 +23,9 @@ import {
   deleteWithinEffectsForRegion
 } from '../src/startofturnspells.ts';
 import { getHeldShiftingWeaponFromToken } from '../src/actions/shifting.ts';
+import { startDemoralize, executeDemoralizeMacro } from '../src/actions/demoralize.ts';
+import { startDazzlingDisplay } from '../src/actions/dazzlingdisplay.ts';
+import { addAutoButtonToMessage, canAddAutoButton } from '../src/chatautobuttons.ts';
 import {
   ActorPF2e,
   ChatMessagePF2e,
@@ -1078,6 +1081,166 @@ describe('Baseline Hook Handlers', () => {
 
       expect(deleteFn).toHaveBeenCalledTimes(1);
       expect(createEmbeddedDocuments).toHaveBeenCalledWith('Item', [mockMoveEffectSource]);
+    });
+  });
+
+  describe('Demoralize Action & Chat Auto-Button', () => {
+    it('warns and aborts startDemoralize if user is not actor owner', async () => {
+      const control = vi.fn();
+      const mockToken = {
+        name: 'Bully',
+        actor: { isOwner: false },
+        control
+      } as unknown as TokenPF2e;
+
+      await startDemoralize(mockToken);
+
+      expect(ui.notifications.warn).toHaveBeenCalledWith(
+        'You do not have permission to demoralize with Bully.'
+      );
+      expect(control).not.toHaveBeenCalled();
+    });
+
+    it('controls token and executes macro when startDemoralize is called by owner', async () => {
+      const execute = vi.fn();
+      const getDocuments = vi.fn().mockResolvedValue([{ canExecute: true, execute }]);
+      (game.packs.get as ReturnType<typeof vi.fn>).mockReturnValue({ getDocuments });
+
+      const control = vi.fn();
+      const mockToken = {
+        name: 'Bully',
+        actor: { isOwner: true },
+        control
+      } as unknown as TokenPF2e;
+
+      await startDemoralize(mockToken);
+
+      expect(control).toHaveBeenCalledWith({ releaseOthers: true });
+      expect(getDocuments).toHaveBeenCalledWith({ name: 'XDY DO_NOT_IMPORT Demoralize' });
+      expect(execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('warns and returns false in executeDemoralizeMacro when pack is missing', async () => {
+      (game.packs.get as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+
+      const result = await executeDemoralizeMacro();
+
+      expect(result).toBe(false);
+      expect(ui.notifications.warn).toHaveBeenCalledWith(
+        'Workbench Demoralize macro not found.'
+      );
+    });
+
+    it('clones and executes macro when canExecute is false', async () => {
+      const clonedExecute = vi.fn();
+      const mockMacroConstructor = vi.fn(function (this: { execute: unknown }) {
+        this.execute = clonedExecute;
+      });
+      (globalThis as unknown as { Macro: unknown }).Macro = mockMacroConstructor;
+      (globalThis as unknown as { CONST: unknown }).CONST = {
+        DOCUMENT_OWNERSHIP_LEVELS: { OWNER: 3 }
+      };
+      (foundry.utils as unknown as { mergeObject: unknown }).mergeObject = vi.fn(
+        (original: object, other: object) => ({ ...original, ...other })
+      );
+
+      const rawMacroObj = { name: 'XDY DO_NOT_IMPORT Demoralize' };
+      const getDocuments = vi.fn().mockResolvedValue([
+        {
+          canExecute: false,
+          toObject: () => rawMacroObj,
+          execute: vi.fn()
+        }
+      ]);
+      (game.packs.get as ReturnType<typeof vi.fn>).mockReturnValue({ getDocuments });
+
+      const result = await executeDemoralizeMacro();
+
+      expect(result).toBe(true);
+      expect(mockMacroConstructor).toHaveBeenCalledWith({
+        name: 'XDY DO_NOT_IMPORT Demoralize',
+        '-=_id': null,
+        'ownership.default': 3
+      });
+      expect(clonedExecute).toHaveBeenCalledTimes(1);
+    });
+
+    it('recognizes demoralize action card in canAddAutoButton', () => {
+      const mockMessage = {
+        token: { object: {} as TokenPF2e },
+        flags: {
+          pf2e: {
+            origin: {
+              rollOptions: ['origin:item:slug:demoralize']
+            }
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      expect(canAddAutoButton(mockMessage)).toBe(true);
+    });
+
+    it('appends Demoralize! button and runs startDemoralize on click', async () => {
+      const execute = vi.fn();
+      const getDocuments = vi.fn().mockResolvedValue([{ canExecute: true, execute }]);
+      (game.packs.get as ReturnType<typeof vi.fn>).mockReturnValue({ getDocuments });
+
+      const control = vi.fn();
+      const mockToken = {
+        name: 'Bully',
+        actor: { isOwner: true },
+        control
+      } as unknown as TokenPF2e;
+      const mockMessage = {
+        token: { object: mockToken },
+        flags: {
+          pf2e: {
+            origin: {
+              rollOptions: ['origin:item:slug:demoralize']
+            }
+          }
+        }
+      } as unknown as ChatMessagePF2e;
+
+      const addEventListener = vi.fn();
+      const mockButton = { type: '', textContent: '', addEventListener };
+      (globalThis as unknown as { document: unknown }).document = {
+        createElement: vi.fn().mockReturnValue(mockButton)
+      };
+
+      const after = vi.fn();
+      const mockHtml = {
+        querySelector: vi.fn().mockReturnValue({ after })
+      } as unknown as HTMLElement;
+
+      addAutoButtonToMessage(mockMessage, mockHtml);
+
+      expect(mockHtml.querySelector).toHaveBeenCalledWith('.card-content');
+      expect(mockButton.textContent).toBe('Demoralize!');
+      expect(after).toHaveBeenCalledWith(mockButton);
+      expect(addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+
+      const clickHandler = addEventListener.mock.calls[0][1] as () => Promise<void>;
+      await clickHandler();
+
+      expect(control).toHaveBeenCalledWith({ releaseOthers: true });
+      expect(execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('warns and aborts startDazzlingDisplay if user is not actor owner', async () => {
+      const control = vi.fn();
+      const mockToken = {
+        name: 'Dazzler',
+        actor: { isOwner: false },
+        control
+      } as unknown as TokenPF2e;
+
+      await startDazzlingDisplay(mockToken);
+
+      expect(ui.notifications.warn).toHaveBeenCalledWith(
+        'You do not have permission to perform Dazzling Display with Dazzler.'
+      );
+      expect(control).not.toHaveBeenCalled();
     });
   });
 });
