@@ -9,7 +9,11 @@ import {
 } from '../src/effects/panache.ts';
 import { resolveMirrorImageOnAttack } from '../src/spells/mirrorimage.ts';
 import { applyUnstableEffectOnFailure } from '../src/effects/unstablecheck.ts';
-import { applyGhostsInTheStormMoveEffect } from '../src/effects/ghostsinthestorm.ts';
+import {
+  applyGhostsInTheStormMoveEffect,
+  handleGhostsInTheStormCreated,
+  playGhostsInTheStormAnimation
+} from '../src/effects/ghostsinthestorm.ts';
 import {
   addSustainEffectToCaster,
   associateRegionWithSustainedEffect,
@@ -26,6 +30,7 @@ import { getHeldShiftingWeaponFromToken } from '../src/actions/shifting.ts';
 import {
   ActorPF2e,
   ChatMessagePF2e,
+  EffectPF2e,
   ItemPF2e,
   RegionDocumentPF2e,
   TokenDocumentPF2e,
@@ -1014,6 +1019,7 @@ describe('Baseline Hook Handlers', () => {
     };
 
     beforeEach(() => {
+      vi.clearAllMocks();
       mockGetDocument.mockResolvedValue({
         toObject: () => mockMoveEffectSource
       });
@@ -1022,6 +1028,7 @@ describe('Baseline Hook Handlers', () => {
     it('creates the move effect when not already present on the actor', async () => {
       const createEmbeddedDocuments = vi.fn().mockResolvedValue([{}]);
       const mockToken = {
+        id: 'token-1',
         actor: {
           items: [],
           createEmbeddedDocuments
@@ -1044,6 +1051,7 @@ describe('Baseline Hook Handlers', () => {
         update: vi.fn()
       };
       const mockToken = {
+        id: 'token-1',
         actor: {
           items: [existingEffect],
           createEmbeddedDocuments
@@ -1068,6 +1076,7 @@ describe('Baseline Hook Handlers', () => {
         delete: deleteFn
       };
       const mockToken = {
+        id: 'token-1',
         actor: {
           items: [expiredEffect],
           createEmbeddedDocuments
@@ -1078,6 +1087,115 @@ describe('Baseline Hook Handlers', () => {
 
       expect(deleteFn).toHaveBeenCalledTimes(1);
       expect(createEmbeddedDocuments).toHaveBeenCalledWith('Item', [mockMoveEffectSource]);
+    });
+
+    it('plays animation when handleGhostsInTheStormCreated is called with active token', async () => {
+      const mockItem = {
+        type: 'effect',
+        slug: 'effect-ghosts-in-the-storm-move',
+        actor: {
+          getActiveTokens: vi.fn().mockReturnValue([
+            { id: 'token-1' } as unknown as TokenPF2e
+          ])
+        }
+      } as unknown as ItemPF2e;
+
+      await handleGhostsInTheStormCreated(mockItem);
+
+      expect(Sequencer.Preloader.preloadForClients).toHaveBeenCalledWith([
+        'jb2a.smoke.puff.centered.grey.0',
+        'jb2a.static_electricity.02.blue',
+        'jb2a.sleep.cloud.02.blue'
+      ]);
+    });
+
+    it('plays animation for all active tokens when multiple tokens exist', async () => {
+      const mockItem = {
+        type: 'effect',
+        slug: 'effect-ghosts-in-the-storm-move',
+        actor: {
+          getActiveTokens: vi.fn().mockReturnValue([
+            { id: 'token-1' } as unknown as TokenPF2e,
+            { id: 'token-2' } as unknown as TokenPF2e
+          ])
+        }
+      } as unknown as ItemPF2e;
+
+      await handleGhostsInTheStormCreated(mockItem);
+
+      expect(Sequencer.Preloader.preloadForClients).toHaveBeenCalledTimes(1);
+      expect(Sequencer.Preloader.preloadForClients).toHaveBeenCalledWith([
+        'jb2a.smoke.puff.centered.grey.0',
+        'jb2a.static_electricity.02.blue',
+        'jb2a.sleep.cloud.02.blue'
+      ]);
+    });
+
+    it('returns early in handleGhostsInTheStormCreated if item is not an effect', async () => {
+      const mockItem = {
+        type: 'weapon',
+        slug: 'effect-ghosts-in-the-storm-move',
+        actor: {
+          getActiveTokens: vi.fn().mockReturnValue([
+            { id: 'token-1' } as unknown as TokenPF2e
+          ])
+        }
+      } as unknown as ItemPF2e;
+
+      await handleGhostsInTheStormCreated(mockItem);
+
+      expect(Sequencer.Preloader.preloadForClients).not.toHaveBeenCalled();
+    });
+
+    it('returns early in handleGhostsInTheStormCreated if item is not the move effect', async () => {
+      const mockItem = {
+        type: 'effect',
+        slug: 'some-other-effect',
+        actor: {
+          getActiveTokens: vi.fn().mockReturnValue([
+            { id: 'token-1' } as unknown as TokenPF2e
+          ])
+        }
+      } as unknown as ItemPF2e;
+
+      await handleGhostsInTheStormCreated(mockItem);
+
+      expect(Sequencer.Preloader.preloadForClients).not.toHaveBeenCalled();
+    });
+
+    it('returns early in handleGhostsInTheStormCreated if actor has no active tokens', async () => {
+      const mockItem = {
+        type: 'effect',
+        slug: 'effect-ghosts-in-the-storm-move',
+        actor: {
+          getActiveTokens: vi.fn().mockReturnValue([])
+        }
+      } as unknown as ItemPF2e;
+
+      await handleGhostsInTheStormCreated(mockItem);
+
+      expect(Sequencer.Preloader.preloadForClients).not.toHaveBeenCalled();
+    });
+
+    it('preloads assets when playGhostsInTheStormAnimation is invoked with tokens', async () => {
+      const mockTokens = [{ id: 'token-123' }] as unknown as TokenPF2e[];
+      const mockEffect = { id: 'effect-123' } as unknown as EffectPF2e;
+
+      await playGhostsInTheStormAnimation(mockTokens, mockEffect);
+
+      expect(Sequencer.Preloader.preloadForClients).toHaveBeenCalledWith([
+        'jb2a.smoke.puff.centered.grey.0',
+        'jb2a.static_electricity.02.blue',
+        'jb2a.sleep.cloud.02.blue'
+      ]);
+    });
+
+    it('returns early in playGhostsInTheStormAnimation if tokens array is empty', async () => {
+      const mockEffect = { id: 'effect-123' } as unknown as EffectPF2e;
+
+      await playGhostsInTheStormAnimation([], mockEffect);
+
+      expect(Sequencer.Preloader.preloadForClients).not.toHaveBeenCalled();
     });
   });
 });

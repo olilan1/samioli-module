@@ -188,6 +188,18 @@ const createSequenceProxy = (): unknown => {
   return createSequenceProxy();
 };
 
+// Define global Sequencer mock
+(globalThis as unknown as { Sequencer: unknown }).Sequencer = {
+  Preloader: {
+    preloadForClients: vi.fn().mockResolvedValue(undefined),
+    preload: vi.fn().mockResolvedValue(undefined)
+  },
+  EffectManager: {
+    endEffects: vi.fn().mockResolvedValue(undefined),
+    getEffects: vi.fn().mockReturnValue([])
+  }
+};
+
 // Define a minimal canvas mock
 (globalThis as unknown as { canvas: unknown }).canvas = {
   grid: { size: 100, distance: 5 },

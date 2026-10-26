@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Visual and sound effects for Ghosts in the Storm
+
 ## [1.1.0] - 2026-09-28
 
 - Ghosts in the Storm automation
