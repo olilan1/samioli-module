@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-26
+
 - Demoralize action button for chat cards
 - Visual and sound effects for Ghosts in the Storm
 
@@ -150,7 +152,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.2.0...HEAD
+
+[1.2.0]: https://github.com/olilan1/samioli-module/compare/v1.1.0...v1.2.0
 
 [1.1.0]: https://github.com/olilan1/samioli-module/compare/v1.0.0...v1.1.0
 
