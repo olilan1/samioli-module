@@ -67,8 +67,6 @@ async function animateSonicDash(token: TokenPF2e, newLocation: Point) {
     const endDelay = 2000
     const combinedAnimationTime = initialDelay + dashAnimationTime;
 
-    const tokenScaleX = token.document.texture.scaleX;
-    const tokenScaleY = token.document.texture.scaleY;
     const halfGrid = canvas.grid.size / 2;
     const animateToX = newLocation.x - token.x - halfGrid;
     const animateToY = newLocation.y - token.y - halfGrid;
@@ -84,12 +82,9 @@ async function animateSonicDash(token: TokenPF2e, newLocation: Point) {
             .duration(combinedAnimationTime)
         .effect()
             .copySprite(token)
-            .animateProperty("sprite", "scale.x", { from : tokenScaleX, to: tokenScaleX, duration: initialDelay }) 
-            .animateProperty("sprite", "scale.y", { from : tokenScaleY, to: tokenScaleY, duration: initialDelay })
             .animateProperty("sprite", "position.x", { from : 0, to: animateToX, duration: dashAnimationTime, ease: "easeInCubic", delay: initialDelay, gridUnits: false })
             .animateProperty("sprite", "position.y", { from : 0, to: animateToY, duration: dashAnimationTime, ease: "easeInCubic", delay: initialDelay, gridUnits: false })
-            .animateProperty("sprite", "scale.x", { from : tokenScaleX, to: tokenScaleX, duration: endDelay, delay: combinedAnimationTime }) 
-            .animateProperty("sprite", "scale.y", { from : tokenScaleY, to: tokenScaleY, duration: endDelay, delay: combinedAnimationTime })
+            .duration(combinedAnimationTime + endDelay)
         .effect()
             .delay(initialDelay)
             .file(gustOfWind)
