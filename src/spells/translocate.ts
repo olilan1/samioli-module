@@ -72,7 +72,6 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
                 gridUnits: true,
                 fromEnd: true,
             })
-            .scale(token.document.texture.scaleX)
             .waitUntilFinished(-750)
         .animation()
             .on(token)
@@ -92,7 +91,6 @@ async function teleport(token: TokenPF2e, maxRange: number, icon: string) {
             .belowTokens()
         .effect()
             .copySprite(token)
-            .scale(token.document.texture.scaleX)
             .atLocation(destination)
             .shape("circle", {
                 radius: 0.8,

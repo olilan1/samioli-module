@@ -40,8 +40,6 @@ async function animateBlazingDive(caster: TokenPF2e,
     const explosionAnimation = "jb2a.explosion.orange.3";
     const groundCracksAnimation = "jb2a.ground_cracks.03.orange";
     const jumpPuffAnimation = "jb2a.smoke.puff.ring.01.white.0"
-    const tokenScaleX = caster.document.texture.scaleX;
-    const tokenScaleY = caster.document.texture.scaleY;
     const animateToX = locationOfTemplate.x - caster.x;
     const animateToY = locationOfTemplate.y - caster.y;
 
@@ -62,9 +60,6 @@ async function animateBlazingDive(caster: TokenPF2e,
         // create effect on caster
         .effect()
             .copySprite(caster)
-            // pause for a moment
-            .animateProperty("sprite", "scale.x", { from : tokenScaleX, to: tokenScaleX, duration: initialDelay }) 
-            .animateProperty("sprite", "scale.y", { from : tokenScaleY, to: tokenScaleY, duration: initialDelay })
             // small shrink before the jump
             .animateProperty("sprite", "scale.x", { from : 1, to: 0.8, duration: setupJumpAnimationTime, ease: "easeOutQuart", delay: initialDelay }) 
             .animateProperty("sprite", "scale.y", { from : 1, to: 0.8, duration: setupJumpAnimationTime, ease: "easeOutQuart", delay: initialDelay })

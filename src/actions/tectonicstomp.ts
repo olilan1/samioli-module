@@ -36,8 +36,6 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
         const jumpPuffAnimation = "jb2a.smoke.puff.ring.01.white.0";
         const landingPuffAnimation = "jb2a.smoke.puff.ring.02.white.0";
         const hittingFloorAnimation = "jb2a.smoke.puff.ring.01.white.1";
-        const tokenScaleX = stomper.document.texture.scaleX;
-        const tokenScaleY = stomper.document.texture.scaleY;
         const impactSound = "sound/NWN2-Sounds/metor_impact_05.WAV"
         const fallingSounds = [
             "sound/NWN2-Sounds/cb_ht_fleshston1.WAV", 
@@ -56,9 +54,6 @@ async function animateTectonicStomp(stomper: TokenPF2e, targets: TokenPF2e[], lo
             // create effect on stomper
             .effect()
                 .copySprite(stomper)
-                // pause for a moment
-                .animateProperty("sprite", "scale.x", { from : tokenScaleX, to: tokenScaleX, duration: initialDelay }) 
-                .animateProperty("sprite", "scale.y", { from : tokenScaleY, to: tokenScaleY, duration: initialDelay })
                 // small shrink before the jump
                 .animateProperty("sprite", "scale.x", { from : 1, to: 0.8, duration: setupJumpAnimationTime, ease: "easeOutQuart", delay: initialDelay }) 
                 .animateProperty("sprite", "scale.y", { from : 1, to: 0.8, duration: setupJumpAnimationTime, ease: "easeOutQuart", delay: initialDelay })
