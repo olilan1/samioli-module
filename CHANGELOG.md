@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-22
+
 - Fix token scaling in Warp Step, Translocate, Sonic Dash, Blazing Dive, and Tectonic Stomp
 
 ## [1.2.0] - 2026-10-26
@@ -154,7 +156,9 @@
 - Notification instructions shown for Dive and Breach
 - Switch to typescript
 
-[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/olilan1/samioli-module/compare/v1.3.0...HEAD
+
+[1.3.0]: https://github.com/olilan1/samioli-module/compare/v1.2.0...v1.3.0
 
 [1.2.0]: https://github.com/olilan1/samioli-module/compare/v1.1.0...v1.2.0
 
