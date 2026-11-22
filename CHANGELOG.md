@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix token scaling in Warp Step, Translocate, Sonic Dash, Blazing Dive, and Tectonic Stomp
+
 ## [1.2.0] - 2026-10-26
 
 - Demoralize action button for chat cards
